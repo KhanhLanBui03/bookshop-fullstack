@@ -1,0 +1,20 @@
+version: '3.9'
+services:
+  bookshop-online:
+    image: mysql:8.3.0
+    container_name: bookshop-online
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bookshop_online
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    ports:
+      - "3314:3306"
+    volumes:
+      - bookshop_data:/var/lib/mysql
+    restart: always
+volumes:
+  bookshop_data:
+networks:
+  default:
+    name: bookshop-online-network
