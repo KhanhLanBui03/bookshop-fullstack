@@ -1,6 +1,5 @@
 package com.fit.monolithic.backend.entity;
 
-import com.fit.monolithic.backend.enums.RoleName;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,14 +14,15 @@ import java.util.List;
 @Setter
 @Getter
 @Entity
-@Table(name = "roles")
-public class Role {
+@Table(name = "publishers")
+public class Publisher {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Enumerated(EnumType.STRING)
-    private RoleName name;
-    @ManyToMany(mappedBy = "roles",fetch = FetchType.LAZY)
-    private List<User> users = new ArrayList<>();
-
+    @Column(nullable = false, unique = true)
+    private String name;
+    private String description;
+    private String country;
+    @OneToMany(mappedBy = "publisher",cascade =  CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Book> books = new ArrayList<>();
 }

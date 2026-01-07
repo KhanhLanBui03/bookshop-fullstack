@@ -1,8 +1,11 @@
 package com.fit.monolithic.backend.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import com.fit.monolithic.backend.enums.AuthProvider;
+import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -11,9 +14,20 @@ import lombok.*;
 @Entity
 @Table(name = "users")
 public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long  id;
     private String fullName;
+    @Column(nullable = false, unique = true)
     private String email;
+    @Column(nullable = false)
     private String password;
-    private String role;
+    private AuthProvider  authProvider;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_role",
+            joinColumns = @JoinColumn(name="user_id"),
+            inverseJoinColumns = @JoinColumn(name="role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
 }

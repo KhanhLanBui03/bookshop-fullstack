@@ -20,4 +20,7 @@ public class Image {
     @Column(columnDefinition = "LONGTEXT")
     @Lob
     private String url;
+    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @JoinColumn(name = "book_id",nullable = false)
+    private Book book;
 }

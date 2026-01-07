@@ -36,9 +36,6 @@ public class Author {
     private String name;
     @Column(unique = true)
     private String email;
-    @Min(0)
-    @Max(5)
-    private Double rating;
     @Enumerated(EnumType.STRING)
     private AuthorStatus status;
     @OneToMany(
@@ -48,10 +45,8 @@ public class Author {
     )
     @JsonIgnore
     private List<Book> books = new ArrayList<>();
-
     @CreationTimestamp
     private LocalDateTime createdAt;
-
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 }

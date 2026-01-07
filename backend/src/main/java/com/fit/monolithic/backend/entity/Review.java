@@ -52,10 +52,8 @@ public class Review {
     @JoinColumn(name = "parent_review_id")
     @JsonIgnore
     private Review parent;
-
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<Review> replies = new ArrayList<>();
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
