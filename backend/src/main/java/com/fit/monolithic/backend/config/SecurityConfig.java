@@ -18,12 +18,12 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   JwtFilter jwtFilter
-                                                   ) throws Exception {
+                                                   JwtFilter jwtFilter) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET).permitAll()
+                        .requestMatchers(HttpMethod.GET,Endpoints.PUBLISH_GET_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.POST,Endpoints.PUBLISH_POST_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.PUT,Endpoints.ADMIN_PUT_ENDPOINTS).hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE,Endpoints.ADMIN_DELETE_ENDPOINTS).hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST,Endpoints.ADMIN_POST_ENDPOINTS).hasRole("ADMIN")
