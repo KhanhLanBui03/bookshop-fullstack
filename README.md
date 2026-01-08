@@ -90,6 +90,10 @@ frontend/
 ├── components/
 ├── pages/
 ├── services/
+├── routes/
+├── stores/
+├── layouts/
+├── contexts/
 ├── hooks/
 ├── types/
 └── main.tsx
