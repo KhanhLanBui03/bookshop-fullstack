@@ -2,6 +2,7 @@ package com.fit.monolithic.backend.controller;
 
 import com.fit.monolithic.backend.dto.request.CategoryRequest;
 import com.fit.monolithic.backend.dto.response.CategoryResponse;
+import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.service.CategoryService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -19,8 +20,12 @@ public class CategoryController {
     private final CategoryService categoryService;
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<CategoryResponse> findAll() {
-        return categoryService.findAll();
+    public ApiResponse<List<CategoryResponse>> findAll() {
+        return new ApiResponse<>(
+                200,
+                "Success",
+                categoryService.findAll()
+        );
     }
     @PostMapping
     public ResponseEntity<CategoryResponse> save(@Valid @RequestBody CategoryRequest request){

@@ -23,7 +23,7 @@ public class AuthorServiceImpl implements AuthorService {
     public List<AuthorResponse> getAllAuthors() {
         return authorRepository.findAll()
                 .stream()
-                .map(author -> new AuthorResponse(author.getId(),author.getName(),author.getEmail(),author.getStatus(),author.getCreatedAt(),author.getUpdatedAt()))
+                .map(author -> new AuthorResponse(author.getId(),author.getName(),author.getEmail(),author.getStatus()))
                 .toList();
     }
 
@@ -37,9 +37,8 @@ public class AuthorServiceImpl implements AuthorService {
                 author.getId(),
                 author.getName(),
                 author.getEmail(),
-                author.getStatus(),
-                author.getCreatedAt(),
-                author.getUpdatedAt()
+                author.getStatus()
+
         );
     }
 
@@ -49,13 +48,13 @@ public class AuthorServiceImpl implements AuthorService {
         author.setName(authorRequest.getName());
         author.setEmail(authorRequest.getEmail());
         author.setStatus(AuthorStatus.ACTIVE);
+        authorRepository.save(author);
         return new AuthorResponse(
                 author.getId(),
                 author.getName(),
                 author.getEmail(),
-                author.getStatus(),
-                author.getCreatedAt(),
-                author.getUpdatedAt()
+                author.getStatus()
+
         );
     }
 

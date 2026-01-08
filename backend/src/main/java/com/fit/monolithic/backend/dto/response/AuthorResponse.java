@@ -16,6 +16,4 @@ public class AuthorResponse {
     private String name;
     private String email;
     private AuthorStatus status;
-    private LocalDateTime created;
-    private LocalDateTime updatedAt;
 }

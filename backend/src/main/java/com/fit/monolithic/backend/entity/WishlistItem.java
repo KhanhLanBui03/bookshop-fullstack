@@ -12,10 +12,7 @@ import lombok.Setter;
 @Getter
 @Entity
 @Table(
-        name = "wishlist_items",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"wishlist_id", "book_id"})
-        }
+        name = "wishlist_items"
 )
 public class WishlistItem {
 
