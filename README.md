@@ -86,7 +86,20 @@ backend/
 ### Frontend
 
 ```
-frontend/
+frontend-user/
+├── components/
+├── pages/
+├── services/
+├── routes/
+├── stores/
+├── layouts/
+├── contexts/
+├── hooks/
+├── types/
+└── main.tsx
+```
+```
+frontend-admin/
 ├── components/
 ├── pages/
 ├── services/
@@ -168,8 +181,6 @@ Backend Developer | Java | Spring Boot | Microservices(basic)
 
 ## 📌 Future Improvements
 
-* Order & payment integration
-* Elasticsearch for search
 * CI/CD pipeline
 * Microservices migration
 
