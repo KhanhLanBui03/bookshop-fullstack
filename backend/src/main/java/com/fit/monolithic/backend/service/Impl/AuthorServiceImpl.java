@@ -66,4 +66,25 @@ public class AuthorServiceImpl implements AuthorService {
         log.info("Author Deleted Successfully");
         return "Author Deleted Successfully";
     }
+
+    @Override
+    public AuthorResponse update(Long id,AuthorRequest authorRequest) {
+        Author author = authorRepository.findById(id).orElseThrow(() ->
+                new RuntimeException("Author not found with id: " + id)
+        );
+        if(author.getName().equals(authorRequest.getName())){
+            author.setName(authorRequest.getName());
+        }
+        if(author.getEmail().equals(authorRequest.getEmail())){
+            author.setEmail(authorRequest.getEmail());
+        }
+        Author savedAuthor = authorRepository.save(author);
+        log.info("Author Updated Successfully");
+        return new AuthorResponse(
+                savedAuthor.getId(),
+                savedAuthor.getName(),
+                savedAuthor.getEmail(),
+                savedAuthor.getStatus()
+        );
+    }
 }
