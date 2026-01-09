@@ -58,4 +58,22 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Category Deleted Successfully");
         return "Category Deleted Successfully";
     }
+
+    @Override
+    public CategoryResponse update(Long id, CategoryRequest request) {
+        Category category = categoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
+        if(!category.getName().equals(request.getName())){
+            category.setName(request.getName());
+        }
+        if(!category.getDescription().equals(request.getDescription())){
+            category.setDescription(request.getDescription());
+        }
+        Category response = categoryRepository.save(category);
+        log.info("Category Updated Successfully");
+        return new CategoryResponse(
+                category.getId(),
+                category.getName(),
+                category.getDescription()
+        );
+    }
 }

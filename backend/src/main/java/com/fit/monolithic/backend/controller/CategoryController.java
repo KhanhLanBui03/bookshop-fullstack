@@ -28,19 +28,39 @@ public class CategoryController {
         );
     }
     @PostMapping
-    public ResponseEntity<CategoryResponse> save(@Valid @RequestBody CategoryRequest request){
-        CategoryResponse response = categoryService.save(request);
-        return ResponseEntity.ok(response);
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<CategoryResponse> save(@Valid @RequestBody CategoryRequest request){
+        return new ApiResponse<>(
+                200,
+                "Success",
+                categoryService.save(request)
+        );
     }
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public CategoryResponse findById(@PathVariable Long id) {
-        return categoryService.findById(id);
+    public ApiResponse<CategoryResponse> findById(@PathVariable Long id) {
+        return new ApiResponse<>(
+                200,
+                "Success",
+                categoryService.findById(id)
+        );
     }
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public String deleteById(@PathVariable Long id){
-        categoryService.deleteById(id);
-        return "Category Deleted Successfully";
+    public ApiResponse<String> deleteById(@PathVariable Long id){
+        return new ApiResponse<>(
+                200,
+                "Success",
+                categoryService.deleteById(id)
+        );
+    }
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<CategoryResponse> updateCategory(@PathVariable Long id,@RequestBody CategoryRequest request){
+        return new ApiResponse<>(
+                200,
+                "Success",
+                categoryService.update(id, request)
+        );
     }
 }

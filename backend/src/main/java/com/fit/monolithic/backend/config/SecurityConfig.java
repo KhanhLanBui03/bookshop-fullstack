@@ -24,6 +24,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET,Endpoints.PUBLISH_GET_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST,Endpoints.PUBLISH_POST_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.PUT,Endpoints.PUBLISH_PUT_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.DELETE,Endpoints.PUBLISH_DELETE_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.PUT,Endpoints.ADMIN_PUT_ENDPOINTS).hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE,Endpoints.ADMIN_DELETE_ENDPOINTS).hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST,Endpoints.ADMIN_POST_ENDPOINTS).hasRole("ADMIN")

@@ -11,5 +11,5 @@ public interface CategoryService {
     List<CategoryResponse> findAll();
     CategoryResponse findById(Long id);
     String deleteById(Long id);
-//    CategoryResponse update(Long id,CategoryRequest request);
+    CategoryResponse update(Long id,CategoryRequest request);
 }

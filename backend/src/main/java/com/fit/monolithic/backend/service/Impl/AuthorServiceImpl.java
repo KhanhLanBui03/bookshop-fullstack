@@ -9,7 +9,9 @@ import com.fit.monolithic.backend.service.AuthorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -68,18 +70,27 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
-    public AuthorResponse update(Long id,AuthorRequest authorRequest) {
-        Author author = authorRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Author not found with id: " + id)
-        );
-        if(author.getName().equals(authorRequest.getName())){
+    public AuthorResponse update(Long id, AuthorRequest authorRequest) {
+        Author author = authorRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Author not found with id: " + id
+                ));
+
+        if (authorRequest.getName() != null &&
+                !authorRequest.getName().equals(author.getName())) {
             author.setName(authorRequest.getName());
         }
-        if(author.getEmail().equals(authorRequest.getEmail())){
+
+        if (authorRequest.getEmail() != null &&
+                !authorRequest.getEmail().equals(author.getEmail())) {
             author.setEmail(authorRequest.getEmail());
         }
+
         Author savedAuthor = authorRepository.save(author);
-        log.info("Author Updated Successfully");
+
+        log.info("Author updated successfully with id {}", id);
+
         return new AuthorResponse(
                 savedAuthor.getId(),
                 savedAuthor.getName(),
@@ -87,4 +98,5 @@ public class AuthorServiceImpl implements AuthorService {
                 savedAuthor.getStatus()
         );
     }
+
 }

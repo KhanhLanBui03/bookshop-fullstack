@@ -5,6 +5,7 @@ import com.fit.monolithic.backend.dto.request.RefreshTokenRequest;
 import com.fit.monolithic.backend.dto.request.RegisterRequest;
 import com.fit.monolithic.backend.dto.response.LoginResponse;
 import com.fit.monolithic.backend.dto.response.RegisterResponse;
+import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.service.AuthService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -25,23 +26,33 @@ import java.util.Map;
 public class AuthController {
     private final AuthService authService;
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> register(
+    public ApiResponse<RegisterResponse> register(
             @Valid @RequestBody RegisterRequest request
     ) {
-        RegisterResponse response = authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return new ApiResponse<>(
+                200,
+                "Register success",
+                authService.register(request)
+        );
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(
+    public ApiResponse<LoginResponse> login(
             @Valid @RequestBody LoginRequest request
     ) {
-        LoginResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
+        return new ApiResponse<>(
+                200,
+                "Login success",
+                authService.login(request)
+        );
     }
     @PostMapping("/refresh-token")
-    public LoginResponse refresh(@Valid @RequestBody RefreshTokenRequest request) {
-        return authService.refreshToken(request.getRefreshToken());
+    public ApiResponse<LoginResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return new ApiResponse<>(
+                200,
+                "Refresh success",
+                authService.refreshToken(request.getRefreshToken())
+        );
     }
 
 }
