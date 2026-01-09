@@ -38,7 +38,7 @@ public class DiscountController {
                 discountService.getDiscountById(id)
         );
     }
-    @GetMapping
+    @PostMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<DiscountResponse> saveDiscount(@Valid @RequestBody DiscountRequest discount) {
         return new ApiResponse<DiscountResponse>(
@@ -57,7 +57,7 @@ public class DiscountController {
                 null
         );
     }
-    @DeleteMapping
+    @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<DiscountResponse> update(@PathVariable Long id, @Valid @RequestBody DiscountRequest discount) {
         return new ApiResponse<>(
