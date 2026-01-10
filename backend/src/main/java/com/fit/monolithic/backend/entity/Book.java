@@ -43,6 +43,10 @@ public class Book {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private BookStatus  status;
+    @Column(nullable = false)
+    private Integer stock;
+    @Column(nullable = false)
+    private Integer soldCount = 0;
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp
@@ -58,5 +62,4 @@ public class Book {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "publisher_id", nullable = false)
     private Publisher publisher;
-
 }
