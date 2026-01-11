@@ -10,5 +10,6 @@ import lombok.*;
 @ToString
 public class ImageResponse {
     private Long id;
+    private String name;
     private String url;
 }

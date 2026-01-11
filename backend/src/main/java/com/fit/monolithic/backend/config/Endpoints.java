@@ -11,6 +11,7 @@ public class Endpoints {
             "/api/v1/publishers/**",
             "/api/v1/authors/**",
             "/api/v1/discounts/**",
+            "/api/v1/books/**",
 
     };
 
@@ -26,7 +27,7 @@ public class Endpoints {
     };
 
     public static final String[] ADMIN_POST_ENDPOINTS = {
-            "/api/v1/books/**",
+//            "/api/v1/books/**",
             "/api/v1/authors/**",
             "/api/v1/category/**",
     };
