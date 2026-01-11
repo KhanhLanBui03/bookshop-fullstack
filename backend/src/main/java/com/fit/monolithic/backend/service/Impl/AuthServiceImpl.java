@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -67,6 +68,7 @@ public class AuthServiceImpl implements AuthService {
 //        return new LoginResponse(token);
 //    }
 @Override
+@Transactional
 public LoginResponse login(LoginRequest request) {
 
     User user = userRepository.findByEmail(request.getEmail())
@@ -78,7 +80,7 @@ public LoginResponse login(LoginRequest request) {
     }
 
     refreshTokenRepository.deleteByUser(user);
-
+    refreshTokenRepository.flush();
     String accessToken = jwtUtil.generateAccessToken(user);
 
     RefreshToken refreshToken = new RefreshToken();
@@ -109,6 +111,11 @@ public LoginResponse login(LoginRequest request) {
         String newAccessToken = jwtUtil.generateAccessToken(token.getUser());
 
         return new LoginResponse(newAccessToken, token.getToken());
+    }
+    @Override
+    @Transactional
+    public void logout(String refreshToken) {
+        refreshTokenRepository.deleteByToken(refreshToken);
     }
     @Override
     public RegisterResponse register(RegisterRequest registerRequest) {

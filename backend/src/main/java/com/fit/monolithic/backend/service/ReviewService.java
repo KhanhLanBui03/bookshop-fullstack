@@ -7,6 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ReviewService {
-    ReviewResponse save(ReviewRequest reviewRequest);
+    ReviewResponse save(Long bookId,ReviewRequest reviewRequest);
     List<ReviewResponse> getAllByBook(Long bookId);
 }

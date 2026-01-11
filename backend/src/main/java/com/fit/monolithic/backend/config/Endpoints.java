@@ -11,7 +11,9 @@ public class Endpoints {
             "/api/v1/publishers/**",
             "/api/v1/authors/**",
             "/api/v1/discounts/**",
+
     };
+
     public static final String[] PUBLISH_PUT_ENDPOINTS = {
             "/api/v1/publishers/**",
             "/api/v1/authors/**",

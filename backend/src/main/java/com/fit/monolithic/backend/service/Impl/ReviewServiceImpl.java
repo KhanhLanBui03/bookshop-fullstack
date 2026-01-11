@@ -5,6 +5,7 @@ import com.fit.monolithic.backend.dto.response.ReviewResponse;
 import com.fit.monolithic.backend.entity.Book;
 import com.fit.monolithic.backend.entity.Review;
 import com.fit.monolithic.backend.entity.User;
+import com.fit.monolithic.backend.enums.CommentStatus;
 import com.fit.monolithic.backend.repository.BookRepository;
 import com.fit.monolithic.backend.repository.ReviewRepository;
 import com.fit.monolithic.backend.repository.UserRepository;
@@ -47,18 +48,24 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewResponse save(ReviewRequest reviewRequest) {
-        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.findById(userId).orElseThrow(()-> new RuntimeException("User not found"));
-        Book book = bookRepository.findById(reviewRequest.getBookId()).orElseThrow(()-> new RuntimeException("Book not found"));
+    public ReviewResponse save(Long bookId, ReviewRequest reviewRequest) {
+        Long userId = (Long) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+
         Review review = new Review();
         review.setUser(user);
         review.setBook(book);
+        review.setStatus(CommentStatus.PENDING);
         review.setContent(reviewRequest.getContent());
         review.setRating(reviewRequest.getRating());
 
-        Review saved = reviewRepository.save(review);
-
-        return mapToResponse(saved);
+        return mapToResponse(reviewRepository.save(review));
     }
+
 }

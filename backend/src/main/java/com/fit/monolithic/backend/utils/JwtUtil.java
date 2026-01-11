@@ -34,7 +34,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .setSubject(user.getEmail())
                 .claim("userId", user.getId())
-                .claim("role", user.getRoles()
+                .claim("roles", user.getRoles()
                         .stream()
                         .map(r -> r.getName().name())
                         .toList())

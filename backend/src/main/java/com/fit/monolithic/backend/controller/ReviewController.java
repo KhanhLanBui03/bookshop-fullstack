@@ -16,13 +16,17 @@ import org.springframework.web.bind.annotation.*;
 public class ReviewController {
     private final ReviewService reviewService;
 
-    @PostMapping("/{id}")
-    public ApiResponse<ReviewResponse> save(@PathVariable Long bookId, @Valid @RequestBody ReviewRequest reviewRequest) {
+    @PostMapping("/books/{bookId}")
+    public ApiResponse<ReviewResponse> save(
+            @PathVariable Long bookId,
+            @Valid @RequestBody ReviewRequest reviewRequest
+    ) {
         return new ApiResponse<>(
                 201,
                 "Successfully created Review",
-                reviewService.save(reviewRequest)
+                reviewService.save(bookId, reviewRequest)
         );
     }
+
 
 }
