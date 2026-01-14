@@ -1,5 +1,6 @@
 import AuthorCard from "@/components/AuthorCard"
 import AuthorList from "@/components/Home/AuthorList"
+import BlogList from "@/components/Home/BlogList"
 import BookBestSeller from "@/components/Home/BookBestSeller"
 import BookList from "@/components/Home/BookList"
 import CategoriesSection from "@/components/Home/CategoriesSection"
@@ -17,6 +18,7 @@ const HomePage = () => {
       <BookList />
       <BookBestSeller />
       <AuthorList />
+      <BlogList/>
       <section className="py-16 bg-muted rounded-lg w-full">
         <div className="max-w-xl mx-auto text-center px-4">
           <h3 className="text-2xl font-bold mb-4">Nhận ưu đãi mới nhất 📩</h3>

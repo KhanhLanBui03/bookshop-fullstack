@@ -54,15 +54,21 @@ const Header = () => {
                             Tài khoản
                         </Link>
                     ) : (
-                        <Link to="/LoginScreen">
+                        <div >
                             <DropdownMenu>
                                 <DropdownMenuTrigger><User className="w-6 h-6 text-gray-400 hover:text-blue-600 transition" /></DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    <DropdownMenuItem><KeyRound />Đăng nhập</DropdownMenuItem>
-                                    <DropdownMenuItem><UserRoundPlus />Đăng ký</DropdownMenuItem>
+                                    <DropdownMenuItem><KeyRound />
+                                        <Link to="/login">
+                                            Đăng nhập
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem><UserRoundPlus /><Link to="/register">
+                                            Đăng ký
+                                        </Link></DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                        </Link>
+                        </div>
                     )
                 }
                 <Link to="/CartScreen" className="group relative px-3 py-2 rounded hover:hover:bg-accent transition">
