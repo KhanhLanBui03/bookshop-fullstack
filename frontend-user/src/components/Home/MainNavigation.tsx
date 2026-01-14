@@ -6,6 +6,7 @@ import {
     NavigationMenuList,
     NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
+import { Link } from "react-router-dom"
 
 const MainNavigation = () => {
     return (
@@ -117,7 +118,7 @@ const MainNavigation = () => {
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                     <NavigationMenuLink className="px-4 py-2 font-semibold hover:text-blue-600">
-                        Chính sách
+                    <Link to="/about">Về chúng tôi</Link>
                     </NavigationMenuLink>
                 </NavigationMenuItem>
 
