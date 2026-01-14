@@ -5,6 +5,7 @@ import HomePage from "@/pages/HomePage"
 import LoginPage from "@/pages/LoginPage"
 import NotFound from "@/pages/NotFound"
 import RegisterPage from "@/pages/RegisterPage"
+import Support from "@/pages/SupportPage"
 import { createBrowserRouter } from "react-router-dom"
 
 const router = createBrowserRouter([
@@ -12,7 +13,8 @@ const router = createBrowserRouter([
         element: <MainLayout />,
         children: [
             { path: "/", element: <HomePage /> },
-            { path: "/about", element: <AboutPage /> }
+            { path: "/about", element: <AboutPage /> },
+            { path: "/support", element: <Support /> }
         ]
     },
     {
