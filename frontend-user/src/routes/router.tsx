@@ -6,15 +6,15 @@ import { createBrowserRouter } from "react-router-dom"
 
 const router = createBrowserRouter([
     {
-        element:<MainLayout/>,
-        children:[
-            {path:"/",element:<HomePage/>},
-            {path:"/about",element:<AboutPage/>}
+        element: <MainLayout />,
+        children: [
+            { path: "/", element: <HomePage /> },
+            { path: "/about", element: <AboutPage /> }
         ]
     },
     {
-    path: "*",
-    element: <NotFound/>,
-  },
+        path: "*",
+        element: <NotFound />,
+    },
 ])
 export default router

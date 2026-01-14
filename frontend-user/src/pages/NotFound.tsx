@@ -1,9 +1,11 @@
-
-
 const NotFound = () => {
   return (
-    <div>
-      <h1 className='text-2xl text-red-500'>Page Not Found</h1>
+    <div className="w-screen h-screen flex items-center justify-center overflow-hidden bg-white">
+      <img
+        src="./404-v3.webp"
+        alt="404 Not Found"
+        className="w-full h-full object-contain"
+      />
     </div>
   )
 }
