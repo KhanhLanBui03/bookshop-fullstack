@@ -28,6 +28,7 @@ const user = {
   avatar: null,
 }
 const Header = () => {
+  const wishlistQuantity = 2
   const cartQuantity = 3
   const isLoggedIn = true
 
@@ -96,8 +97,13 @@ const Header = () => {
 
             )}
 
-            <Link to="/wishlist">
+            <Link to="/wishlist" className="relative">
               <Heart className="w-6 h-6 text-muted-foreground hover:text-red-500" />
+              {wishlistQuantity > 0 && (
+                <span className="absolute -top-2 -right-2 text-xs bg-red-600 text-white rounded-full px-1.5">
+                  {wishlistQuantity}
+                </span>
+              )}
             </Link>
 
             <Link to="/cart" className="relative">

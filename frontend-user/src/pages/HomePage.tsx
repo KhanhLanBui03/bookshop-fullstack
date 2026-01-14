@@ -4,6 +4,7 @@ import BlogList from "@/components/Home/BlogList"
 import BookBestSeller from "@/components/Home/BookBestSeller"
 import BookList from "@/components/Home/BookList"
 import CategoriesSection from "@/components/Home/CategoriesSection"
+import FlashSale from "@/components/Home/FlashSale"
 import HeroBanner from "@/components/Home/HeroBanner"
 import { Button } from "@/components/ui/button"
 
@@ -16,6 +17,7 @@ const HomePage = () => {
       <CategoriesSection />
       <BookList />
       <BookBestSeller />
+      <FlashSale/>
       <AuthorList />
       <BlogList />
       <section className="py-6 px-4 w-full">

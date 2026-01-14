@@ -73,7 +73,7 @@ const books = [
 
 const BookBestSeller = () => {
   return (
-    <section className="py-8 bg-red-300 rounded-lg">
+    <section className="py-8 bg-orange-50 rounded-lg">
       <div className="max-w-7xl mx-auto px-4 md:px-16">
         <div className="text-center mb-8">
           <h2 className="text-2xl lg:text-3xl font-bold dark:text-white">
