@@ -40,7 +40,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="text-xl font-bold">
-            BookShop
+            <img  src="./log5.png" className="w-30 h-20" />
           </Link>
 
           {/* Search */}

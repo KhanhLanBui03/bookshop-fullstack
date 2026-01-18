@@ -3,6 +3,7 @@ package com.fit.monolithic.backend.service.Impl;
 import com.fit.monolithic.backend.dto.request.BookRequest;
 import com.fit.monolithic.backend.dto.request.ImageRequest;
 import com.fit.monolithic.backend.dto.request.PublisherRequest;
+import com.fit.monolithic.backend.dto.response.BookCardResponse;
 import com.fit.monolithic.backend.dto.response.BookResponse;
 import com.fit.monolithic.backend.dto.response.ImageResponse;
 import com.fit.monolithic.backend.dto.response.PublisherResponse;
@@ -30,7 +31,6 @@ public class BookServiceImpl implements BookService {
     private final PublisherRepository publisherRepository;
 
     public BookResponse mapToResponse(Book book) {
-
         BookResponse res = new BookResponse();
         res.setId(book.getId());
         res.setTitle(book.getTitle());
@@ -52,7 +52,6 @@ public class BookServiceImpl implements BookService {
                 publisher.getDescription(),
                 publisher.getCountry()
         ));
-
         List<ImageResponse> images = book.getImages()
                 .stream()
                 .map(img -> new ImageResponse(
@@ -67,12 +66,30 @@ public class BookServiceImpl implements BookService {
         return res;
     }
 
+    public BookCardResponse mapToCardResponse(Book book) {
+
+        String thumbnail = null;
+        if (book.getImages() != null && !book.getImages().isEmpty()) {
+            thumbnail = book.getImages().get(0).getUrl(); // lấy ảnh đầu
+        }
+        return new BookCardResponse(
+                book.getId(),
+                book.getTitle(),
+                book.getSalePrice(),
+                book.getOriginalPrice(),
+                book.getRating(),
+                book.getSoldCount(),
+                thumbnail,
+                book.getAuthor().getName()
+        );
+    }
+
     @Override
-    public List<BookResponse> findAll() {
+    public List<BookCardResponse> findAll() {
         return bookRepository.findAll()
                 .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+                .map(this::mapToCardResponse)
+                .toList();
     }
 
     @Override
@@ -86,14 +103,14 @@ public class BookServiceImpl implements BookService {
         book.setStock(bookRequest.getStock());
         book.setSoldCount(0);
         Category category = categoryRepository.findById(bookRequest.getCategoryId())
-                        .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new RuntimeException("Category not found"));
         book.setCategory(category);
         Author author = authorRepository.findById(bookRequest.getAuthorId())
-                 .orElseThrow(() -> new RuntimeException("Author not found"));
+                .orElseThrow(() -> new RuntimeException("Author not found"));
         book.setAuthor(author);
         List<Image> images = bookRequest.getImages()
                 .stream()
-                .map(image->{
+                .map(image -> {
                     Image imageEntity = new Image();
                     imageEntity.setName(image.getName());
                     imageEntity.setUrl(image.getUrl());
@@ -106,7 +123,13 @@ public class BookServiceImpl implements BookService {
                 .orElseThrow(() -> new RuntimeException("Publisher not found"));
         book.setPublisher(publisher);
         log.info("Saving book {}", book);
-        return  mapToResponse(bookRepository.save(book));
+        return mapToResponse(bookRepository.save(book));
     }
 
+    @Override
+    public BookResponse findById(Long id) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+        return mapToResponse(book);
+    }
 }

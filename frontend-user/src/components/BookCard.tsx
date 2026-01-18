@@ -6,84 +6,85 @@ import {
     CardTitle,
 } from "./ui/card"
 import { ShoppingBag, Heart, Star, Eye } from "lucide-react"
+import type { BookCard as BookCardType } from "@/types/Book"
 
 type Props = {
-    title: string
-    description: string
-    rating: number
-    category: string
-    imageUrl: string
-    originalPrice: number
-    salePrice: number
+    book: BookCardType
 }
 
-const BookCard = ({
-    title,
-    description,
-    rating,
-    category,
-    imageUrl,
-    originalPrice,
-    salePrice,
-}: Props) => {
+
+const BookCard = ({ book }: Props) => {
+    if (!book) return null
+    const {
+        title,
+        salePrice,
+        originalPrice,
+        rating,
+        soldCount,
+        image,
+        authorName
+    } = book
+
+    const hasDiscount = originalPrice && originalPrice > salePrice
+    
     return (
         <Card className="group hover:shadow-lg transition w-full">
-            {/* Image */}
-            <div className="relative overflow-hidden rounded-t-lg group">
-                {originalPrice > 0 && (
+            {/* IMAGE */}
+            <div className="relative overflow-hidden rounded-t-lg">
+                {hasDiscount && (
                     <span className="absolute top-1 right-1 z-10 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                        -{Math.round(((originalPrice - salePrice) / originalPrice) * 100)}%
+                        -{Math.round(
+                            ((originalPrice! - salePrice) / originalPrice!) * 100
+                        )}%
                     </span>
                 )}
 
-                {/* Image */}
-                <div className="h-48 flex items-center justify-center bg-white">
+                <div className="relative w-full aspect-[3/4] bg-white overflow-hidden">
                     <img
-                        src={imageUrl}
+                        src={image || "/placeholder.png"}
                         alt={title}
-                        className="h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="w-full h-full object-contain"
                     />
                 </div>
 
-                {/* ACTION ICONS (HOVER) */}
-                <div className="
+
+                {/* ACTION ICONS */}
+                <div
+                    className="
                         absolute top-1/2 right-2 -translate-y-1/2
                         flex flex-col gap-2
                         opacity-0 translate-x-4
                         group-hover:opacity-100 group-hover:translate-x-0
                         transition-all duration-300
-                    
-                    ">
-                    {/* Add to cart */}
-                    <Button className="p-2 bg-white text-gray-700 rounded-full shadow hover:bg-blue-600 hover:text-white transition">
+                    "
+                >
+                    <Button className="p-2 bg-white text-gray-700 rounded-full shadow hover:bg-blue-600 hover:text-white">
                         <ShoppingBag className="w-4 h-4" />
                     </Button>
 
-                    {/* View detail */}
-                    <Button className="p-2 bg-white text-gray-700 rounded-full shadow hover:bg-gray-800 hover:text-white transition">
+                    <Button className="p-2 bg-white text-gray-700 rounded-full shadow hover:bg-gray-800 hover:text-white">
                         <Eye className="w-4 h-4" />
                     </Button>
 
-                    {/* Wishlist */}
-                    <Button className="p-2 bg-white text-gray-700 rounded-full shadow hover:bg-red-500 hover:text-white transition">
+                    <Button className="p-2 bg-white text-gray-700 rounded-full shadow hover:bg-red-500 hover:text-white">
                         <Heart className="w-4 h-4" />
                     </Button>
                 </div>
             </div>
+
+            {/* CONTENT */}
             <CardHeader className="pb-2">
-                <CardTitle className="text-base line-clamp-1">
+                <CardTitle className="text-base line-clamp-2">
                     {title}
                 </CardTitle>
-                <p className="text-sm text-gray-500 line-clamp-2">
-                    {description}
+
+                <p className="text-sm text-gray-500">
+                    {authorName}
                 </p>
-                <span className="flex justify-center items-center bg-transparent border-gray-400 border-2 w-25 text-black text-xs px-2 py-1 rounded-2xl dark:text-white mt-2">
-                    {category}
-                </span>
             </CardHeader>
 
             <CardContent className="flex items-center justify-between">
-                {/* Rating */}
+                {/* RATING */}
                 <div className="flex items-center gap-1 text-yellow-500">
                     {Array.from({ length: 5 }).map((_, i) => (
                         <Star
@@ -94,29 +95,28 @@ const BookCard = ({
                                 }`}
                         />
                     ))}
-                    <span className="text-sm font-medium">{rating.toFixed(1)}</span>
+                    <span className="text-sm font-medium text-gray-700">
+                        ({rating.toFixed(1)})
+                    </span>
                 </div>
 
-                {/* Price */}
+                {/* PRICE */}
                 <div className="text-right">
-                    <p className="text-sm line-through text-gray-400">
-                        {originalPrice.toLocaleString()}₫
-                    </p>
+                    {hasDiscount && (
+                        <p className="text-sm line-through text-gray-400">
+                            {originalPrice!.toLocaleString()}₫
+                        </p>
+                    )}
                     <p className="text-lg font-bold text-red-600">
                         {salePrice.toLocaleString()}₫
                     </p>
                 </div>
             </CardContent>
 
-            {/* <CardFooter className="flex gap-2">
-                <Button className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-                    <ShoppingBag className="w-4 h-4" />
-                    Thêm
-                </Button>
-                <Button className="p-2 border rounded hover:bg-gray-100 transition">
-                    <Heart className="w-4 h-4 text-gray-500 hover:text-red-600" />
-                </Button>
-            </CardFooter> */}
+            {/* SOLD */}
+            <div className="px-4 pb-4 text-xs text-gray-500">
+                Đã bán {soldCount}
+            </div>
         </Card>
     )
 }

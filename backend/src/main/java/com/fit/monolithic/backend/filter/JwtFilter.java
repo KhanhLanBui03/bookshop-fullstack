@@ -18,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.security.Key;
 import java.util.List;
+
 @Component
 public class JwtFilter extends OncePerRequestFilter {
     @Value("${jwt.secret}")
@@ -26,6 +27,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,

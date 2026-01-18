@@ -1,6 +1,7 @@
 import AuthLayout from "@/layouts/AuthLayout"
 import MainLayout from "@/layouts/MainLayout"
 import AboutPage from "@/pages/AboutPage"
+import BookDetail from "@/pages/BookDetail"
 import CartPage from "@/pages/CartPage"
 import HomePage from "@/pages/HomePage"
 import LoginPage from "@/pages/LoginPage"
@@ -16,7 +17,8 @@ const router = createBrowserRouter([
             { path: "/", element: <HomePage /> },
             { path: "/about", element: <AboutPage /> },
             { path: "/support", element: <Support /> },
-            { path: "/cart", element: <CartPage /> }
+            { path: "/cart", element: <CartPage /> },
+            { path: "/detail", element: <BookDetail /> }
         ]
     },
     {

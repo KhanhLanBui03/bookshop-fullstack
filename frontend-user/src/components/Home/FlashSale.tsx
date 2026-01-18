@@ -74,9 +74,9 @@ const FlashSale = () => {
           <Flame /> Flash Sale hôm nay
         </h2>
 
-        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded shadow">
-          <Timer className="w-5 h-5 text-red-500" />
-          <span className="font-mono text-lg text-red-600">
+        <div className="flex items-center gap-2 bg-black px-4 py-2 rounded shadow">
+          <Timer className="w-5 h-5 text-white" />
+          <span className="font-bold text-lg text-white">
             {formatTime(timeLeft)}
           </span>
         </div>

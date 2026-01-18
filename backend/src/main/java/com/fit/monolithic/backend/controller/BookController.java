@@ -1,6 +1,7 @@
 package com.fit.monolithic.backend.controller;
 
 import com.fit.monolithic.backend.dto.request.BookRequest;
+import com.fit.monolithic.backend.dto.response.BookCardResponse;
 import com.fit.monolithic.backend.dto.response.BookResponse;
 import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.service.BookService;
@@ -29,7 +30,7 @@ public class BookController {
     }
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<List<BookResponse>> getAll() {
+    public ApiResponse<List<BookCardResponse>> getAll() {
         return new ApiResponse<>(
                 200,
                 "Success",

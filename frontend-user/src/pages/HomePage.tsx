@@ -17,44 +17,39 @@ const HomePage = () => {
       <CategoriesSection />
       <BookList />
       <BookBestSeller />
-      <FlashSale/>
+      <FlashSale />
       <AuthorList />
       <BlogList />
-      <section className="py-6 px-4 w-full">
-        <div className="max-w-7xl  mx-auto bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-zinc-800 dark:to-zinc-900
-    rounded-2xl shadow-md p-8 md:p-12text-center
-  ">
-          <h3 className="text-2xl text-center md:text-3xl font-bold mb-4 dark:text-white">
-            📩 Nhận ưu đãi mới nhất
-          </h3>
+      <section className="bg-blue-50 py-20 px-4 flex justify-center items-center w-full dark:bg-accent">
+        <div className="max-w-4xl w-full bg-blue-400 p-10 md:p-16 text-center relative overflow-hidden rounded-sm dark:bg-gray-800">
 
-          <p className="text-gray-800 text-center dark:text-gray-400 mb-8">
-            Đăng ký email để nhận voucher, sách hot và ưu đãi độc quyền mỗi tuần
+          <div className="absolute top-4 left-4 grid grid-cols-2 gap-1 opacity-20">
+            <div className="w-2 h-2 bg-white"></div>
+            <div className="w-2 h-2 bg-white"></div>
+          </div>
+
+          <h2 className="text-white text-3xl md:text-5xl font-bold mb-6">
+            Subscribe to Our Newsletter
+          </h2>
+          <p className="text-white/90 text-sm md:text-base max-w-2xl mx-auto mb-10 leading-relaxed">
+            Sed eu feugiat amet, libero ipsum enim pharetra hac dolor sit amet,
+            consectetur. Elit adipiscing enim pharetra hac.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
-            <input
-              type="email"
-              placeholder="Nhập email của bạn"
-              className="
-                  flex-1
-                  rounded-xl
-                  border
-                  px-4 py-3
-                  focus:outline-none focus:ring-2 focus:ring-blue-500
-                  dark:bg-zinc-900 dark:border-zinc-700 dark:text-white
-                "
-            />
-            <Button className="
-                  rounded-xl
-                  px-6 py-3
-                  bg-blue-600
-                  hover:bg-blue-700
-                  dark:text-white
-                  transition
-                ">
-              Đăng ký
-            </Button>
+          <div className="max-w-2xl mx-auto bg-white p-2 shadow-xl flex flex-col md:flex-row items-stretch gap-2">
+            <div className="flex flex-1 items-center px-4 py-2 border border-gray-100 md:border-none">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <input
+                type="email"
+                placeholder="youremail123@gmail.com"
+                className="w-full outline-none text-gray-600 placeholder-gray-400"
+              />
+            </div>
+            <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 tracking-widest transition-colors uppercase text-sm">
+              Subscribe
+            </button>
           </div>
         </div>
       </section>
