@@ -25,7 +25,7 @@ public class CategoryServiceImpl implements CategoryService {
         category.setDescription(request.getDescription());
         categoryRepository.save(category);
         log.info("Category Saved Successfully");
-        return new CategoryResponse(category.getId(), category.getName(), category.getDescription());
+        return new CategoryResponse(category.getId(), category.getName(), category.getDescription(),category.getUrl());
     }
 
     @Override
@@ -33,7 +33,7 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Finding All Categories Successfully");
         return categoryRepository.findAll()
                 .stream()
-                .map(category -> new CategoryResponse(category.getId(),category.getName(),category.getDescription()))
+                .map(category -> new CategoryResponse(category.getId(),category.getName(),category.getDescription(), category.getUrl()))
                 .toList();
     }
 
@@ -46,7 +46,8 @@ public class CategoryServiceImpl implements CategoryService {
         return new CategoryResponse(
                 category.getId(),
                 category.getName(),
-                category.getDescription()
+                category.getDescription(),
+                category.getUrl()
         );
     }
 
@@ -73,7 +74,8 @@ public class CategoryServiceImpl implements CategoryService {
         return new CategoryResponse(
                 category.getId(),
                 category.getName(),
-                category.getDescription()
+                category.getDescription(),
+                category.getUrl()
         );
     }
 }

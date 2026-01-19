@@ -1,84 +1,39 @@
-import { BookOpen, TrendingUp, ChevronRight } from "lucide-react"
 
-const categories = [
-    {
-        id: 1,
-        name: "Văn học",
-        description: "Tiểu thuyết & truyện ngắn",
-        color: "from-purple-600 to-purple-800",
-        bgColor: "bg-purple-50",
-        hoverColor: "group-hover:from-purple-700 group-hover:to-purple-900",
-        books: "320+ sách",
-        trending: true,
-        image: "https://images.unsplash.com/photo-1512820790803-83ca734da794",
-    },
-    {
-        id: 2,
-        name: "Kinh tế",
-        description: "Kinh doanh & tài chính",
-        color: "from-blue-600 to-blue-800",
-        bgColor: "bg-blue-50",
-        hoverColor: "group-hover:from-blue-700 group-hover:to-blue-900",
-        books: "210+ sách",
-        trending: true,
-        image: "https://images.unsplash.com/photo-1454165205744-3b78555e5572",
-    },
-    {
-        id: 3,
-        name: "Công nghệ",
-        description: "Lập trình & IT",
-        color: "from-green-600 to-green-800",
-        bgColor: "bg-green-50",
-        hoverColor: "group-hover:from-green-700 group-hover:to-green-900",
-        books: "180+ sách",
-        trending: false,
-        image: "https://images.unsplash.com/photo-1517433456452-f9633a875f6f",
-    },
-    {
-        id: 4,
-        name: "Thiếu nhi",
-        description: "Sách cho trẻ em",
-        color: "from-yellow-500 to-yellow-700",
-        bgColor: "bg-yellow-50",
-        hoverColor: "group-hover:from-yellow-600 group-hover:to-yellow-800",
-        books: "260+ sách",
-        trending: false,
-        image: "https://images.unsplash.com/photo-1509021436665-8f07dbf5bf1d",
-    },
-    {
-        id: 5,
-        name: "Kỹ năng sống",
-        description: "Phát triển bản thân",
-        color: "from-pink-500 to-pink-700",
-        bgColor: "bg-pink-50",
-        hoverColor: "group-hover:from-pink-600 group-hover:to-pink-800",
-        books: "140+ sách",
-        trending: true,
-        image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b",
-    },
-    {
-        id: 6,
-        name: "Ngoại ngữ",
-        description: "Tiếng Anh & ngôn ngữ",
-        color: "from-indigo-500 to-indigo-700",
-        bgColor: "bg-indigo-50",
-        hoverColor: "group-hover:from-indigo-600 group-hover:to-indigo-800",
-        books: "190+ sách",
-        trending: false,
-        image: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f",
-    },
-]
+import { useFetch } from "@/hooks/useFetch"
+import { categoryService } from "@/services/category.service"
+import type { CategoryCard } from "@/types/Category"
+import { BookOpen, ChevronRight } from "lucide-react"
+
+
+//     {
+//         id: 6,
+//         name: "Ngoại ngữ",
+//         description: "Tiếng Anh & ngôn ngữ",
+//         color: "from-indigo-500 to-indigo-700",
+//         bgColor: "bg-indigo-50",
+//         hoverColor: "group-hover:from-indigo-600 group-hover:to-indigo-800",
+//         books: "190+ sách",
+//         trending: false,
+//         image: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f",
+//     },
+// ]
 
 const CategoriesSection = () => {
-    const handleCategoryClick = (categoryId) => {
-        console.log(`Navigate to books?category=${categoryId}`)
+    const { data: categories, loading } = useFetch<CategoryCard[]>(
+        () => categoryService.getCategories()
+    )
+    if (loading) {
+        return <div>Loading...</div>
+    }
+    if (!categories || categories.length === 0) {
+        return <div>Không có danh mục</div>
     }
 
     return (
         <section className="relative dark:bg-zinc-900 py-12 lg:py-16 bg-gradient-to-b from-gray-50 to-white">
-            <div className="container mx-auto px-4">
+            <div className="container mx-auto px-4 bg-black/5 dark:bg-white/5 rounded-3xl py-10 lg:py-16">
                 {/* Header */}
-                <div className="text-center mb-12">
+                <div className="text-center mb-12 ">
                     <div className="inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-4">
                         <BookOpen className="w-4 h-4" />
                         <span>Khám phá theo chủ đề</span>
@@ -99,27 +54,19 @@ const CategoriesSection = () => {
                     {categories.map((category, index) => (
                         <div
                             key={category.id}
-                            onClick={() => handleCategoryClick(category.id)}
+                            // onClick={() => handleCategoryClick(category.id)}
                             className="group flex-shrink-0 w-64 cursor-pointer relative"
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
                             {/* Card */}
-                            <div className={`relative rounded-2xl ${category.bgColor} dark:bg-zinc-800 border-2 border-transparent hover:border-gray-200 dark:hover:border-zinc-700 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2`}>
-                                {/* Trending Badge */}
-                                {category.trending && (
-                                    <div className="absolute top-3 right-3 z-10">
-                                        <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1.5 text-xs font-bold rounded-full flex gap-1.5 items-center shadow-lg animate-pulse">
-                                            <TrendingUp className="w-3.5 h-3.5" />
-                                            HOT
-                                        </div>
-                                    </div>
-                                )}
+                            <div className={`relative rounded-2xl  dark:bg-zinc-800 border-1 border-gray-200 hover:border-gray-200 dark:hover:border-zinc-700 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 `}>
+
 
                                 {/* Image Container */}
                                 <div className="relative h-40 overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
                                     <img
-                                        src={category.image}
+                                        src={category.url || "/placeholder.png"}
                                         alt={category.name}
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                     />
@@ -127,23 +74,14 @@ const CategoriesSection = () => {
 
                                 {/* Content */}
                                 <div className="p-5">
-                                    <h3 className={`font-bold text-xl mb-1 bg-gradient-to-r ${category.color} ${category.hoverColor} bg-clip-text text-transparent transition-all duration-300`}>
+                                    <h3 className={`font-bold text-xl mb-1 bg-gradient-to-r  bg-clip-text text-transparent transition-all duration-300`}>
                                         {category.name}
                                     </h3>
                                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                                         {category.description}
                                     </p>
 
-                                    {/* Footer */}
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <BookOpen className="w-4 h-4 text-gray-400" />
-                                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                                {category.books}
-                                            </span>
-                                        </div>
-                                        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200 group-hover:translate-x-1 transition-all duration-300" />
-                                    </div>
+
                                 </div>
 
                                 {/* Shine Effect */}

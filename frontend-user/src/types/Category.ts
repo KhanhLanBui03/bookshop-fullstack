@@ -1,6 +1,6 @@
-export type Category = {
+export type CategoryCard = {
     id: string;
     name: string;
-    description?: string;
-    urlSlug: string;
+    url: string;
+    description: string;
 };

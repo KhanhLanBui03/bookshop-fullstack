@@ -18,6 +18,8 @@ public class Category {
     private Long id;
     private String name;
     private String description;
+    @Lob
+    private String url;
     @OneToMany(mappedBy = "category",cascade = CascadeType.ALL,orphanRemoval = true)
     private List<Book> books = new ArrayList<>();
 
