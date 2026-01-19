@@ -1,3 +1,4 @@
+import Chatbot from "@/components/Chatbot";
 import { Footer } from "@/components/footer";
 import Header from "@/components/header";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -9,7 +10,9 @@ const MainLayout = () => {
       <Header/>
       <Outlet />
       <Footer/>
+      <Chatbot />
       <ScrollToTop/>
+      
     </>
   );
 };

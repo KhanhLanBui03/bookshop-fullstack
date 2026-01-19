@@ -141,7 +141,7 @@ const CartItemList = ({ items, selectedIds, setSelectedIds }: Props) => {
                         disabled:bg-muted disabled:text-muted-foreground
                         disabled:cursor-not-allowed
                         "
-                        >
+                >
                     Thanh toán
                 </Button>
 

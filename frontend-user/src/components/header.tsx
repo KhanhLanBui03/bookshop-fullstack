@@ -2,10 +2,12 @@ import { Link } from "react-router-dom"
 import {
   Heart,
   KeyRound,
+  Menu,
   SearchIcon,
   ShoppingBag,
   User,
   UserRoundPlus,
+  X,
 } from "lucide-react"
 import { ModeToggle } from "./mode-toggle"
 import {
@@ -14,20 +16,18 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "./ui/input-group"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu"
+
 import MainNavigation from "./Home/MainNavigation"
-import { Avatar } from "@radix-ui/react-avatar"
-import { AvatarFallback, AvatarImage } from "./ui/avatar"
+
+
+import { useState } from "react"
 const user = {
   name: "Bùi Khánh Lân",
   avatar: null,
 }
 const Header = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const wishlistQuantity = 2
   const cartQuantity = 3
   const isLoggedIn = true
@@ -38,6 +38,12 @@ const Header = () => {
 
         {/* ===== TOP BAR ===== */}
         <div className="flex items-center justify-between h-16">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden flex items-center justify-center w-10 h-10 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors flex-shrink-0"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
           {/* Logo */}
           <Link to="/" className="text-xl font-bold">
             <img  src="./log5.png" className="w-30 h-20" />
@@ -57,65 +63,57 @@ const Header = () => {
           </div>
 
           {/* Icons */}
-          <div className="flex items-center gap-4">
+          {/* Icons */}
+          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+            {/* User Menu */}
             {!isLoggedIn ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <User className="w-6 h-6 text-muted-foreground hover:text-blue-600" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link to="/login" className="flex gap-2">
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                >
+                  <User className="w-5 h-5 md:w-6 md:h-6 text-gray-600 dark:text-gray-400" />
+                </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 py-2">
+                    <a href="/login" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-zinc-700">
                       <KeyRound className="w-4 h-4" /> Đăng nhập
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/register" className="flex gap-2">
+                    </a>
+                    <a href="/register" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-zinc-700">
                       <UserRoundPlus className="w-4 h-4" /> Đăng ký
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    </a>
+                  </div>
+                )}
+              </div>
             ) : (
-              <Link to="/profile" className="group flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-200 group-hover:text-blue-600 transition">
-                  {user.name}
-                </span>
-                <Avatar className="w-10 h-10">
-                  <AvatarFallback className="bg-muted text-sm font-medium">
-                    {user.name
-                      .split(" ")
-                      .map(w => w[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase()}
-                  </AvatarFallback>
-                  <AvatarImage src={user.avatar ?? undefined} />
-                </Avatar>
-
-              </Link>
-
+              <a href="/profile" className="hidden md:flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-zinc-800 px-3 py-2 rounded-lg transition-colors">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{user.name}</span>
+                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                  {user.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                </div>
+              </a>
             )}
 
-            <Link to="/wishlist" className="relative">
-              <Heart className="w-6 h-6 text-muted-foreground hover:text-red-500" />
+            <a href="/wishlist" className="relative p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">
+              <Heart className="w-5 h-5 md:w-6 md:h-6 text-gray-600 dark:text-gray-400" />
               {wishlistQuantity > 0 && (
-                <span className="absolute -top-2 -right-2 text-xs bg-red-600 text-white rounded-full px-1.5">
+                <span className="absolute -top-1 -right-1 text-xs bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center font-bold">
                   {wishlistQuantity}
                 </span>
               )}
-            </Link>
+            </a>
 
-            <Link to="/cart" className="relative">
-              <ShoppingBag className="w-6 h-6 text-muted-foreground hover:text-blue-600" />
+            {/* Cart */}
+            <a href="/cart" className="relative p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">
+              <ShoppingBag className="w-5 h-5 md:w-6 md:h-6 text-gray-600 dark:text-gray-400" />
               {cartQuantity > 0 && (
-                <span className="absolute -top-2 -right-2 text-xs bg-blue-600 text-white rounded-full px-1.5">
+                <span className="absolute -top-1 -right-1 text-xs bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center font-bold">
                   {cartQuantity}
                 </span>
               )}
-            </Link>
+            </a>
 
-            <ModeToggle />
+            <ModeToggle  />
           </div>
         </div>
 
@@ -132,11 +130,21 @@ const Header = () => {
       </div>
 
       {/* ===== NAVIGATION BAR (DƯỚI HEADER) ===== */}
-      <div className="border-t bg-white dark:bg-zinc-900">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
+      {/* Desktop Navigation */}
+      <div className="hidden lg:block border-t border-gray-200 dark:border-zinc-800">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-2">
           <MainNavigation />
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-slideDown">
+          <div className="max-w-7xl mx-auto px-4 py-3 max-h-[calc(100vh-10rem)] overflow-y-auto">
+            <MainNavigation isMobile={true} />
+          </div>
+        </div>
+      )}
     </header>
   )
 }
