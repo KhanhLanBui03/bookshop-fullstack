@@ -4,7 +4,8 @@ export type LoginRequest = {
     password: string;
 }
 export type LoginResponse = {
-    token: string;
+    accessToken: string;
+    refreshToken: string;
 }
 export type RegisterRequest = {
     name: string;
@@ -13,4 +14,4 @@ export type RegisterRequest = {
 }
 export type RegisterResponse = {
     token: string;
-} 
+}

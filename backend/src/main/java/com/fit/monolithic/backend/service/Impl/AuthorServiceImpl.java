@@ -2,6 +2,7 @@ package com.fit.monolithic.backend.service.Impl;
 
 import com.fit.monolithic.backend.dto.request.AuthorRequest;
 import com.fit.monolithic.backend.dto.response.AuthorResponse;
+import com.fit.monolithic.backend.dto.response.BookCardResponse;
 import com.fit.monolithic.backend.entity.Author;
 import com.fit.monolithic.backend.enums.AuthorStatus;
 import com.fit.monolithic.backend.repository.AuthorRepository;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -98,5 +100,6 @@ public class AuthorServiceImpl implements AuthorService {
                 savedAuthor.getStatus()
         );
     }
+
 
 }

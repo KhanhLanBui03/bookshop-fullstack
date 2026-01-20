@@ -47,9 +47,9 @@ const HomePage = () => {
                 className="w-full outline-none text-gray-600 placeholder-gray-400"
               />
             </div>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 tracking-widest transition-colors uppercase text-sm">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 tracking-widest transition-colors uppercase text-sm">
               Subscribe
-            </button>
+            </Button>
           </div>
         </div>
       </section>

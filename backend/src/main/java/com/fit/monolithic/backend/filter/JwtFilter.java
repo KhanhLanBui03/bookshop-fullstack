@@ -8,22 +8,25 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.security.Key;
 import java.util.List;
-
+@RequiredArgsConstructor
 @Component
 public class JwtFilter extends OncePerRequestFilter {
     @Value("${jwt.secret}")
     private String secret;
-
+    private final UserDetailsService userDetailsService;
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
@@ -37,8 +40,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        // ✅ BỎ QUA AUTH API
-        if (path.startsWith("/api/v1/auth")) {
+        if (path.equals("/api/v1/auth/login") ||
+                path.equals("/api/v1/auth/register") ||
+                path.equals("/api/v1/auth/refresh-token")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -59,28 +63,33 @@ public class JwtFilter extends OncePerRequestFilter {
                     .parseClaimsJws(token)
                     .getBody();
 
-            Long userId = claims.get("userId", Long.class);
-            List<String> roles = claims.get("roles", List.class);
+            // ✅ Lấy email từ claim hoặc subject (tùy cách bạn setup JwtUtil)
+            String email = claims.get("email", String.class);  // Hoặc claims.getSubject() nếu đã sửa
 
-            var authorities = roles.stream()
-                    .map(SimpleGrantedAuthority::new)
-                    .toList();
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            userId,
-                            null,
-                            authorities
-                    );
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
 
         } catch (ExpiredJwtException e) {
-
+            SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\":\"Token expired\"}");
+            return;
+        } catch (Exception e) {
             SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
     }
+
 
 }

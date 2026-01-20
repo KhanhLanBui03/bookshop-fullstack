@@ -7,14 +7,24 @@ import com.fit.monolithic.backend.dto.response.LoginResponse;
 import com.fit.monolithic.backend.dto.response.RegisterResponse;
 import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.service.AuthService;
+import com.fit.monolithic.backend.utils.JwtUtil;
+import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Tag(name = "Authentication API", description = "Operations related to Authentication")
 @RestController
@@ -22,6 +32,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final JwtUtil jwtUtil;
     @PostMapping("/register")
     public ApiResponse<RegisterResponse> register(
             @Valid @RequestBody RegisterRequest request
@@ -47,6 +58,24 @@ public class AuthController {
     public void logout(@RequestParam String token) {
         authService.logout(token);
     }
+    @GetMapping("/me")
+    public ApiResponse<Map<String, Object>> me(
+            @AuthenticationPrincipal UserDetails user,
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        // Parse token để lấy claims
+        String token = authHeader.substring(7);
+        Claims claims = jwtUtil.parseToken(token);
+
+        return new ApiResponse<>(200, "Success", Map.of(
+                "userId", claims.get("userId"),
+                "email", claims.get("email"),
+                "fullName", claims.get("name"),
+                "roles", claims.get("roles", List.class)
+        ));
+    }
+
+
     @PostMapping("/refresh-token")
     public ApiResponse<LoginResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
         return new ApiResponse<>(

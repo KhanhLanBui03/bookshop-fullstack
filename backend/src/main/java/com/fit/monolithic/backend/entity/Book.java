@@ -58,6 +58,7 @@ public class Book {
     @JoinColumn(name = "author_id", nullable = false)
     private Author author;
     @OneToMany(mappedBy = "book", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OrderBy("id ASC")
     private List<Image> images = new ArrayList<>();
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "publisher_id", nullable = false)

@@ -3,6 +3,7 @@ import { useFetch } from "@/hooks/useFetch"
 import { categoryService } from "@/services/category.service"
 import type { CategoryCard } from "@/types/Category"
 import { BookOpen, ChevronRight } from "lucide-react"
+import { Skeleton } from "../ui/skeleton"
 
 
 //     {
@@ -23,8 +24,39 @@ const CategoriesSection = () => {
         () => categoryService.getCategories()
     )
     if (loading) {
-        return <div>Loading...</div>
+        return (
+            <section className="py-12 lg:py-16">
+                <div className="container mx-auto px-4">
+                    {/* Header skeleton */}
+                    <div className="text-center mb-12">
+                        <Skeleton className="h-6 w-40 mx-auto mb-4 rounded-full" />
+                        <Skeleton className="h-10 w-64 mx-auto mb-3" />
+                        <Skeleton className="h-4 w-96 mx-auto" />
+                    </div>
+
+                    {/* Cards skeleton */}
+                    <div className="flex gap-6 max-w-7xl mx-auto overflow-x-auto pb-6">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                            <div key={i} className="flex-shrink-0 w-64">
+                                <div className="rounded-2xl overflow-hidden bg-white dark:bg-zinc-800 shadow-sm">
+                                    {/* Image */}
+                                    <Skeleton className="h-40 w-full" />
+
+                                    {/* Content */}
+                                    <div className="p-5 space-y-3">
+                                        <Skeleton className="h-5 w-3/4" />
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-4 w-5/6" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        )
     }
+
     if (!categories || categories.length === 0) {
         return <div>Không có danh mục</div>
     }
@@ -59,9 +91,7 @@ const CategoriesSection = () => {
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
                             {/* Card */}
-                            <div className={`relative rounded-2xl  dark:bg-zinc-800 border-1 border-gray-200 hover:border-gray-200 dark:hover:border-zinc-700 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 `}>
-
-
+                            <div className={`relative rounded-2xl  dark:bg-zinc-800 hover:border-gray-200 dark:hover:border-zinc-700 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 `}>
                                 {/* Image Container */}
                                 <div className="relative h-40 overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
@@ -74,9 +104,18 @@ const CategoriesSection = () => {
 
                                 {/* Content */}
                                 <div className="p-5">
-                                    <h3 className={`font-bold text-xl mb-1 bg-gradient-to-r  bg-clip-text text-transparent transition-all duration-300`}>
+                                    <h3
+                                        className="
+                                            font-bold text-xl mb-1
+                                            bg-gradient-to-r from-blue-600 to-purple-600
+                                            dark:from-blue-400 dark:to-purple-400
+                                            bg-clip-text text-transparent
+                                            transition-all duration-300
+                                        "
+                                    >
                                         {category.name}
                                     </h3>
+
                                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                                         {category.description}
                                     </p>

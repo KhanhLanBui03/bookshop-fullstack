@@ -37,4 +37,14 @@ public class BookController {
                 bookService.findAll()
         );
     }
+
+    @GetMapping("/by-author")  // ✅ Thêm path để rõ nghĩa
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<List<BookCardResponse>> getBooksByAuthorId(@RequestParam Long authorId) {
+        return new ApiResponse<>(
+                200,
+                "Success",
+                bookService.findByAuthorId(authorId)
+        );
+    }
 }

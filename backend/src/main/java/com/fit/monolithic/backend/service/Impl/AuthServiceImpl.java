@@ -118,6 +118,7 @@ public LoginResponse login(LoginRequest request) {
         refreshTokenRepository.deleteByToken(refreshToken);
     }
     @Override
+    @Transactional
     public RegisterResponse register(RegisterRequest registerRequest) {
         User  user = new User();
         user.setFullName(registerRequest.getName());

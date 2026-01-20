@@ -13,8 +13,10 @@ import com.fit.monolithic.backend.repository.*;
 import com.fit.monolithic.backend.service.BookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -131,5 +133,17 @@ public class BookServiceImpl implements BookService {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
         return mapToResponse(book);
+    }
+    @Override
+    public List<BookCardResponse> findByAuthorId(Long id) {
+        if (!authorRepository.existsById(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Author not found with id: " + id
+            );
+        }
+
+        // Gọi đúng method name
+        return bookRepository.findByAuthorId(id);
     }
 }
