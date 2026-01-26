@@ -1,11 +1,13 @@
 package com.fit.monolithic.backend.service.Impl;
 
 import com.fit.monolithic.backend.dto.request.AuthorRequest;
+import com.fit.monolithic.backend.dto.response.AuthorDetailResponse;
 import com.fit.monolithic.backend.dto.response.AuthorResponse;
 import com.fit.monolithic.backend.dto.response.BookCardResponse;
 import com.fit.monolithic.backend.entity.Author;
 import com.fit.monolithic.backend.enums.AuthorStatus;
 import com.fit.monolithic.backend.repository.AuthorRepository;
+import com.fit.monolithic.backend.repository.BookRepository;
 import com.fit.monolithic.backend.service.AuthorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,12 +24,13 @@ import java.util.List;
 @Slf4j
 public class AuthorServiceImpl implements AuthorService {
     private final AuthorRepository authorRepository;
-
+    private final BookRepository  bookRepository;
     @Override
     public List<AuthorResponse> getAllAuthors() {
         return authorRepository.findAll()
                 .stream()
-                .map(author -> new AuthorResponse(author.getId(),author.getName(),author.getEmail(),author.getStatus()))
+                .map(author -> new AuthorResponse(author.getId(),author.getName(),author.getEmail(),author.getBio(),
+                        author.getImage(),author.getStatus()))
                 .toList();
     }
 
@@ -41,6 +44,8 @@ public class AuthorServiceImpl implements AuthorService {
                 author.getId(),
                 author.getName(),
                 author.getEmail(),
+                author.getBio(),
+                author.getImage(),
                 author.getStatus()
 
         );
@@ -52,11 +57,15 @@ public class AuthorServiceImpl implements AuthorService {
         author.setName(authorRequest.getName());
         author.setEmail(authorRequest.getEmail());
         author.setStatus(AuthorStatus.ACTIVE);
+        author.setBio(authorRequest.getBio());
+        author.setImage(authorRequest.getImage());
         authorRepository.save(author);
         return new AuthorResponse(
                 author.getId(),
                 author.getName(),
                 author.getEmail(),
+                author.getBio(),
+                author.getImage(),
                 author.getStatus()
 
         );
@@ -88,6 +97,12 @@ public class AuthorServiceImpl implements AuthorService {
                 !authorRequest.getEmail().equals(author.getEmail())) {
             author.setEmail(authorRequest.getEmail());
         }
+        if (authorRequest.getBio() != null && !authorRequest.getBio().equals(author.getBio())) {
+            author.setBio(authorRequest.getBio());
+        }
+        if (authorRequest.getImage() != null && !authorRequest.getImage().equals(author.getImage())) {
+            author.setImage(authorRequest.getImage());
+        }
 
         Author savedAuthor = authorRepository.save(author);
 
@@ -97,9 +112,32 @@ public class AuthorServiceImpl implements AuthorService {
                 savedAuthor.getId(),
                 savedAuthor.getName(),
                 savedAuthor.getEmail(),
+                savedAuthor.getBio(),
+                savedAuthor.getImage(),
                 savedAuthor.getStatus()
         );
     }
+    @Override
+    public AuthorDetailResponse getAuthorDetail(Long id) {
+
+        Author author = authorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Author not found"));
+
+        List<BookCardResponse> books = bookRepository.findByAuthorId(id);
+
+        return new AuthorDetailResponse(
+                new AuthorResponse(
+                        author.getId(),
+                        author.getName(),
+                        author.getEmail(),
+                        author.getBio(),
+                        author.getImage(),
+                        author.getStatus()
+                ),
+                books
+        );
+    }
+
 
 
 }

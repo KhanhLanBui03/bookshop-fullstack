@@ -38,7 +38,7 @@ public class BookController {
         );
     }
 
-    @GetMapping("/by-author")  // ✅ Thêm path để rõ nghĩa
+    @GetMapping("/by-author")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<List<BookCardResponse>> getBooksByAuthorId(@RequestParam Long authorId) {
         return new ApiResponse<>(

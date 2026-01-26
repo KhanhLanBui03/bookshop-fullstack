@@ -1,6 +1,7 @@
 package com.fit.monolithic.backend.controller;
 
 import com.fit.monolithic.backend.dto.request.AuthorRequest;
+import com.fit.monolithic.backend.dto.response.AuthorDetailResponse;
 import com.fit.monolithic.backend.dto.response.AuthorResponse;
 import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.service.AuthorService;
@@ -39,6 +40,15 @@ public class AuthorController {
                 authorService.getAuthorById(id)
         );
     }
+    @GetMapping("/detail-author/{id}")
+    public ApiResponse<AuthorDetailResponse> getAuthorDetail(@PathVariable Long id) {
+        return new ApiResponse<AuthorDetailResponse>(
+                200,
+                "Success",
+                authorService.getAuthorDetail(id)
+        );
+    }
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

@@ -36,6 +36,10 @@ public class Author {
     private String name;
     @Column(unique = true)
     private String email;
+    @Lob
+    private String bio;
+    @Lob
+    private String image;
     @Enumerated(EnumType.STRING)
     private AuthorStatus status;
     @OneToMany(

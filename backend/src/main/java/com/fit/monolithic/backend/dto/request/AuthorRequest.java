@@ -17,4 +17,7 @@ public class AuthorRequest {
     @NotBlank(message = "Email không được để trống")
     @Email
     private String email;
+    @NotBlank
+    private String bio;
+    private String image;
 }
