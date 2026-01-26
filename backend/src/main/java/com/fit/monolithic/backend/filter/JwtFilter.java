@@ -1,5 +1,6 @@
 package com.fit.monolithic.backend.filter;
 
+import com.fit.monolithic.backend.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -21,15 +22,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.security.Key;
 import java.util.List;
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
-    @Value("${jwt.secret}")
-    private String secret;
+
+    private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
-    private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
-    }
 
     @Override
     protected void doFilterInternal(
@@ -39,15 +37,18 @@ public class JwtFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String path = request.getServletPath();
+        System.out.println(">>> JwtFilter: " + path);
 
-        if (path.equals("/api/v1/auth/login") ||
-                path.equals("/api/v1/auth/register") ||
-                path.equals("/api/v1/auth/refresh-token")) {
+        // Bỏ qua auth endpoints
+        if (path.startsWith("/api/v1/auth/login")
+                || path.startsWith("/api/v1/auth/register")
+                || path.startsWith("/api/v1/auth/refresh-token")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String authHeader = request.getHeader("Authorization");
+        System.out.println("Authorization = " + authHeader);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -57,39 +58,42 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-
-            // ✅ Lấy email từ claim hoặc subject (tùy cách bạn setup JwtUtil)
-            String email = claims.get("email", String.class);  // Hoặc claims.getSubject() nếu đã sửa
+            String email = jwtUtil.extractEmail(token);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(email);
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                if (!jwtUtil.isTokenExpired(token)) {
+
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+
+                    System.out.println("AUTH OK: " + email
+                            + " | roles = " + userDetails.getAuthorities());
+
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(authentication);
+                }
             }
-
-        } catch (ExpiredJwtException e) {
+        }
+        catch (ExpiredJwtException e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
             SecurityContextHolder.clearContext();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"error\":\"Token expired\"}");
-            return;
-        } catch (Exception e) {
-            SecurityContextHolder.clearContext();
+            return; // 🔥 BẮT BUỘC
         }
 
         filterChain.doFilter(request, response);
     }
-
-
 }

@@ -1,4 +1,5 @@
 import axios from "axios"
+import { authApi } from "./auth.api"
 
 const API_BASE_URL = 'http://localhost:8686/api/v1/';
 
@@ -34,12 +35,15 @@ axiosClient.interceptors.response.use(
 
             try {
                 const refreshToken = localStorage.getItem('refreshToken');
-                const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-                    refreshToken,
-                });
+                if (!refreshToken) {
+                    throw new Error('No refresh token');
+                }
 
-                const { accessToken } = response.data;
+                const response = await authApi.refreshToken(refreshToken);
+                const { accessToken, refreshToken: newRefreshToken } = response;
+                
                 localStorage.setItem('accessToken', accessToken);
+                localStorage.setItem('refreshToken', newRefreshToken);
 
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                 return axiosClient(originalRequest);

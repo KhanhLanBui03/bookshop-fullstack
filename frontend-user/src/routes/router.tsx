@@ -9,6 +9,7 @@ import LoginPage from "@/pages/LoginPage"
 import NotFound from "@/pages/NotFound"
 import RegisterPage from "@/pages/RegisterPage"
 import Support from "@/pages/SupportPage"
+import ProtectedRoute from "@/components/ProtectedRoute"
 import { createBrowserRouter } from "react-router-dom"
 
 const router = createBrowserRouter([
@@ -18,7 +19,10 @@ const router = createBrowserRouter([
             { path: "/", element: <HomePage /> },
             { path: "/about", element: <AboutPage /> },
             { path: "/support", element: <Support /> },
-            { path: "/cart", element: <CartPage /> },
+            { 
+                path: "/cart", 
+                element: <ProtectedRoute><CartPage /></ProtectedRoute> 
+            },
             { path: "/detail", element: <BookDetail /> },
             { path: "/author-detail", element: <AuthorBooksPage /> }
         ]

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import {
   Heart,
   KeyRound,
@@ -8,6 +8,7 @@ import {
   User,
   UserRoundPlus,
   X,
+  LogOut,
 } from "lucide-react"
 import { ModeToggle } from "./mode-toggle"
 import {
@@ -18,19 +19,23 @@ import {
 } from "./ui/input-group"
 
 import MainNavigation from "./Home/MainNavigation"
-
-
+import { useAuth } from "@/contexts/AuthContext"
 import { useState } from "react"
-const user = {
-  name: "Bùi Khánh Lân",
-  avatar: null,
-}
+import { Button } from "./ui/button"
+
 const Header = () => {
+  const { isAuthenticated, user, logout, loading } = useAuth()
+  const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const wishlistQuantity = 2
   const cartQuantity = 3
-  const isLoggedIn = true
+
+  const handleLogout = async () => {
+    await logout()
+    setUserMenuOpen(false)
+    navigate("/")
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white dark:bg-zinc-900 border-b">
@@ -66,32 +71,57 @@ const Header = () => {
           {/* Icons */}
           <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             {/* User Menu */}
-            {!isLoggedIn ? (
+            {loading ? (
+              <div className="p-2">
+                <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gray-300 dark:bg-zinc-700 animate-pulse"></div>
+              </div>
+            ) : !isAuthenticated ? (
               <div className="relative">
-                <button
+                <Button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                 >
                   <User className="w-5 h-5 md:w-6 md:h-6 text-gray-600 dark:text-gray-400" />
-                </button>
+                </Button>
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 py-2">
-                    <a href="/login" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-zinc-700">
+                    <Link to="/login" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-zinc-700">
                       <KeyRound className="w-4 h-4" /> Đăng nhập
-                    </a>
-                    <a href="/register" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-zinc-700">
+                    </Link>
+                    <Link to="/register" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-zinc-700">
                       <UserRoundPlus className="w-4 h-4" /> Đăng ký
-                    </a>
+                    </Link>
                   </div>
                 )}
               </div>
             ) : (
-              <a href="/profile" className="hidden md:flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-zinc-800 px-3 py-2 rounded-lg transition-colors">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{user.name}</span>
-                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-                  {user.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
-                </div>
-              </a>
+              <div className="relative bg-white">
+                <Button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="hidden md:flex items-center gap-2  px-3 py-2 rounded-lg transition-colors bg-white"
+                >
+                  <span className="text-sm font-medium text-gray-900 bg-white">
+                    {user?.email || 'User'}
+                  </span>
+
+                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                    {(user?.email || 'U').split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                  </div>
+                </Button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200  py-2">
+                    <Link to="/profile" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100">
+                      <User className="w-4 h-4" /> Hồ sơ
+                    </Link>
+                    <Button
+                      onClick={handleLogout}
+                      className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100  text-red-600 dark:text-red-400"
+                    >
+                      <LogOut className="w-4 h-4" /> Đăng xuất
+                    </Button>
+                  </div>
+                )}
+              </div>
             )}
 
             <a href="/wishlist" className="relative p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">

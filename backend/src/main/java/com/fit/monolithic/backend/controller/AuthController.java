@@ -60,20 +60,21 @@ public class AuthController {
     }
     @GetMapping("/me")
     public ApiResponse<Map<String, Object>> me(
-            @AuthenticationPrincipal UserDetails user,
-            @RequestHeader("Authorization") String authHeader
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
-        // Parse token để lấy claims
-        String token = authHeader.substring(7);
-        Claims claims = jwtUtil.parseToken(token);
+        if (userDetails == null) {
+            return new ApiResponse<>(401, "Unauthorized", null);
+        }
 
-        return new ApiResponse<>(200, "Success", Map.of(
-                "userId", claims.get("userId"),
-                "email", claims.get("email"),
-                "fullName", claims.get("name"),
-                "roles", claims.get("roles", List.class)
-        ));
+        Map<String, Object> response = new HashMap<>();
+        response.put("email", userDetails.getUsername());
+        response.put("roles", userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList());
+
+        return new ApiResponse<>(200, "Success", response);
     }
+
 
 
     @PostMapping("/refresh-token")

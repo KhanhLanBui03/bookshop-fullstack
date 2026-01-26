@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Book, BookOpen, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { authApi } from '@/api/auth.api';
+import { useAuth } from '@/contexts/AuthContext';
+import type { RegisterRequest } from '@/types/Account';
 
 const RegisterPage: React.FC = () => {
+    const navigate = useNavigate();
+    const { getCurrentUser } = useAuth();
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [serverError, setServerError] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         password: '',
     });
     const [errors, setErrors] = useState<any>({});
+    const [agreeTerms, setAgreeTerms] = useState(false);
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -25,6 +34,7 @@ const RegisterPage: React.FC = () => {
         if (errors[name]) {
             setErrors((prev: any) => ({ ...prev, [name]: '' }));
         }
+        setServerError('');
     };
 
     const validateForm = () => {
@@ -40,22 +50,53 @@ const RegisterPage: React.FC = () => {
             newErrors.email = 'Email không hợp lệ';
         }
 
-
         if (!formData.password) {
             newErrors.password = 'Vui lòng nhập mật khẩu';
         } else if (formData.password.length < 6) {
             newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
         }
 
+        if (!agreeTerms) {
+            newErrors.terms = 'Vui lòng đồng ý với điều khoản dịch vụ';
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (validateForm()) {
-            console.log('Register data:', formData);
-            alert('Đăng ký thành công!');
+        setServerError('');
+        
+        if (!validateForm()) {
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const registerRequest: RegisterRequest = {
+                name: formData.name,
+                email: formData.email,
+                password: formData.password
+            };
+
+            const response = await authApi.register(registerRequest);
+            
+            // Lưu tokens vào localStorage
+            localStorage.setItem('accessToken', response.accessToken);
+            localStorage.setItem('refreshToken', response.refreshToken);
+            
+            // Cập nhật AuthContext
+            await getCurrentUser();
+
+            // Chuyển hướng đến trang chủ
+            navigate('/');
+        } catch (err: any) {
+            console.error('Register error:', err);
+            const errorMessage = err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.';
+            setServerError(errorMessage);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -158,6 +199,13 @@ const RegisterPage: React.FC = () => {
                     <p className="text-gray-600">Tạo tài khoản để bắt đầu mua sắm 🎉</p>
                 </div>
 
+                {/* Error Message */}
+                {serverError && (
+                    <div className="mx-6 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-sm text-red-600">{serverError}</p>
+                    </div>
+                )}
+
                 {/* Card Content */}
                 <div className="px-6 pb-6">
                     <div className="flex flex-col gap-5">
@@ -242,8 +290,14 @@ const RegisterPage: React.FC = () => {
                             <input
                                 type="checkbox"
                                 id="terms"
+                                checked={agreeTerms}
+                                onChange={(e) => {
+                                    setAgreeTerms(e.target.checked);
+                                    if (errors.terms) {
+                                        setErrors((prev: any) => ({ ...prev, terms: '' }));
+                                    }
+                                }}
                                 className="w-4 h-4 mt-1 text-blue-600 border-gray-300 rounded focus:ring-blue-600"
-                                required
                             />
                             <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
                                 Tôi đồng ý với{' '}
@@ -256,6 +310,7 @@ const RegisterPage: React.FC = () => {
                                 </button>
                             </label>
                         </div>
+                        {errors.terms && <p className="text-sm text-red-500 -mt-2">{errors.terms}</p>}
                     </div>
                 </div>
 
@@ -263,16 +318,17 @@ const RegisterPage: React.FC = () => {
                 <div className="px-6 pb-6 flex flex-col gap-3">
                     <button
                         onClick={handleSubmit}
-                        className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors"
+                        disabled={loading}
+                        className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Đăng ký
+                        {loading ? 'Đang đăng ký...' : 'Đăng ký'}
                     </button>
 
                     <div className="text-center text-sm text-gray-600">
                         Đã có tài khoản?{' '}
-                        <button className="text-blue-600 hover:underline font-medium">
+                        <Link to="/login" className="text-blue-600 hover:underline font-medium">
                             Đăng nhập
-                        </button>
+                        </Link>
                     </div>
 
                     <div className="mt-3">
@@ -324,7 +380,7 @@ const RegisterPage: React.FC = () => {
                     </div>
 
                     <button className="text-sm text-gray-600 hover:text-blue-600 underline mt-2">
-                        ← Quay về trang chủ
+                        <Link to="/">← Quay về trang chủ</Link>
                     </button>
                 </div>
 

@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Book, BookOpen, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { authApi } from '@/api/auth.api';
+import { useAuth } from '@/contexts/AuthContext';
+import type { LoginRequest } from '@/types/Account';
 
 const LoginPage: React.FC = () => {
+    const navigate = useNavigate();
+    const { getCurrentUser } = useAuth();
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -21,12 +29,44 @@ const LoginPage: React.FC = () => {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        setError('');
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Login data:', formData);
-        alert('Đăng nhập thành công!');
+        setError('');
+        setLoading(true);
+
+        try {
+            if (!formData.email || !formData.password) {
+                setError('Vui lòng nhập email và mật khẩu');
+                setLoading(false);
+                return;
+            }
+
+            const loginRequest: LoginRequest = {
+                email: formData.email,
+                password: formData.password
+            };
+
+            const response = await authApi.login(loginRequest);
+            
+            // Lưu tokens vào localStorage
+            localStorage.setItem('accessToken', response.accessToken);
+            localStorage.setItem('refreshToken', response.refreshToken);
+            
+            // Cập nhật AuthContext
+            await getCurrentUser();
+
+            // Chuyển hướng đến trang chủ
+            navigate('/');
+        } catch (err: any) {
+            console.error('Login error:', err);
+            const errorMessage = err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -127,11 +167,18 @@ const LoginPage: React.FC = () => {
                     <h2 className="text-2xl font-bold text-gray-800">Đăng nhập</h2>
                     <p className="text-gray-600">Chào mừng bạn quay lại 👋</p>
                     <div className="pt-2">
-                        <button className="text-sm text-blue-600 hover:underline">
+                        <Link to="/register" className="text-sm text-blue-600 hover:underline">
                             Chưa có tài khoản? Đăng ký
-                        </button>
+                        </Link>
                     </div>
                 </div>
+
+                {/* Error Message */}
+                {error && (
+                    <div className="mx-6 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-sm text-red-600">{error}</p>
+                    </div>
+                )}
 
                 {/* Card Content */}
                 <div className="px-6 pb-6">
@@ -194,9 +241,10 @@ const LoginPage: React.FC = () => {
                 <div className="px-6 pb-6 flex flex-col gap-3">
                     <Button
                         onClick={handleSubmit}
-                        className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors"
+                        disabled={loading}
+                        className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Đăng nhập
+                        {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
                     </Button>
 
                     <div className="mt-3">
@@ -248,7 +296,7 @@ const LoginPage: React.FC = () => {
                     </div>
 
                     <button className="text-sm text-gray-600 hover:text-blue-600 underline mt-2">
-                        ← Quay về trang chủ
+                        <Link to="/">← Quay về trang chủ</Link>
                     </button>
                 </div>
 
