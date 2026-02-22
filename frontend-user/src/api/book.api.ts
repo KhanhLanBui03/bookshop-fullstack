@@ -10,5 +10,8 @@ export const bookApi = {
     },
     getTopBooksBestSeller() {
         return axiosClient.get("/books/top-best-seller")
+    },
+    getRelatedBooks(id: number) {
+        return axiosClient.get(`/books/${id}/related`)
     }
 }

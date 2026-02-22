@@ -54,6 +54,24 @@ export const bookService = {
             images: item.images,
             createdAt: item.createdAt,
         }
+    },
+    async getRelatedBooks(id: number): Promise<BookCard[]> {
+        const res = await bookApi.getRelatedBooks(id)
+
+        const items = res.data.data
+
+        return items.map((item: any): BookCard => ({
+            id: item.id,
+            title: item.title,
+            salePrice: Number(item.salePrice),
+            originalPrice: item.originalPrice
+                ? Number(item.originalPrice)
+                : undefined,
+            rating: Number(item.rating ?? 0),
+            soldCount: item.soldCount,
+            image: item.image,
+            authorName: item.authorName,
+        }))
     }
 
 }

@@ -65,4 +65,14 @@ public class BookController {
                 bookService.findById(id)
         );
     }
+    @GetMapping("/{id}/related")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<List<BookCardResponse>> getRelatedBooks(@PathVariable Long id) {
+        return new ApiResponse<>(
+                200,
+                "Success",
+                bookService.getRelatedBooks(id)
+        );
+    }
+
 }

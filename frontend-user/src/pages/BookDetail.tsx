@@ -8,14 +8,16 @@ import BookInfo from '@/components/BookDetail/BookInfo';
 import ReviewCard from '@/components/BookDetail/ReviewCard';
 import RelatedBookCard from '@/components/BookDetail/RelatedBookCard';
 import { useParams } from 'react-router-dom';
-import type { BookDetail } from '@/types/Book';
+import type { BookCard, BookDetail } from '@/types/Book';
 import { bookService } from '@/services/book.service';
 import { useFetch } from '@/hooks/useFetch';
+
 const BookDetail = () => {
     const [quantity, setQuantity] = useState(1);
     const [isFavorite, setIsFavorite] = useState(false);
     const {id} = useParams();
     const { data: book, loading } = useFetch<BookDetail>(()=>bookService.getBookById(Number(id)));
+    const { data: relatedBooks } = useFetch<BookCard[]>(() => bookService.getRelatedBooks(Number(id)),[id])
       if (loading) {
         return <div>Loading...</div>
       }
@@ -80,36 +82,36 @@ const BookDetail = () => {
         }
     ];
 
-    const relatedBooks = [
-        {
-            id: 2,
-            title: "Reasons to Stay Alive",
-            author: "Matt Haig",
-            price: 249000,
-            image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300"
-        },
-        {
-            id: 3,
-            title: "The Comfort Book",
-            author: "Matt Haig",
-            price: 279000,
-            image: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=300"
-        },
-        {
-            id: 4,
-            title: "Notes on a Nervous Planet",
-            author: "Matt Haig",
-            price: 269000,
-            image: "https://images.unsplash.com/photo-1524578271613-d550eacf6090?w=300"
-        },
-        {
-            id: 5,
-            title: "How to Stop Time",
-            author: "Matt Haig",
-            price: 289000,
-            image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300"
-        }
-    ];
+    // const relatedBooks = [
+    //     {
+    //         id: 2,
+    //         title: "Reasons to Stay Alive",
+    //         author: "Matt Haig",
+    //         price: 249000,
+    //         image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300"
+    //     },
+    //     {
+    //         id: 3,
+    //         title: "The Comfort Book",
+    //         author: "Matt Haig",
+    //         price: 279000,
+    //         image: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=300"
+    //     },
+    //     {
+    //         id: 4,
+    //         title: "Notes on a Nervous Planet",
+    //         author: "Matt Haig",
+    //         price: 269000,
+    //         image: "https://images.unsplash.com/photo-1524578271613-d550eacf6090?w=300"
+    //     },
+    //     {
+    //         id: 5,
+    //         title: "How to Stop Time",
+    //         author: "Matt Haig",
+    //         price: 289000,
+    //         image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300"
+    //     }
+    // ];
 
     const handleAddToCart = () => {
         alert(`Đã thêm ${quantity} cuốn sách vào giỏ hàng!`);
@@ -223,7 +225,7 @@ const BookDetail = () => {
                 <div className="bg-white rounded-lg p-8">
                     <h2 className="text-2xl font-bold mb-6">Sách liên quan</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        {relatedBooks.map(book => (
+                        {relatedBooks?.map(book => (
                             <RelatedBookCard key={book.id} book={book} />
                         ))}
                     </div>

@@ -29,7 +29,29 @@ public interface BookRepository extends JpaRepository<Book, Long> {
                WHERE b.author.id = :id
             """)
     List<BookCardResponse> getBooksByAuthor(@Param("id") Long id);
-
+    @Query("""
+    SELECT new com.fit.monolithic.backend.dto.response.BookCardResponse(
+                    b.id,
+                    b.title,
+                    b.salePrice,
+                    b.originalPrice,
+                    b.rating,
+                    b.soldCount,
+                    i.url,
+                    b.author.name
+               )
+    FROM Book b
+    LEFT JOIN b.images i
+    WHERE b.category.id = :categoryId
+      AND b.id <> :bookId
+      AND b.status = 'ACTIVE'
+    ORDER BY b.soldCount DESC
+""")
+    List<BookCardResponse> findRelatedBooks(
+            @Param("categoryId") Long categoryId,
+            @Param("bookId") Long bookId,
+            Pageable pageable
+    );
     List<Book> findTop10ByStatusOrderBySoldCountDesc(BookStatus status);
 
 }

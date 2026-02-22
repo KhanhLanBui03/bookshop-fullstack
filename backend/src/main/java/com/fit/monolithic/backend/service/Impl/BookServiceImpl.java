@@ -156,4 +156,17 @@ public class BookServiceImpl implements BookService {
                 .map(this::mapToCardResponse)
                 .toList();
     }
+    @Override
+    public List<BookCardResponse> getRelatedBooks(Long bookId) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+
+        Pageable pageable = PageRequest.of(0, 4);
+
+        return bookRepository.findRelatedBooks(
+                book.getCategory().getId(),
+                bookId,
+                pageable
+        );
+    }
 }

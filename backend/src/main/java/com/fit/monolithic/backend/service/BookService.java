@@ -13,4 +13,5 @@ public interface BookService {
     BookResponse findById(Long id);
     List<BookCardResponse> getBooksByAuthor(Long id);
     List<BookCardResponse> getTopBookBestSeller();
+    List<BookCardResponse> getRelatedBooks(Long bookId);
 }

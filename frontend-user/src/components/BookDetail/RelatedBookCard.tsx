@@ -1,14 +1,124 @@
 
-const RelatedBookCard = ({ book }) => {
+import { ShoppingBag, Heart, Star, Eye } from "lucide-react"
+import type { BookCard as BookCardType } from "@/types/Book"
+import { useNavigate } from "react-router-dom"
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
+import { Button } from "../ui/button"
+
+type Props = {
+    book: BookCardType
+}
+
+
+const RelatedBookCard = ({ book }: Props) => {
+    const navigate = useNavigate();
+    if (!book) return null
+    const {
+        title,
+        salePrice,
+        originalPrice,
+        rating,
+        soldCount,
+        image,
+        authorName
+    } = book
+
+    const hasDiscount = originalPrice && originalPrice > salePrice
+
     return (
-        <div className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-white">
-            <img src={book.image} alt={book.title} className="w-full h-48 object-cover" />
-            <div className="p-4">
-                <h3 className="font-medium mb-1 line-clamp-2">{book.title}</h3>
-                <p className="text-sm text-gray-600 mb-2">{book.author}</p>
-                <p className="font-semibold text-blue-600">{book.price.toLocaleString('vi-VN')}₫</p>
+        <Card className="group hover:shadow-lg transition w-full">
+            {/* IMAGE */}
+            <div className="relative overflow-hidden rounded-t-lg">
+                {hasDiscount && (
+                    <span className="absolute top-1 right-1 z-10 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                        -{Math.round(
+                            ((originalPrice! - salePrice) / originalPrice!) * 100
+                        )}%
+                    </span>
+                )}
+
+                <div className="relative w-full aspect-[3/4] bg-white overflow-hidden">
+                    <img
+                        src={image || "/placeholder.png"}
+                        alt={title}
+                        className="w-full h-full object-contain"
+                    />
+                </div>
+
+
+                {/* ACTION ICONS */}
+                <div
+                    className="
+                        absolute top-1/2 right-2 -translate-y-1/2
+                        flex flex-col gap-2
+                        opacity-0 translate-x-4
+                        group-hover:opacity-100 group-hover:translate-x-0
+                        transition-all duration-300
+                    "
+                >
+                    <Button className="p-2 bg-white text-gray-700 rounded-full shadow hover:bg-blue-600 hover:text-white">
+                        <ShoppingBag className="w-4 h-4" />
+                    </Button>
+
+                    <Button
+                        onClick={() => navigate(`/books/${book.id}`)}
+                        className="p-2 bg-white text-gray-700 rounded-full shadow hover:bg-gray-800 hover:text-white">
+                        <Eye className="w-4 h-4" />
+                    </Button>
+
+                    <Button className="p-2 bg-white text-gray-700 rounded-full shadow hover:bg-red-500 hover:text-white">
+                        <Heart className="w-4 h-4" />
+                    </Button>
+                </div>
             </div>
-        </div>
-    );
-};
-export default RelatedBookCard;
+
+            {/* CONTENT */}
+            <CardHeader className="pb-2">
+                <CardTitle className="text-base line-clamp-2">
+                    {title}
+                </CardTitle>
+
+                <p className="text-sm text-gray-500">
+                    {authorName}
+                </p>
+            </CardHeader>
+
+            <CardContent className="flex items-center justify-between">
+                {/* RATING */}
+                <div className="flex items-center gap-1 text-yellow-500">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                            key={i}
+                            className={`w-4 h-4 ${i < Math.round(rating)
+                                ? "fill-yellow-500 text-yellow-500"
+                                : "text-gray-300"
+                                }`}
+                        />
+                    ))}
+                    <span className="text-sm font-medium text-gray-700">
+                        ({rating.toFixed(1)})
+                    </span>
+                </div>
+
+                {/* PRICE */}
+                <div className="text-right">
+                    {hasDiscount && (
+                        <p className="text-sm line-through text-gray-400">
+                            {originalPrice!.toLocaleString()}₫
+                        </p>
+                    )}
+                    <p className="text-lg font-bold text-red-600">
+                        {salePrice.toLocaleString()}₫
+                    </p>
+                </div>
+            </CardContent>
+
+            {/* SOLD */}
+            <div className="px-4 pb-4 text-xs text-gray-500">
+                Đã bán {soldCount}
+            </div>
+        </Card>
+    )
+}
+
+export default RelatedBookCard
