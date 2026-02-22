@@ -41,14 +41,13 @@ public class AuthorController {
         );
     }
     @GetMapping("/detail-author/{id}")
-    public ApiResponse<AuthorDetailResponse> getAuthorDetail(@PathVariable Long id) {
-        return new ApiResponse<AuthorDetailResponse>(
+    public ApiResponse<AuthorResponse> getAuthorDetail(@PathVariable Long id) {
+        return new ApiResponse<AuthorResponse>(
                 200,
                 "Success",
-                authorService.getAuthorDetail(id)
+                authorService.getAuthorById(id)
         );
     }
-
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

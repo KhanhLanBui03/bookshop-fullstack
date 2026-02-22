@@ -5,8 +5,7 @@ export const bookService = {
     async getBooks(): Promise<BookCard[]> {
         const res = await bookApi.getAll()
 
-        const items = res.data.data   // 👈 QUAN TRỌNG
-
+        const items = res.data.data  
         return items.map((item: any): BookCard => ({
             id: item.id,
             title: item.title,
@@ -20,7 +19,22 @@ export const bookService = {
             authorName: item.authorName,
         }))
     },
-
+    async getTopBooksBestSeller(): Promise<BookCard[]> {
+        const res = await bookApi.getTopBooksBestSeller()
+        const items = res.data.data
+        return items.map((item: any): BookCard => ({
+            id: item.id,
+            title: item.title,
+            salePrice: Number(item.salePrice),
+            originalPrice: item.originalPrice
+                ? Number(item.originalPrice)
+                : undefined,
+            rating: Number(item.rating ?? 0),
+            soldCount: item.soldCount,
+            image: item.image,
+            authorName: item.authorName,
+        }))
+    },
 
     async getBookById(id: number): Promise<BookDetail> {
         const res = await bookApi.getById(id)

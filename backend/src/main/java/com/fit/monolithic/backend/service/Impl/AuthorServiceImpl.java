@@ -12,10 +12,14 @@ import com.fit.monolithic.backend.service.AuthorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.crossstore.ChangeSetPersister;
+
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.awt.print.Pageable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -117,26 +121,43 @@ public class AuthorServiceImpl implements AuthorService {
                 savedAuthor.getStatus()
         );
     }
-    @Override
-    public AuthorDetailResponse getAuthorDetail(Long id) {
+//    @Override
+//    public AuthorDetailResponse getAuthorDetail(Long id) {
+//
+//        Author author = authorRepository.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Author not found"));
+//
+//        List<BookCardResponse> books = bookRepository.findByAuthorId(id);
+//
+//        return new AuthorDetailResponse(
+//                new AuthorResponse(
+//                        author.getId(),
+//                        author.getName(),
+//                        author.getEmail(),
+//                        author.getBio(),
+//                        author.getImage(),
+//                        author.getStatus()
+//                ),
+//                books
+//        );
+//    }
+//        @Override
+//        public List<AuthorResponse> getTopAuthors() {
+//            Pageable pageable = (Pageable) PageRequest.of(0, 3); // lấy top 3
+//
+//            return authorRepository.findTopAuthors(pageable)
+//                    .stream()
+//                    .map(a -> new AuthorResponse(
+//                            a.getId(),
+//                            a.getName(),
+//                            a.getEmail(),
+//                            a.getBio(),
+//                            a.getImage(),
+//                            a.getStatus()
+//                    ))
+//                    .toList();
+//        }
 
-        Author author = authorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Author not found"));
-
-        List<BookCardResponse> books = bookRepository.findByAuthorId(id);
-
-        return new AuthorDetailResponse(
-                new AuthorResponse(
-                        author.getId(),
-                        author.getName(),
-                        author.getEmail(),
-                        author.getBio(),
-                        author.getImage(),
-                        author.getStatus()
-                ),
-                books
-        );
-    }
 
 
 

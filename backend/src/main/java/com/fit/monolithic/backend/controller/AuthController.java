@@ -43,7 +43,6 @@ public class AuthController {
                 authService.register(request)
         );
     }
-
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(
             @Valid @RequestBody LoginRequest request

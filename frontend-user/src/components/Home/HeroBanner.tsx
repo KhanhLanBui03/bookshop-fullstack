@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react"
 import { BookOpen, Sparkles, TrendingUp, Users } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 const HeroBanner = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isHovered, setIsHovered] = useState(false)
-
+  const navigate = useNavigate()
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = (e.clientX - rect.left) / rect.width - 0.5
@@ -132,7 +133,7 @@ const HeroBanner = () => {
             <button className="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105">
               Khám phá ngay
             </button>
-            <button className="bg-white/20 backdrop-blur-md text-white px-8 py-4 rounded-xl font-bold hover:bg-white/30 transition-all duration-300 border-2 border-white/50 hover:scale-105">
+            <button onClick={() => navigate("./CategoriesSection.tsx")} className="bg-white/20 backdrop-blur-md text-white px-8 py-4 rounded-xl font-bold hover:bg-white/30 transition-all duration-300 border-2 border-white/50 hover:scale-105">
               Xem danh mục
             </button>
           </div>

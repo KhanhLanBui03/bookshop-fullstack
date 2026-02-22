@@ -4,7 +4,7 @@ import BlogList from "@/components/Home/BlogList"
 import BookBestSeller from "@/components/Home/BookBestSeller"
 import BookList from "@/components/Home/BookList"
 import CategoriesSection from "@/components/Home/CategoriesSection"
-import FlashSale from "@/components/Home/FlashSale"
+import FlashSale from "@/components/Home/BookStack"
 import HeroBanner from "@/components/Home/HeroBanner"
 import { Button } from "@/components/ui/button"
 

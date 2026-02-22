@@ -38,13 +38,22 @@ public class BookController {
         );
     }
 
-    @GetMapping("/by-author")
+    @GetMapping("/author/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<List<BookCardResponse>> getBooksByAuthorId(@RequestParam Long authorId) {
+    public ApiResponse<List<BookCardResponse>> getBooksByAuthor(@PathVariable Long id) {
         return new ApiResponse<>(
                 200,
                 "Success",
-                bookService.findByAuthorId(authorId)
+                bookService.getBooksByAuthor(id)
+        );
+    }
+    @GetMapping("/top-best-seller")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<List<BookCardResponse>> getTopBookBestSeller() {
+        return new ApiResponse<>(
+                200,
+                "Success",
+                bookService.getTopBookBestSeller()
         );
     }
 }

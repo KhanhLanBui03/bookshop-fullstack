@@ -40,6 +40,7 @@ public class Author {
     private String bio;
     @Lob
     private String image;
+    private Long follower;
     @Enumerated(EnumType.STRING)
     private AuthorStatus status;
     @OneToMany(

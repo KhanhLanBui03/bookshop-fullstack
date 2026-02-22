@@ -7,5 +7,8 @@ export const bookApi = {
 
     getById(id: number) {
         return axiosClient.get(`/books/${id}`)
+    },
+    getTopBooksBestSeller() {
+        return axiosClient.get("/books/top-best-seller")
     }
 }
