@@ -39,7 +39,6 @@ export const bookService = {
     async getBookById(id: number): Promise<BookDetail> {
         const res = await bookApi.getById(id)
         const item = res.data.data   // 👈 unwrap
-
         return {
             id: item.id,
             title: item.title,

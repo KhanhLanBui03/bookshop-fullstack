@@ -23,7 +23,7 @@ const router = createBrowserRouter([
                 path: "/cart", 
                 element: <ProtectedRoute><CartPage /></ProtectedRoute> 
             },
-            { path: "/detail", element: <BookDetail /> },
+            { path: "/books/:id", element: <BookDetail /> },
             { path: "/author-detail", element: <AuthorBooksPage /> }
         ]
     },

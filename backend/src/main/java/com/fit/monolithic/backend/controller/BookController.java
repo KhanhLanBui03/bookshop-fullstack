@@ -56,4 +56,13 @@ public class BookController {
                 bookService.getTopBookBestSeller()
         );
     }
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<BookResponse> getBookById(@PathVariable Long id) {
+        return new ApiResponse<>(
+                200,
+                "Success",
+                bookService.findById(id)
+        );
+    }
 }

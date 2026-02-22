@@ -17,18 +17,14 @@ public class BookResponse {
     private Long id;
     private String title;
     private String description;
-
     private BigDecimal originalPrice;
     private BigDecimal salePrice;
     private BigDecimal rating;
-
     private Integer stock;
     private Integer soldCount;
     private String categoryName;
     private String authorName;
-
     private PublisherResponse publisher;
     private List<ImageResponse> images;
-
     private LocalDateTime createdAt;
 }

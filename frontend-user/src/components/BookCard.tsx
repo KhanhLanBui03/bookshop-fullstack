@@ -7,6 +7,7 @@ import {
 } from "./ui/card"
 import { ShoppingBag, Heart, Star, Eye } from "lucide-react"
 import type { BookCard as BookCardType } from "@/types/Book"
+import { useNavigate } from "react-router-dom"
 
 type Props = {
     book: BookCardType
@@ -14,6 +15,7 @@ type Props = {
 
 
 const BookCard = ({ book }: Props) => {
+    const navigate = useNavigate();
     if (!book) return null
     const {
         title,
@@ -26,7 +28,7 @@ const BookCard = ({ book }: Props) => {
     } = book
 
     const hasDiscount = originalPrice && originalPrice > salePrice
-    
+
     return (
         <Card className="group hover:shadow-lg transition w-full">
             {/* IMAGE */}
@@ -62,7 +64,9 @@ const BookCard = ({ book }: Props) => {
                         <ShoppingBag className="w-4 h-4" />
                     </Button>
 
-                    <Button className="p-2 bg-white text-gray-700 rounded-full shadow hover:bg-gray-800 hover:text-white">
+                    <Button
+                        onClick={() => navigate(`/books/${book.id}`)}
+                        className="p-2 bg-white text-gray-700 rounded-full shadow hover:bg-gray-800 hover:text-white">
                         <Eye className="w-4 h-4" />
                     </Button>
 
