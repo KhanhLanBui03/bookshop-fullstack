@@ -10,10 +10,12 @@ import { bookService } from "@/services/book.service"
 import { useFetch } from "@/hooks/useFetch"
 import type { BookCard as BookCardType } from "@/types/Book"
 import BookCard from "../BookCard"
+import { useNavigate } from "react-router-dom"
 
 
 const BookList = () => {
   const { data: books, loading } = useFetch<BookCardType[]>(bookService.getBooks)
+  const navigate = useNavigate()
   if (loading) {
     return <div>Loading...</div>
   }
@@ -50,7 +52,9 @@ const BookList = () => {
           <CarouselNext />
         </Carousel>
         <div>
-          <span className=" mt-6 text-md font-medium hover:text-blue-600 cursor-pointer block text-end dark:text-white">
+          <span 
+          onClick={() => navigate("/list-books")}
+          className=" mt-6 text-md font-medium hover:text-blue-600 cursor-pointer block text-end dark:text-white">
             Xem tất cả sách
             <CircleArrowRight className="inline ml-1 hover:text-blue-600 w-5 h-5 transition" />
           </span>

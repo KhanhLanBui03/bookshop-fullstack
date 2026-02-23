@@ -1,5 +1,6 @@
 package com.fit.monolithic.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fit.monolithic.backend.enums.BookStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -53,14 +54,17 @@ public class Book {
     private LocalDateTime updatedAt;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
+    @JsonIgnore
     private Category category;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
+    @JsonIgnore
     private Author author;
     @OneToMany(mappedBy = "book", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @OrderBy("id ASC")
     private List<Image> images = new ArrayList<>();
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "publisher_id", nullable = false)
+    @JsonIgnore
     private Publisher publisher;
 }

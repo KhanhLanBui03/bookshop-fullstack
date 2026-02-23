@@ -13,5 +13,10 @@ export const bookApi = {
     },
     getRelatedBooks(id: number) {
         return axiosClient.get(`/books/${id}/related`)
+    },
+    getListBook(params: any) {
+        return axiosClient.get("/books/all-book", {
+            params
+        })
     }
 }

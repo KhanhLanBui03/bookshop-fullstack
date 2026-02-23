@@ -11,8 +11,10 @@ import com.fit.monolithic.backend.entity.*;
 import com.fit.monolithic.backend.enums.BookStatus;
 import com.fit.monolithic.backend.repository.*;
 import com.fit.monolithic.backend.service.BookService;
+import com.fit.monolithic.backend.specification.BookSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -168,5 +171,25 @@ public class BookServiceImpl implements BookService {
                 bookId,
                 pageable
         );
+    }
+    @Override
+    public Page<BookCardResponse> getBooks(
+            String keyword,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            String category,
+            BigDecimal minRating,
+            Pageable pageable
+    ) {
+        var spec = BookSpecification.filter(
+                keyword,
+                minPrice,
+                maxPrice,
+                category,
+                minRating
+        );
+
+        return bookRepository.findAll(spec, pageable)
+                .map(this::mapToCardResponse);
     }
 }

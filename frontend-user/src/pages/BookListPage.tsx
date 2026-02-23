@@ -1,22 +1,23 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Search, SlidersHorizontal, ChevronDown, X, LayoutGrid, LayoutList, ChevronLeft, ChevronRight, Badge } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import BookCard from "@/components/BookCard"
 import type { BookCard as BookCardType } from "@/types/Book"
-
+import { useFetch } from "@/hooks/useFetch"
+import { bookService } from "@/services/book.service"
 // ── Mock data ─────────────────────────────────────────────────────
-const MOCK_BOOKS: BookCardType[] = Array.from({ length: 24 }, (_, i) => ({
-    id: i + 1,
-    title: ["Atomic Habits", "Sapiens", "Clean Code", "The Alchemist", "Zero to One", "Deep Work"][i % 6],
-    authorName: ["James Clear", "Yuval Harari", "Robert Martin", "Paulo Coelho", "Peter Thiel", "Cal Newport"][i % 6],
-    salePrice: [85000, 120000, 199000, 75000, 110000, 95000][i % 6],
-    originalPrice: [100000, 150000, 230000, null, 130000, null][i % 6] as number | null,
-    rating: [4.9, 4.8, 4.7, 4.6, 4.5, 4.4][i % 6],
-    soldCount: [1200, 980, 750, 630, 540, 420][i % 6],
-    image: "/placeholder.png",
-    genre: ["Kỹ năng", "Lịch sử", "Công nghệ", "Văn học", "Kinh doanh", "Kỹ năng"][i % 6],
-}))
+// const MOCK_BOOKS: BookCardType[] = Array.from({ length: 24 }, (_, i) => ({
+//     id: i + 1,
+//     title: ["Atomic Habits", "Sapiens", "Clean Code", "The Alchemist", "Zero to One", "Deep Work"][i % 6],
+//     authorName: ["James Clear", "Yuval Harari", "Robert Martin", "Paulo Coelho", "Peter Thiel", "Cal Newport"][i % 6],
+//     salePrice: [85000, 120000, 199000, 75000, 110000, 95000][i % 6],
+//     originalPrice: [100000, 150000, 230000, null, 130000, null][i % 6] as number | null,
+//     rating: [4.9, 4.8, 4.7, 4.6, 4.5, 4.4][i % 6],
+//     soldCount: [1200, 980, 750, 630, 540, 420][i % 6],
+//     image: "/placeholder.png",
+//     genre: ["Kỹ năng", "Lịch sử", "Công nghệ", "Văn học", "Kinh doanh", "Kỹ năng"][i % 6],
+// }))
 
 const GENRES = ["Tất cả", "Kỹ năng", "Lịch sử", "Công nghệ", "Văn học", "Kinh doanh"]
 const SORT_OPTIONS = [
@@ -33,7 +34,6 @@ const PRICE_RANGES = [
     { label: "Trên 200.000đ", min: 200000, max: Infinity },
 ]
 
-const PAGE_SIZE = 12
 
 // ── Helpers ────────────────────────────────────────────────────────
 function sortBooks(books: BookCardType[], sort: string) {
@@ -45,9 +45,28 @@ function sortBooks(books: BookCardType[], sort: string) {
         return 0
     })
 }
+function mapSort(sort: string) {
+    switch (sort) {
+        case "price_asc":
+            return "salePrice,asc"
+        case "price_desc":
+            return "salePrice,desc"
+        case "rating":
+            return "rating,desc"
+        case "popular":
+            return "soldCount,desc"
+        case "newest":
+            return "createdAt,desc"
+        default:
+            return undefined
+    }
+}
 
 // ── Component ──────────────────────────────────────────────────────
 export default function BookListPage() {
+    const [data, setData] = useState<any>(null)
+    const [loading, setLoading] = useState(false)
+    const [searchInput, setSearchInput] = useState("")
     const [search, setSearch] = useState("")
     const [genre, setGenre] = useState("Tất cả")
     const [priceIdx, setPriceIdx] = useState(0)
@@ -56,7 +75,44 @@ export default function BookListPage() {
     const [grid, setGrid] = useState<"grid" | "list">("grid")
     const [sortOpen, setSortOpen] = useState(false)
     const [sidebarOpen, setSidebarOpen] = useState(false)
+    // const { data, loading } = useFetch(() =>
+    //     bookService.getListBooks(page - 1)
+    // )
+    useEffect(() => {
+        const fetchBooks = async () => {
+            setLoading(true)
+            try {
+                const price = PRICE_RANGES[priceIdx]
 
+                const res = await bookService.getListBooks({
+                    page: page - 1,
+                    size: 12,
+                    search: search || undefined,
+                    genre: genre !== "Tất cả" ? genre : undefined,
+                    minPrice: price.min !== 0 ? price.min : undefined,
+                    maxPrice: price.max !== Infinity ? price.max : undefined,
+                    sort: mapSort(sort)
+                })
+
+                setData(res)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchBooks()
+    }, [page, search, genre, priceIdx, sort])
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setSearch(searchInput)
+            setPage(1)
+        }, 400)
+
+        return () => clearTimeout(timer)
+    }, [searchInput])
+    const books = data?.content ?? []
+    const totalPages = data?.totalPages ?? 0
+    
     // Active filter tags
     const activeFilters = [
         genre !== "Tất cả" && { key: "genre", label: genre },
@@ -69,23 +125,11 @@ export default function BookListPage() {
         setPage(1)
     }
 
-    // Filtered + sorted + paginated
-    const { range } = PRICE_RANGES[priceIdx]
-    const filtered = useMemo(() => {
-        const q = search.toLowerCase()
-        return MOCK_BOOKS.filter(b =>
-            (genre === "Tất cả" || b.genre === genre) &&
-            (b.salePrice >= PRICE_RANGES[priceIdx].min && b.salePrice <= PRICE_RANGES[priceIdx].max) &&
-            (b.title.toLowerCase().includes(q) || b.authorName.toLowerCase().includes(q))
-        )
-    }, [search, genre, priceIdx])
-
-    const sorted = useMemo(() => sortBooks(filtered, sort), [filtered, sort])
-    const totalPages = Math.ceil(sorted.length / PAGE_SIZE)
-    const paginated = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
     const handleFilter = (setter: () => void) => { setter(); setPage(1) }
-
+    if (loading) {
+        return <div>Loading...</div>
+    }
     return (
         <div className="min-h-screen bg-gray-50">
 
@@ -93,7 +137,7 @@ export default function BookListPage() {
             <div className="bg-white border-b">
                 <div className="max-w-7xl mx-auto px-4 py-6">
                     <h1 className="text-2xl font-bold text-gray-900 mb-1">Tất cả sách</h1>
-                    <p className="text-sm text-gray-400">{filtered.length} kết quả</p>
+                    <p className="text-sm text-gray-400">{data?.totalElements ?? 0} kết quả</p>
                 </div>
             </div>
 
@@ -169,12 +213,11 @@ export default function BookListPage() {
 
                         {/* Search */}
                         <div className="relative flex-1 min-w-48">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            
                             <Input
                                 placeholder="Tìm sách, tác giả..."
-                                value={search}
-                                onChange={e => { setSearch(e.target.value); setPage(1) }}
-                                className="pl-9 h-10 text-sm bg-white"
+                                value={searchInput}
+                                onChange={e => setSearchInput(e.target.value)}
                             />
                         </div>
 
@@ -235,9 +278,9 @@ export default function BookListPage() {
                             {activeFilters.map(f => (
                                 <Badge key={f.key} variant="secondary" className="gap-1.5 pr-1.5 text-xs">
                                     {f.label}
-                                    <button onClick={() => clearFilter(f.key)} className="hover:text-red-500 transition-colors">
+                                    <Button onClick={() => clearFilter(f.key)} className="hover:text-red-500 transition-colors">
                                         <X className="w-3 h-3" />
-                                    </button>
+                                    </Button>
                                 </Badge>
                             ))}
                             <button
@@ -250,7 +293,7 @@ export default function BookListPage() {
                     )}
 
                     {/* Book Grid / List */}
-                    {paginated.length === 0 ? (
+                    {books.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-24 text-gray-400">
                             <Search className="w-12 h-12 mb-3 opacity-30" />
                             <p className="font-medium">Không tìm thấy sách nào</p>
@@ -258,51 +301,25 @@ export default function BookListPage() {
                         </div>
                     ) : grid === "grid" ? (
                         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {paginated.map(book => <BookCard key={book.id} book={book} />)}
+                            {books.map(book => <BookCard key={book.id} book={book} />)}
                         </div>
                     ) : (
                         <div className="flex flex-col gap-3">
-                            {paginated.map(book => (
+                            {books.map(book => (
                                 <div key={book.id} className="bg-white border border-gray-100 rounded-xl p-4 flex gap-4 hover:shadow-md transition-shadow">
-                                    <img
-                                        src={book.image || "/placeholder.png"}
-                                        alt={book.title}
-                                        className="w-16 h-24 object-contain flex-shrink-0 rounded"
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-semibold text-sm line-clamp-2">{book.title}</p>
-                                        <p className="text-xs text-gray-400 mt-0.5">{book.authorName}</p>
-                                        <div className="flex items-center gap-0.5 mt-1.5">
-                                            {"★".repeat(Math.round(book.rating)).split("").map((_, i) => (
-                                                <span key={i} className="text-yellow-400 text-xs">★</span>
-                                            ))}
-                                            <span className="text-xs text-gray-400 ml-1">({book.rating.toFixed(1)})</span>
-                                        </div>
-                                        <p className="text-xs text-gray-400 mt-1">Đã bán {book.soldCount}</p>
-                                    </div>
-                                    <div className="flex flex-col items-end justify-between flex-shrink-0">
-                                        <div className="text-right">
-                                            {book.originalPrice && (
-                                                <p className="text-xs line-through text-gray-300">{book.originalPrice.toLocaleString()}₫</p>
-                                            )}
-                                            <p className="text-base font-bold text-red-600">{book.salePrice.toLocaleString()}₫</p>
-                                        </div>
-                                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs">
-                                            Mua ngay
-                                        </Button>
-                                    </div>
+                                    <BookCard book={book} />
                                 </div>
                             ))}
                         </div>
                     )}
 
                     {/* ── PAGINATION ── */}
-                    {totalPages > 1 && (
+                    {totalPages >1 && (
                         <div className="flex items-center justify-center gap-1 mt-10">
                             <Button
                                 variant="outline" size="icon"
                                 disabled={page === 1}
-                                onClick={() => setPage(p => p - 1)}
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
                                 className="w-9 h-9"
                             >
                                 <ChevronLeft className="w-4 h-4" />
