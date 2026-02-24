@@ -6,6 +6,7 @@ import com.fit.monolithic.backend.dto.request.RegisterRequest;
 import com.fit.monolithic.backend.dto.response.LoginResponse;
 import com.fit.monolithic.backend.dto.response.RegisterResponse;
 import com.fit.monolithic.backend.dto.response.based.ApiResponse;
+import com.fit.monolithic.backend.security.CustomUserDetails;
 import com.fit.monolithic.backend.service.AuthService;
 import com.fit.monolithic.backend.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
@@ -59,13 +60,14 @@ public class AuthController {
     }
     @GetMapping("/me")
     public ApiResponse<Map<String, Object>> me(
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @AuthenticationPrincipal CustomUserDetails userDetails
+            ) {
         if (userDetails == null) {
             return new ApiResponse<>(401, "Unauthorized", null);
         }
 
         Map<String, Object> response = new HashMap<>();
+        response.put("id", userDetails.getId());
         response.put("email", userDetails.getUsername());
         response.put("roles", userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

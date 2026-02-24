@@ -79,9 +79,9 @@ const Header = () => {
               <div className="relative">
                 <Button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                    className="p-4 bg-white hover:bg-gray-300 rounded-lg transition-colors"
                 >
-                  <User className="w-5 h-5 md:w-6 md:h-6 text-gray-600 dark:text-gray-400" />
+                    <User className="w-8 h-8 text-gray-600 dark:text-gray-400" />
                 </Button>
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-gray-200 dark:border-zinc-700 py-2">
@@ -98,7 +98,7 @@ const Header = () => {
               <div className="relative bg-white">
                 <Button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="hidden md:flex items-center gap-2  px-3 py-2 rounded-lg transition-colors bg-white"
+                      className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg bg-white hover:bg-white hover:text-gray-900"
                 >
                   <span className="text-sm font-medium text-gray-900 bg-white">
                     {user?.email || 'User'}
@@ -115,7 +115,7 @@ const Header = () => {
                     </Link>
                     <Button
                       onClick={handleLogout}
-                      className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100  text-red-600 dark:text-red-400"
+                      className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white"
                     >
                       <LogOut className="w-4 h-4" /> Đăng xuất
                     </Button>

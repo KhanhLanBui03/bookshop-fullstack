@@ -15,6 +15,7 @@ public class Endpoints {
             "/api/v1/discounts/**",
             "/api/v1/books/**",
             "/api/v1/categories/**",
+            "/api/v1/carts/**"
 
     };
 

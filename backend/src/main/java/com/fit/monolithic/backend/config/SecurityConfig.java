@@ -52,6 +52,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/refresh-token"
                         ).permitAll()
                         .requestMatchers("/api/v1/auth/me").authenticated()
+                        .requestMatchers("/api/v1/carts/**").authenticated()
                         .anyRequest().authenticated()
 
                 )

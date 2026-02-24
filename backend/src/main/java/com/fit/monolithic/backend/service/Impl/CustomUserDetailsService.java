@@ -2,6 +2,7 @@ package com.fit.monolithic.backend.service.Impl;
 
 import com.fit.monolithic.backend.entity.User;
 import com.fit.monolithic.backend.repository.UserRepository;
+import com.fit.monolithic.backend.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,11 +29,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().name().replace("ROLE_", "")))// ROLE_ADMIN
                 .collect(Collectors.toList());
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPassword(),
-                authorities
-        );
+        return new CustomUserDetails(user, authorities);
     }
 
 }
