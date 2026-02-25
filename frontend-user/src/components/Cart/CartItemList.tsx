@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useCartStore } from "@/store/cart.store"
 import type { CartItem } from "@/types/Cart"
 import { Trash2, Minus, Plus } from "lucide-react"
 import { Link } from "react-router-dom"
+import { toast } from "sonner"
 
 
 
@@ -13,6 +15,37 @@ interface Props {
 }
 
 const CartItemList = ({ items, selectedIds, setSelectedIds }: Props) => {
+    const updateQuantity = useCartStore(state => state.updateQuantity)
+    const deleteCartItem = useCartStore(state => state.deleteCartItem)
+    const handleIncrease = async (bookId: number, currentQty: number) => {
+        await updateQuantity({
+            bookId,
+            quantity: currentQty + 1
+        })
+    }
+   
+
+    const handleDelete = async (cartItemId: number) => {
+        await toast.promise(
+            deleteCartItem(cartItemId),
+            {
+                loading: "Đang xóa sản phẩm...",
+                success: "Đã xóa sản phẩm khỏi giỏ hàng",
+                error: (err) => err?.message || "Xóa sản phẩm thất bại"
+            },
+            
+        )
+    }
+           
+      
+
+    const handleDecrease = async (bookId: number, currentQty: number) => {
+        if (currentQty <= 1) return
+        await updateQuantity({
+            bookId,
+            quantity: currentQty - 1
+        })
+    }
     if (items.length === 0) {
         return (
             <div className="flex flex-col items-center py-20 text-center">
@@ -41,7 +74,7 @@ const CartItemList = ({ items, selectedIds, setSelectedIds }: Props) => {
     return (
         <div className="grid lg:grid-cols-3 gap-8">
             {/* ITEMS */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
                 {items.map(item => (
                     <div
                         key={item.bookId}
@@ -63,11 +96,11 @@ const CartItemList = ({ items, selectedIds, setSelectedIds }: Props) => {
                             </h3>
 
                             <div className="flex items-center gap-3 mt-4">
-                                <Button size="icon" variant="outline">
+                                <Button onClick={()=> handleDecrease(item.bookId, item.quantity)} size="icon" variant="outline">
                                     <Minus size={16} />
                                 </Button>
                                 <span>{item.quantity}</span>
-                                <Button size="icon" variant="outline">
+                                <Button onClick={()=> handleIncrease(item.bookId, item.quantity)} size="icon" variant="outline">
                                     <Plus size={16} />
                                 </Button>
                             </div>
@@ -78,7 +111,7 @@ const CartItemList = ({ items, selectedIds, setSelectedIds }: Props) => {
                                 {(item.price * item.quantity).toLocaleString()} ₫
                             </p>
 
-                            <Button size="icon" variant="ghost">
+                            <Button onClick={()=> handleDelete(item.bookId)} size="icon" variant="ghost">
                                 <Trash2 className="text-red-500" size={18} />
                             </Button>
                         </div>

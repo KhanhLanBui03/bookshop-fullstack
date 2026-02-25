@@ -18,3 +18,7 @@ export interface CartResponse {
     totalAmount: number;
     totalItems: number;
 }
+export interface UpdateCartItemRequest {
+    bookId: number;
+    quantity: number;
+}
