@@ -14,4 +14,5 @@ public class CartResponse {
     private Long cartId;
     private List<CartItemResponse> items;
     private BigDecimal totalAmount;
+    private Integer totalItems;
 }

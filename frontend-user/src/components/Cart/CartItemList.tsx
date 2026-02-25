@@ -1,15 +1,10 @@
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import type { CartItem } from "@/types/Cart"
 import { Trash2, Minus, Plus } from "lucide-react"
 import { Link } from "react-router-dom"
 
-type CartItem = {
-    id: number
-    name: string
-    price: number
-    quantity: number
-    image: string
-}
+
 
 interface Props {
     items: CartItem[]
@@ -40,7 +35,7 @@ const CartItemList = ({ items, selectedIds, setSelectedIds }: Props) => {
     }
 
     const totalPrice = items
-        .filter(item => selectedIds.includes(item.id))
+        .filter(item => selectedIds.includes(item.bookId))
         .reduce((sum, item) => sum + item.price * item.quantity, 0)
 
     return (
@@ -49,22 +44,22 @@ const CartItemList = ({ items, selectedIds, setSelectedIds }: Props) => {
             <div className="lg:col-span-2 space-y-4">
                 {items.map(item => (
                     <div
-                        key={item.id}
+                        key={item.bookId}
                         className="flex gap-4 rounded-xl border p-4 bg-background shadow-sm"
                     >
                         <Checkbox
-                            checked={selectedIds.includes(item.id)}
-                            onCheckedChange={() => toggleItem(item.id)}
+                            checked={selectedIds.includes(item.bookId)}
+                            onCheckedChange={() => toggleItem(item.bookId)}
                         />
 
                         <img
-                            src={item.image}
+                            src={item.image ?? "/placeholder.png"}
                             className="w-24 h-32 object-cover rounded-lg border"
                         />
 
                         <div className="flex-1">
                             <h3 className="font-semibold text-lg line-clamp-2">
-                                {item.name}
+                                {item.title}
                             </h3>
 
                             <div className="flex items-center gap-3 mt-4">

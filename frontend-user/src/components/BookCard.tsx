@@ -8,6 +8,9 @@ import {
 import { ShoppingBag, Heart, Star, Eye } from "lucide-react"
 import type { BookCard as BookCardType } from "@/types/Book"
 import { useNavigate } from "react-router-dom"
+import { useCartStore } from "@/store/cart.store"
+import { cartService } from "@/services/cart.service"
+import { toast } from "sonner"
 
 type Props = {
     book: BookCardType
@@ -15,6 +18,7 @@ type Props = {
 
 
 const BookCard = ({ book }: Props) => {
+    const setCart = useCartStore((state) => state.setCart)
     const navigate = useNavigate();
     if (!book) return null
     const {
@@ -26,6 +30,22 @@ const BookCard = ({ book }: Props) => {
         image,
         authorName
     } = book
+    const handleAddToCart = async () => {
+        try {
+            const updatedCart = await cartService.addToCart({
+                bookId: book.id,
+                quantity: 1,
+            });
+            setCart(updatedCart);
+            toast.success("Book added to cart successfully!", {
+                position: "top-right",
+                className: "bg-green-600 text-white border-none"
+            })
+
+        } catch (error) {
+            console.error("Add to cart failed", error);
+        }
+    };
 
     const hasDiscount = originalPrice && originalPrice > salePrice
 
@@ -60,7 +80,7 @@ const BookCard = ({ book }: Props) => {
                         transition-all duration-300
                     "
                 >
-                    <Button className="p-2 bg-white text-gray-700 rounded-full shadow hover:bg-blue-600 hover:text-white">
+                    <Button onClick={handleAddToCart} className="p-2 bg-white text-gray-700 rounded-full shadow hover:bg-blue-600 hover:text-white">
                         <ShoppingBag className="w-4 h-4" />
                     </Button>
 

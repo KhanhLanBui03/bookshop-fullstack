@@ -1,28 +1,19 @@
-import { useState } from "react"
-import CartItemList from "@/components/Cart/CartItemList"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
+
 import { ShoppingBasket } from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
+import { useCartStore } from "@/store/cart.store"
+import CartItemList from "@/components/Cart/CartItemList"
 
 const CartPage = () => {
+    const { cart, fetchCart } = useCartStore()
     const [selectedIds, setSelectedIds] = useState<number[]>([])
-    const [cartItems, setCartItems] = useState([
-        {
-            id: 1,
-            name: "Clean Code",
-            price: 150000,
-            quantity: 1,
-            image: "/gia-kim.jpg",
-        },
-        {
-            id: 2,
-            name: "Thám tử lừng danh Conan",
-            price: 150000,
-            quantity: 2,
-            image: "/connan.jpg",
-        },
-    ])
+
+    useEffect(() => {
+        fetchCart()
+    }, [])
+
+    const cartItems = cart?.items ?? []
+
     const isAllSelected =
         cartItems.length > 0 &&
         selectedIds.length === cartItems.length
@@ -34,6 +25,7 @@ const CartPage = () => {
             setSelectedIds(cartItems.map(item => item.id))
         }
     }
+
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex flex-col items-center mb-8">
@@ -43,26 +35,11 @@ const CartPage = () => {
                 </h1>
             </div>
 
-            <Button
-                variant="outline"
-                className="mb-4"
-                onClick={() => setCartItems([])}
-            >
-                Fake empty cart
-            </Button>
-            <div className="flex items-center space-x-2 py-4">
-                <Checkbox
-                    checked={isAllSelected}
-                    onCheckedChange={toggleSelectAll}
-                />
-                <Label>Tất cả</Label>
-            </div>
             <CartItemList
-            items={cartItems}
-            selectedIds={selectedIds}
-            setSelectedIds={setSelectedIds}
+                items={cartItems}
+                selectedIds={selectedIds}
+                setSelectedIds={setSelectedIds}
             />
-
         </div>
     )
 }

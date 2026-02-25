@@ -22,6 +22,7 @@ import MainNavigation from "./Home/MainNavigation"
 import { useAuth } from "@/contexts/AuthContext"
 import { useState } from "react"
 import { Button } from "./ui/button"
+import { useCartStore } from "@/store/cart.store"
 
 const Header = () => {
   const { isAuthenticated, user, logout, loading } = useAuth()
@@ -29,7 +30,7 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const wishlistQuantity = 2
-  const cartQuantity = 3
+  const totalItems = useCartStore(state => state.cart?.totalItems || 0)
 
   const handleLogout = async () => {
     await logout()
@@ -136,9 +137,9 @@ const Header = () => {
             {/* Cart */}
             <a href="/cart" className="relative p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">
               <ShoppingBag className="w-5 h-5 md:w-6 md:h-6 text-gray-600 dark:text-gray-400" />
-              {cartQuantity > 0 && (
+              {totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 text-xs bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                  {cartQuantity}
+                  {totalItems}
                 </span>
               )}
             </a>

@@ -1,6 +1,7 @@
 package com.fit.monolithic.backend.service.Impl;
 
 import com.fit.monolithic.backend.dto.request.AddToCartRequest;
+import com.fit.monolithic.backend.dto.request.UpdateCartItemRequest;
 import com.fit.monolithic.backend.dto.response.CartItemResponse;
 import com.fit.monolithic.backend.dto.response.CartResponse;
 import com.fit.monolithic.backend.entity.Book;
@@ -50,11 +51,12 @@ public class CartServiceImpl implements CartService {
         BigDecimal total = items.stream()
                 .map(CartItemResponse::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
+        int totalItems = items.stream().mapToInt(CartItemResponse::getQuantity).sum();
         return CartResponse.builder()
                 .cartId(cart.getId())
                 .items(items)
                 .totalAmount(total)
+                .totalItems(totalItems)
                 .build();
     }
     @Override
@@ -87,6 +89,45 @@ public class CartServiceImpl implements CartService {
             cartItemRepository.save(newItem);
         }
 
+        return toResponse(cart);
+    }
+    @Override
+    public CartResponse getCart(Long userId) {
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseGet(() -> createEmptyCart(userId));
+
+        return toResponse(cart);
+    }
+    private Cart createEmptyCart(Long userId) {
+        User user = userRepository.getReferenceById(userId);
+        Cart cart = new Cart();
+        cart.setUser(user);
+        return cartRepository.save(cart);
+    }
+
+    @Override
+    public CartResponse updateQuantity(Long userId, UpdateCartItemRequest request) {
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+        CartItem item = cartItemRepository.findByCartIdAndBookId(cart.getId(),request.getBookId())
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+        if (item.getQuantity() <= 0){
+            cart.getItems().remove(item);
+            cartItemRepository.delete(item);
+        }else {
+            item.setQuantity(request.getQuantity());
+        }
+        return toResponse(cart);
+    }
+
+    @Override
+    public CartResponse removeItem(Long userId, Long bookId) {
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+        CartItem item = cartItemRepository.findByCartIdAndBookId(cart.getId(),bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+        cart.getItems().remove(item);
+        cartItemRepository.delete(item);
         return toResponse(cart);
     }
 }

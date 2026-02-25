@@ -19,46 +19,7 @@ export const bookService = {
             authorName: item.authorName,
         }))
     },
-    // async getListBooks(page: number): Promise<BookCard[]> {
-    //     const res = await bookApi.getListBook(page, 12)
 
-    //     const items = res.data.data.content
-    //     return items.map((item: any): BookCard => ({
-    //         id: item.id,
-    //         title: item.title,
-    //         salePrice: Number(item.salePrice),
-    //         originalPrice: item.originalPrice
-    //             ? Number(item.originalPrice)
-    //             : undefined,
-    //         rating: Number(item.rating ?? 0),
-    //         soldCount: item.soldCount,
-    //         image: item.image,
-    //         authorName: item.authorName,
-    //     }))
-    // },
-    // async getListBooks(page: number): Promise<PageResponse<BookCard>> {
-    //     const res = await bookApi.getListBook(page, 12)
-    //     const pageData = res.data.data
-
-    //     return {
-    //         content: pageData.content.map((item: any): BookCard => ({
-    //             id: item.id,
-    //             title: item.title,
-    //             salePrice: Number(item.salePrice),
-    //             originalPrice: item.originalPrice
-    //                 ? Number(item.originalPrice)
-    //                 : undefined,
-    //             rating: Number(item.rating ?? 0),
-    //             soldCount: item.soldCount,
-    //             image: item.image,
-    //             authorName: item.authorName,
-    //         })),
-    //         totalPages: pageData.totalPages,
-    //         totalElements: pageData.totalElements,
-    //         number: pageData.number,
-    //         size: pageData.size,
-    //     }
-    // },
     async getListBooks(params: {
         page: number
         size: number

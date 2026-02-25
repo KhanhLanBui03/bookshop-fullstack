@@ -1,7 +1,9 @@
 package com.fit.monolithic.backend.controller;
 
 import com.fit.monolithic.backend.dto.request.AddToCartRequest;
+import com.fit.monolithic.backend.dto.request.UpdateCartItemRequest;
 import com.fit.monolithic.backend.dto.response.CartResponse;
+import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.security.CustomUserDetails;
 import com.fit.monolithic.backend.service.CartService;
 import com.fit.monolithic.backend.service.Impl.CustomUserDetailsService;
@@ -21,12 +23,47 @@ public class CartController {
     private final CartService cartService;
 
     @PostMapping
-    public ResponseEntity<CartResponse> addToCart(
+    public ApiResponse<CartResponse> addToCart(
             @RequestBody @Valid AddToCartRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
-        return ResponseEntity.ok(
+        return new ApiResponse<>(
+                200,
+                "Success",
                 cartService.addToCart(user.getId(), request)
         );
     }
+    @GetMapping
+    public ApiResponse<CartResponse> getCart(
+          @AuthenticationPrincipal CustomUserDetails user
+    ){
+        return new ApiResponse<>(
+                200,
+                "Success",
+                cartService.getCart(user.getId())
+        );
+    }
+    @PutMapping("/update")
+    public ApiResponse<CartResponse> updateQuantity(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody UpdateCartItemRequest request
+            ){
+        return new ApiResponse<>(
+                200,
+                "Success",
+                cartService.updateQuantity(userDetails.getId(),request)
+        );
+    }
+    @DeleteMapping("/{bookId}")
+    public ApiResponse<CartResponse> removeFromCart(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long bookId
+    ){
+        return new ApiResponse<>(
+                200,
+                "Success",
+                cartService.removeItem(userDetails.getId(), bookId)
+        );
+    }
+
 }
