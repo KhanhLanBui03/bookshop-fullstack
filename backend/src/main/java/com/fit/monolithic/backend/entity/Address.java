@@ -36,6 +36,7 @@ public class Address {
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     private User user;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp

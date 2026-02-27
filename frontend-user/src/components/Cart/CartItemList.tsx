@@ -3,7 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useCartStore } from "@/store/cart.store"
 import type { CartItem } from "@/types/Cart"
 import { Trash2, Minus, Plus } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
 
@@ -15,6 +15,9 @@ interface Props {
 }
 
 const CartItemList = ({ items, selectedIds, setSelectedIds }: Props) => {
+    console.log("items:", items)
+    const navigate = useNavigate()
+    const setSelectedCheckoutIds = useCartStore(state => state.setSelectedCheckoutIds)
     const updateQuantity = useCartStore(state => state.updateQuantity)
     const deleteCartItem = useCartStore(state => state.deleteCartItem)
     const handleIncrease = async (bookId: number, currentQty: number) => {
@@ -37,7 +40,6 @@ const CartItemList = ({ items, selectedIds, setSelectedIds }: Props) => {
         )
     }
            
-      
 
     const handleDecrease = async (bookId: number, currentQty: number) => {
         if (currentQty <= 1) return
@@ -68,7 +70,7 @@ const CartItemList = ({ items, selectedIds, setSelectedIds }: Props) => {
     }
 
     const totalPrice = items
-        .filter(item => selectedIds.includes(item.bookId))
+        .filter(item => selectedIds.includes(item.cartItemId))
         .reduce((sum, item) => sum + item.price * item.quantity, 0)
 
     return (
@@ -77,12 +79,12 @@ const CartItemList = ({ items, selectedIds, setSelectedIds }: Props) => {
             <div className="lg:col-span-2 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
                 {items.map(item => (
                     <div
-                        key={item.bookId}
+                        key={item.cartItemId}
                         className="flex gap-4 rounded-xl border p-4 bg-background shadow-sm"
                     >
                         <Checkbox
-                            checked={selectedIds.includes(item.bookId)}
-                            onCheckedChange={() => toggleItem(item.bookId)}
+                            checked={selectedIds.includes(item.cartItemId)}
+                            onCheckedChange={() => toggleItem(item.cartItemId)}
                         />
 
                         <img
@@ -162,15 +164,17 @@ const CartItemList = ({ items, selectedIds, setSelectedIds }: Props) => {
                 </div>
 
                 <Button
+                    onClick={() => {
+                        // 1. Lưu danh sách ID đã chọn vào Zustand Store
+                        setSelectedCheckoutIds(selectedIds)
+
+                        // 2. Chuyển hướng sang trang checkout
+                        navigate("/checkout")
+                    }}
                     disabled={selectedIds.length === 0}
-                    className="
-                        w-full h-12 text-base font-semibold
-                        bg-blue-600 hover:bg-blue-700
-                        disabled:bg-muted disabled:text-muted-foreground
-                        disabled:cursor-not-allowed
-                        "
+                    className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700"
                 >
-                    Thanh toán
+                    Thanh toán ({selectedIds.length} sản phẩm)
                 </Button>
 
                 {selectedIds.length === 0 && (

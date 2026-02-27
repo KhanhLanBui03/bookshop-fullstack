@@ -5,6 +5,11 @@ import { cartService } from "@/services/cart.service"
 interface CartState {
   cart: CartResponse | null
   loading: boolean
+
+  selectedCheckoutIds: number[]
+  setSelectedCheckoutIds: (ids: number[]) => void
+  clearSelectedCheckoutIds: () => void
+
   updateQuantity: (data: UpdateCartItemRequest) => Promise<void>
   deleteCartItem: (cartItemId: number) => Promise<void>
   fetchCart: () => Promise<void>
@@ -38,4 +43,7 @@ export const useCartStore = create<CartState>((set) => ({
   setCart: (cart) => set({ cart }),
 
   clearCart: () => set({ cart: null }),
+  selectedCheckoutIds: [],
+  setSelectedCheckoutIds: (ids) => set({ selectedCheckoutIds: ids }),
+  clearSelectedCheckoutIds: () => set({ selectedCheckoutIds: [] }),
 }))

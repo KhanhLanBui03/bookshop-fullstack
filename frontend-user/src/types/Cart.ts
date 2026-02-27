@@ -4,6 +4,7 @@ export interface AddToCartRequest {
 }
 
 export interface CartItem {
+    cartItemId: number;
     bookId: number;
     title: string;
     image: string | null;

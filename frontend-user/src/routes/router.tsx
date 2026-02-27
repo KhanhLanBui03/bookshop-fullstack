@@ -12,6 +12,7 @@ import Support from "@/pages/SupportPage"
 import ProtectedRoute from "@/components/ProtectedRoute"
 import { createBrowserRouter } from "react-router-dom"
 import BookListPage from "@/pages/BookListPage"
+import CheckoutPage from "@/pages/CheckoutPage"
 
 const router = createBrowserRouter([
     {
@@ -26,7 +27,8 @@ const router = createBrowserRouter([
             },
             { path: "/books/:id", element: <BookDetail /> },
             { path: "/author-detail", element: <AuthorBooksPage /> },
-            {path: "/list-books", element: <BookListPage/>}
+            {path: "/list-books", element: <BookListPage/>},
+            {path: "/checkout", element: <ProtectedRoute><CheckoutPage /></ProtectedRoute>}
         ]
     },
     {

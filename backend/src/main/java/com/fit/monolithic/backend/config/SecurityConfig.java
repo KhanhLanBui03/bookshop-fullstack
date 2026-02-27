@@ -53,6 +53,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/v1/auth/me").authenticated()
                         .requestMatchers("/api/v1/carts/**").authenticated()
+                        .requestMatchers("/api/v1/checkout/**").authenticated()
                         .anyRequest().authenticated()
 
                 )

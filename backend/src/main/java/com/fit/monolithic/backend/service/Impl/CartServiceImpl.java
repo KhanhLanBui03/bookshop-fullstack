@@ -32,6 +32,7 @@ public class CartServiceImpl implements CartService {
 
         List<CartItemResponse> items = cart.getItems().stream()
                 .map(item -> CartItemResponse.builder()
+                        .cartItemId(item.getId())
                         .bookId(item.getBook().getId())
                         .title(item.getBook().getTitle())
                         .image(
