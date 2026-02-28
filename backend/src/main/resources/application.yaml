@@ -22,3 +22,8 @@ jwt:
   refresh-expiration: 2592000000 # 30 ngày
 server:
   port: 8686
+vnpay:
+  tmnCode: 2NV6M2KC
+  hashSecret: AJT5PV30N4JGBQP8BUF0UHQKWC5LVL60
+  payUrl: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  returnUrl: http://localhost:8080/api/payment/vnpay-return

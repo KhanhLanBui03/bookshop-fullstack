@@ -42,4 +42,6 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "discount_id")
     private Discount discount;
+    @Column(name = "transaction_id")
+    private String transactionId;
 }

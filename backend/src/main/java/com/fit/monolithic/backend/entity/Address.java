@@ -3,10 +3,7 @@ package com.fit.monolithic.backend.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fit.monolithic.backend.enums.AddressType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -17,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Setter
 @Getter
+@Builder
 @Table(name="addresses")
 public class Address {
     @Id

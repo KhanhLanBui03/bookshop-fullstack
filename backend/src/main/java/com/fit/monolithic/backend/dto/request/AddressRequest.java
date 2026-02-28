@@ -13,5 +13,5 @@ public class AddressRequest {
     private String city;
     private String state;
     private String zip;
-    private AddressType type;
+    private String country;
 }

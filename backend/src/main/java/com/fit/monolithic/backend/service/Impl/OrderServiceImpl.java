@@ -8,6 +8,8 @@ import com.fit.monolithic.backend.enums.PaymentMethod;
 import com.fit.monolithic.backend.repository.*;
 import com.fit.monolithic.backend.security.CustomUserDetails;
 import com.fit.monolithic.backend.service.OrderService;
+import com.fit.monolithic.backend.service.VnpayService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ public class OrderServiceImpl implements OrderService {
     private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final VnpayService vnpayService;
     @Override
     public OrderResponse createOrder(CreateOrderRequest request, CustomUserDetails  customUserDetails) {
         if(request.getPaymentMethod()!= PaymentMethod.COD){
@@ -78,4 +81,5 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
     }
+
 }

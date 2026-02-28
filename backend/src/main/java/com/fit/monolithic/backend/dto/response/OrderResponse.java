@@ -22,4 +22,5 @@ public class OrderResponse {
     private BigDecimal totalAmount;
     private OrderStatus status;
     private LocalDate createdAt;
+//    private String paymentUrl;
 }

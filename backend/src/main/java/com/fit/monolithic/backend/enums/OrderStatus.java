@@ -1,10 +1,11 @@
 package com.fit.monolithic.backend.enums;
 
 public enum OrderStatus {
-    PENDING,           // mới tạo
-    WAITING_PAYMENT,   // đã tạo link Sepay
-    PAID,              // thanh toán thành công
-    FAILED,
-    CANCELLED,
-    CREATED
+    PENDING_PAYMENT,   // tạo order xong, chưa thanh toán
+    PAID,              // đã thanh toán thành công
+    FAILED,            // thanh toán lỗi
+    CREATED,           // COD
+    SHIPPING,
+    COMPLETED,
+    CANCELLED
 }

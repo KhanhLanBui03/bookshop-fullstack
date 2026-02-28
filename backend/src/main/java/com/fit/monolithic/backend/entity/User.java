@@ -3,7 +3,9 @@ package com.fit.monolithic.backend.entity;
 import com.fit.monolithic.backend.enums.AuthProvider;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +27,8 @@ public class User {
     @Column(nullable = false)
     private String password;
     private String phoneNumber;
+    @CreationTimestamp
+    LocalDate createAt = LocalDate.now();
     private AuthProvider  authProvider;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
