@@ -10,7 +10,7 @@ const AdminLayout = () => {
             style={{
                 display: "flex",
                 minHeight: "100vh",
-                background: "#0f172a",   // 👈 nền chung toàn app
+                background: "var(--bg)",   // 👈 nền chung toàn app
                 color: "#f8fafc",
             }}
         >

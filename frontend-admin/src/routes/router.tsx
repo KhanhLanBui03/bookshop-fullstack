@@ -3,6 +3,7 @@ import { AnalyticsPage } from "@/feature/analytics/pages/AnalyticsPage"
 import LoginPage from "@/feature/auth/pages/LoginPage"
 import RegisterPage from "@/feature/auth/pages/RegisterPage"
 import { DashboardPage } from "@/feature/dashboard/pages/DashboardPage"
+import { OrdersPage } from "@/feature/order/pages/OrderPage"
 import { SettingsPage } from "@/feature/setting/pages/SettingsPage"
 
 import AdminLayout from "@/layout/AdminLayout"
@@ -17,7 +18,8 @@ const router = createBrowserRouter([
         children: [
             { index: true, element: <DashboardPage/> },
             {path:"/analytics", element: <AnalyticsPage/>},
-            {path:"/settings", element: <SettingsPage/>}
+            {path:"/settings", element: <SettingsPage/>},
+            {path:"/orders", element: <OrdersPage/>},
         ],
     },
     {
