@@ -3,8 +3,9 @@ import { AnalyticsPage } from "@/feature/analytics/pages/AnalyticsPage"
 import LoginPage from "@/feature/auth/pages/LoginPage"
 import RegisterPage from "@/feature/auth/pages/RegisterPage"
 import { BookManagementPage } from "@/feature/book/pages/BookPage"
+import { CustomerPage } from "@/feature/customer/pages/CustomerPage"
 import { DashboardPage } from "@/feature/dashboard/pages/DashboardPage"
-import { OrdersPage } from "@/feature/order/pages/OrderPage"
+import { OrderManagementPage} from "@/feature/order/pages/OrderPage"
 import { SettingsPage } from "@/feature/setting/pages/SettingsPage"
 
 import AdminLayout from "@/layout/AdminLayout"
@@ -17,17 +18,18 @@ const router = createBrowserRouter([
     {
         element: <AdminLayout />,
         children: [
-            { index: true, element: <DashboardPage/> },
+            { path: "/", element: <DashboardPage/> },
             {path:"/analytics", element: <AnalyticsPage/>},
             {path:"/settings", element: <SettingsPage/>},
-            {path:"/orders", element: <OrdersPage/>},
+            {path:"/orders", element: <OrderManagementPage/>},
             {path:"/books", element:<BookManagementPage/>},
+            {path:"/customers",element:<CustomerPage/>}
         ],
     },
     {
         element: <AuthLayout />,
         children: [
-            { path: "/login", element: <LoginPage /> },
+            {index:true, path: "/login", element: <LoginPage /> },
             { path: "/register", element: <RegisterPage /> },
         ],
     },

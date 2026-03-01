@@ -13,6 +13,7 @@ public class CustomUserDetails implements UserDetails {
     private final Long id;
     private final String email;
     private final String password;
+    private final String name;
     private final Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(User user,
@@ -20,7 +21,9 @@ public class CustomUserDetails implements UserDetails {
         this.id = user.getId();
         this.email = user.getEmail();
         this.password = user.getPassword();
+        this.name = user.getFullName();
         this.authorities = authorities;
+
     }
 
     @Override

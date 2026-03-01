@@ -80,7 +80,7 @@ type Period = "weekly" | "monthly";
 /* ── KPI card ── */
 interface KpiCardProps { label: string; value: string; change: string; up: boolean; icon: string; }
 const KpiCard = ({ label, value, change, up, icon }: KpiCardProps) => (
-  <div style={{ background: "#111117", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "18px 20px" }}>
+  <div style={{ background: "var(--bg2, #111117)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "18px 20px" }}>
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
       <span style={{ fontSize: 10, color: "#9490a8", textTransform: "uppercase", letterSpacing: 1, fontFamily: "'DM Mono', monospace" }}>{label}</span>
       <span style={{ fontSize: 16, color: "#9490a8" }}>{icon}</span>
@@ -109,7 +109,7 @@ export const AnalyticsPage = () => {
 
       {/* Revenue + Traffic */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16, marginBottom: 16 }}>
-        <div style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, overflow: "hidden" }}>
+        <div style={{ background: "var(--bg2, #111117)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, overflow: "hidden" }}>
           <div style={{ padding: "16px 22px", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 700 }}>Revenue Overview</h2>
             <div style={{ display: "flex", gap: 6 }}>
@@ -131,7 +131,7 @@ export const AnalyticsPage = () => {
           </div>
         </div>
 
-        <div style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, overflow: "hidden" }}>
+        <div style={{ background: "var(--bg2, #111117)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, overflow: "hidden" }}>
           <div style={{ padding: "16px 22px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700 }}>Traffic Sources</h2>
           </div>
@@ -145,7 +145,7 @@ export const AnalyticsPage = () => {
 
       {/* Funnel + Category table */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <div style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, overflow: "hidden" }}>
+        <div style={{ background: "var(--bg2, #111117)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, overflow: "hidden" }}>
           <div style={{ padding: "16px 22px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700 }}>Conversion Funnel</h2>
           </div>
@@ -175,7 +175,7 @@ export const AnalyticsPage = () => {
           </div>
         </div>
 
-        <div style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, overflow: "hidden" }}>
+        <div style={{ background: "var(--bg2, #111117)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, overflow: "hidden" }}>
           <div style={{ padding: "16px 22px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700 }}>Category Performance</h2>
           </div>

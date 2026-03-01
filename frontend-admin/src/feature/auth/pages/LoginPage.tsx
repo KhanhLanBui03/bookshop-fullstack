@@ -1,8 +1,13 @@
 "use client"
 
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
+import { authApi } from "@/api/auth.api"
 
 const LoginPage = () => {
+  const navigate = useNavigate()
+  const {getCurrentUser} = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -12,25 +17,20 @@ const LoginPage = () => {
     setLoading(true)
 
     try {
-      const res = await fetch("http://localhost:8080/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
+      const res = await authApi.login({ email, password })
 
-      if (!res.ok) throw new Error("Login failed")
+      localStorage.setItem("accessToken", res.accessToken)
+      localStorage.setItem("refreshToken", res.refreshToken)
 
-      const data = await res.json()
-      localStorage.setItem("token", data.token)
+      await getCurrentUser()
 
-      window.location.href = "/admin"
+      navigate("/")
     } catch (err) {
       alert("Sai tài khoản hoặc mật khẩu")
     } finally {
       setLoading(false)
     }
   }
-
   return (
     <div
       style={{

@@ -69,6 +69,7 @@ public class AuthController {
         Map<String, Object> response = new HashMap<>();
         response.put("id", userDetails.getId());
         response.put("email", userDetails.getUsername());
+        response.put("name", userDetails.getEmail());
         response.put("roles", userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList());

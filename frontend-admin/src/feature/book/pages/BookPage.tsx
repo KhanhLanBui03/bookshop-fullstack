@@ -844,7 +844,7 @@ export const BookManagementPage = () => {
                 {/* ── Stats row ── */}
                 <div className="bm-up" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20, animationDelay: "40ms" }}>
                     {[
-                        { label: "Total Books", value: books.length, icon: <Book /> },
+                        { label: "Total Books", value: books.length, icon: "📚" },
                         { label: "Active", value: books.filter(b => b.status === "ACTIVE").length, icon: <ShieldCheck /> },
                         { label: "Low Stock", value: books.filter(b => b.stock > 0 && b.stock <= 10).length, icon: <TriangleAlert /> },
                         { label: "Out of Stock", value: books.filter(b => b.stock === 0).length, icon: <Siren /> },
