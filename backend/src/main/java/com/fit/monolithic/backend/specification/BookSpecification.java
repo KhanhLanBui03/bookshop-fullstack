@@ -39,7 +39,6 @@ public class BookSpecification {
                         cb.lessThanOrEqualTo(root.get("salePrice"), maxPrice));
             }
 
-            // ✅ Dùng subquery thay vì JOIN trực tiếp để tránh duplicate rows
             if (category != null && !category.isBlank()) {
                 var categoryJoin = root.join("category", JoinType.LEFT);
                 predicate = cb.and(predicate,

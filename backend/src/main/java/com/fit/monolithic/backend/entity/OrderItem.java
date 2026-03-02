@@ -21,7 +21,7 @@ public class OrderItem {
     private String bookTitle;  // snapshot tên
     private BigDecimal price;        // snapshot giá tại thời điểm mua
     private Integer quantity;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
 }
