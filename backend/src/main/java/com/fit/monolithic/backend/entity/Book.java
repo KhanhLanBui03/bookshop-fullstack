@@ -67,4 +67,6 @@ public class Book {
     @JoinColumn(name = "publisher_id", nullable = false)
     @JsonIgnore
     private Publisher publisher;
+    @OneToMany(mappedBy = "book")
+    private List<OrderItem> orderItems;
 }

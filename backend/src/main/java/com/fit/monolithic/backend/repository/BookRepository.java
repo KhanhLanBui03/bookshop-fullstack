@@ -55,5 +55,18 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
             Pageable pageable
     );
     List<Book> findTop10ByStatusOrderBySoldCountDesc(BookStatus status);
+    @Query("""
+            SELECT
+            b.id,
+            b.title,
+            a.name,
+            b.rating,
+            b.soldCount,
+            b.stock
+            FROM Book b
+            LEFT JOIN b.author a
+            ORDER BY b.soldCount DESC
+            """)
+    List<Object[]> getTopBook(Pageable pageable);
 
 }
