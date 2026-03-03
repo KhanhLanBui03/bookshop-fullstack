@@ -206,4 +206,9 @@ public class BookServiceImpl implements BookService {
                 .countOutOfStock(totalOutOfStock)
                 .build();
     }
+
+    @Override
+    public List<BookAdminResponse> getAllBookAdmins() {
+        return bookRepository.getAllBookAdmins();
+    }
 }

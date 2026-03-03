@@ -1,5 +1,6 @@
 package com.fit.monolithic.backend.repository;
 
+import com.fit.monolithic.backend.dto.response.BookAdminResponse;
 import com.fit.monolithic.backend.dto.response.BookCardResponse;
 import com.fit.monolithic.backend.dto.response.BookResponse;
 import com.fit.monolithic.backend.entity.Author;
@@ -81,5 +82,34 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
                 FROM Book b
             """)
     List<Object[]> getBookDashboardStats();
+
+    @Query("""
+    SELECT new com.fit.monolithic.backend.dto.response.BookAdminResponse(
+        b.id,
+        b.title,
+        p.name,
+        a.name,
+        (
+            SELECT i.url
+            FROM Image i
+            WHERE i.book.id = b.id
+            ORDER BY i.id ASC
+            LIMIT 1
+        ),
+        c.name,
+        b.salePrice,
+        b.stock,
+        b.soldCount,
+        b.rating,
+        b.status
+    )
+    FROM Book b
+    LEFT JOIN b.author a
+    LEFT JOIN b.category c
+    LEFT JOIN b.publisher p
+    ORDER BY b.createdAt DESC
+""")
+    List<BookAdminResponse> getAllBookAdmins();
+
 
 }

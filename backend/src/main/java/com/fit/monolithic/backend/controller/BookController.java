@@ -1,6 +1,7 @@
 package com.fit.monolithic.backend.controller;
 
 import com.fit.monolithic.backend.dto.request.BookRequest;
+import com.fit.monolithic.backend.dto.response.BookAdminResponse;
 import com.fit.monolithic.backend.dto.response.BookCardResponse;
 import com.fit.monolithic.backend.dto.response.BookDashboardStats;
 import com.fit.monolithic.backend.dto.response.BookResponse;
@@ -108,6 +109,14 @@ public class BookController {
                 200,
                 "Success",
                 bookService.getBookDashboardStats()
+        );
+    }
+    @GetMapping("/admin/management")
+    public ApiResponse<List<BookAdminResponse>> getBookManagement() {
+        return new ApiResponse<>(
+                200,
+                "Success",
+                bookService.getAllBookAdmins()
         );
     }
 
