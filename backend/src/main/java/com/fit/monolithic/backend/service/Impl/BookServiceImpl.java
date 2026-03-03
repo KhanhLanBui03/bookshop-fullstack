@@ -3,10 +3,7 @@ package com.fit.monolithic.backend.service.Impl;
 import com.fit.monolithic.backend.dto.request.BookRequest;
 import com.fit.monolithic.backend.dto.request.ImageRequest;
 import com.fit.monolithic.backend.dto.request.PublisherRequest;
-import com.fit.monolithic.backend.dto.response.BookCardResponse;
-import com.fit.monolithic.backend.dto.response.BookResponse;
-import com.fit.monolithic.backend.dto.response.ImageResponse;
-import com.fit.monolithic.backend.dto.response.PublisherResponse;
+import com.fit.monolithic.backend.dto.response.*;
 import com.fit.monolithic.backend.entity.*;
 import com.fit.monolithic.backend.enums.BookStatus;
 import com.fit.monolithic.backend.repository.*;
@@ -191,5 +188,22 @@ public class BookServiceImpl implements BookService {
 
         return bookRepository.findAll(spec, pageable)
                 .map(this::mapToCardResponse);
+    }
+    @Override
+    public BookDashboardStats getBookDashboardStats() {
+
+        Object[] stats = bookRepository.getBookDashboardStats().get(0);
+
+        Long totalBooks = (Long) stats[0];
+        Long totalActive =  (Long) stats[1];
+        Long totalLowStock = (Long) stats[2];
+        Long totalOutOfStock = (Long) stats[3];
+
+        return BookDashboardStats.builder()
+                .totalBooks(totalBooks)
+                .countActive(totalActive)
+                .countLowStock(totalLowStock)
+                .countOutOfStock(totalOutOfStock)
+                .build();
     }
 }

@@ -2,6 +2,7 @@ package com.fit.monolithic.backend.controller;
 
 import com.fit.monolithic.backend.dto.request.BookRequest;
 import com.fit.monolithic.backend.dto.response.BookCardResponse;
+import com.fit.monolithic.backend.dto.response.BookDashboardStats;
 import com.fit.monolithic.backend.dto.response.BookResponse;
 import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.entity.Book;
@@ -99,6 +100,14 @@ public class BookController {
                         minRating,
                         pageable
                 )
+        );
+    }
+    @GetMapping("/admin/stats")
+    public ApiResponse<BookDashboardStats> getBookDashboardStats() {
+        return new ApiResponse<>(
+                200,
+                "Success",
+                bookService.getBookDashboardStats()
         );
     }
 

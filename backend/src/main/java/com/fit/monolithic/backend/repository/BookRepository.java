@@ -31,30 +31,33 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
                WHERE b.author.id = :id
             """)
     List<BookCardResponse> getBooksByAuthor(@Param("id") Long id);
+
     @Query("""
-    SELECT new com.fit.monolithic.backend.dto.response.BookCardResponse(
-                    b.id,
-                    b.title,
-                    b.salePrice,
-                    b.originalPrice,
-                    b.rating,
-                    b.soldCount,
-                    i.url,
-                    b.author.name
-               )
-    FROM Book b
-    LEFT JOIN b.images i
-    WHERE b.category.id = :categoryId
-      AND b.id <> :bookId
-      AND b.status = 'ACTIVE'
-    ORDER BY b.soldCount DESC
-""")
+                SELECT new com.fit.monolithic.backend.dto.response.BookCardResponse(
+                                b.id,
+                                b.title,
+                                b.salePrice,
+                                b.originalPrice,
+                                b.rating,
+                                b.soldCount,
+                                i.url,
+                                b.author.name
+                           )
+                FROM Book b
+                LEFT JOIN b.images i
+                WHERE b.category.id = :categoryId
+                  AND b.id <> :bookId
+                  AND b.status = 'ACTIVE'
+                ORDER BY b.soldCount DESC
+            """)
     List<BookCardResponse> findRelatedBooks(
             @Param("categoryId") Long categoryId,
             @Param("bookId") Long bookId,
             Pageable pageable
     );
+
     List<Book> findTop10ByStatusOrderBySoldCountDesc(BookStatus status);
+
     @Query("""
             SELECT
             b.id,
@@ -68,5 +71,15 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
             ORDER BY b.soldCount DESC
             """)
     List<Object[]> getTopBook(Pageable pageable);
+
+    @Query("""
+                SELECT
+                    COUNT(b),
+                    SUM(CASE WHEN b.status = com.fit.monolithic.backend.enums.BookStatus.ACTIVE THEN 1 ELSE 0 END),
+                    SUM(CASE WHEN b.stock > 0 AND b.stock <= 5 THEN 1 ELSE 0 END),
+                    SUM(CASE WHEN b.stock = 0 THEN 1 ELSE 0 END)
+                FROM Book b
+            """)
+    List<Object[]> getBookDashboardStats();
 
 }
