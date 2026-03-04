@@ -8,7 +8,8 @@ public class Endpoints {
             "/api/v1/authors/**",
             "/api/v1/discounts/**",
             "/api/v1/categories/**",
-            "/api/v1/dashboards/**"
+            "/api/v1/dashboards/**",
+            "/api/v1/orders/**",
     };
     public static final String[] PUBLISH_POST_ENDPOINTS = {
             "/api/v1/publishers/**",

@@ -57,10 +57,10 @@ public class PaymentController {
         Order order = orderRepository.findByOrderCode(orderCode).orElseThrow();
 
         if("00".equals(responseCode)){
-            order.setOrderStatus(OrderStatus.PAID);
+            order.setOrderStatus(OrderStatus.CANCELLED);
             order.setTransactionId(transactionNo);
         }else{
-            order.setOrderStatus(OrderStatus.FAILED);
+            order.setOrderStatus(OrderStatus.CANCELLED);
         }
 
         orderRepository.save(order);

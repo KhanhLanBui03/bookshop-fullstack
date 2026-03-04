@@ -1,6 +1,7 @@
 package com.fit.monolithic.backend.service.Impl;
 
 import com.fit.monolithic.backend.dto.request.CreateOrderRequest;
+import com.fit.monolithic.backend.dto.response.OrderDashboardStats;
 import com.fit.monolithic.backend.dto.response.OrderResponse;
 import com.fit.monolithic.backend.entity.*;
 import com.fit.monolithic.backend.enums.OrderStatus;
@@ -30,34 +31,51 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
     private final VnpayService vnpayService;
     @Override
-    public OrderResponse createOrder(CreateOrderRequest request, CustomUserDetails  customUserDetails) {
-        if(request.getPaymentMethod()!= PaymentMethod.COD){
+    public OrderResponse createOrder(CreateOrderRequest request, CustomUserDetails userDetails) {
+
+        if (request.getPaymentMethod() != PaymentMethod.COD) {
             throw new RuntimeException("Only COD supported now");
         }
-        Address address = addressRepository.findById(request.getAddressId()).orElseThrow();
-        String email = customUserDetails.getUsername();
-        User user = userRepository.findByEmail(email).orElseThrow();
-        if(!address.getUser().getId().equals(user.getId())){
-            throw new RuntimeException("Only COD supported now");
+
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow();
+
+        Address address = addressRepository.findById(request.getAddressId())
+                .orElseThrow();
+
+        if (!address.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Address does not belong to user");
         }
-        List<CartItem> cartItems = cartItemRepository.findByIdInAndCart_User(request.getCartItemIds(), user);
-        BigDecimal total = cartItems.stream()
-                .map(item -> item.getBook().getSalePrice()
-                        .multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        List<CartItem> cartItems = cartItemRepository
+                .findByIdInAndCart_User(request.getCartItemIds(), user);
+
+        if (cartItems.isEmpty() ||
+                cartItems.size() != request.getCartItemIds().size()) {
+            throw new RuntimeException("Invalid cart items");
+        }
+
+        BigDecimal total = BigDecimal.ZERO;
 
         Order order = Order.builder()
-                .orderCode(UUID.randomUUID().toString())
-                .orderStatus(OrderStatus.CREATED)
+                .orderCode("ORD-" + System.currentTimeMillis())
+                .orderStatus(OrderStatus.PENDING)
                 .paymentMethod(PaymentMethod.COD)
-                .orderTotalAmount(total)
                 .shippingAddress(address)
                 .orderUser(user)
                 .build();
 
-        orderRepository.save(order);
-
         for (CartItem cartItem : cartItems) {
+
+            if (cartItem.getQuantity() > cartItem.getBook().getStock()) {
+                throw new RuntimeException("Insufficient stock");
+            }
+
+            BigDecimal itemTotal = cartItem.getBook().getSalePrice()
+                    .multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+
+            total = total.add(itemTotal);
+
             OrderItem orderItem = OrderItem.builder()
                     .order(order)
                     .bookId(cartItem.getBook().getId())
@@ -66,9 +84,16 @@ public class OrderServiceImpl implements OrderService {
                     .price(cartItem.getBook().getSalePrice())
                     .build();
 
-            orderItemRepository.save(orderItem);
+            order.getOrderItems().add(orderItem);
+
+            cartItem.getBook().setStock(
+                    cartItem.getBook().getStock() - cartItem.getQuantity()
+            );
         }
 
+        order.setOrderTotalAmount(total);
+
+        orderRepository.save(order);
         cartItemRepository.deleteAll(cartItems);
 
         return OrderResponse.builder()
@@ -77,9 +102,22 @@ public class OrderServiceImpl implements OrderService {
                 .totalAmount(total)
                 .status(order.getOrderStatus())
                 .createdAt(order.getOrderDate())
-                .paymentMethod(PaymentMethod.COD)
+                .paymentMethod(order.getPaymentMethod())
                 .build();
-
     }
 
+    @Override
+    public OrderDashboardStats getOrderDashboardStat() {
+        Object[] orders = orderRepository.getOrderDashboardStat().get(0);
+        BigDecimal total = (BigDecimal) orders[0];
+        Long totalPending = (Long) orders[1];
+        Long totalShipped = (Long) orders[2];
+        Long totalDelivered = (Long) orders[3];
+        return OrderDashboardStats.builder()
+                .totalDelivered(totalDelivered)
+                .totalPending(totalPending)
+                .totalRevenue(total)
+                .totalShipping(totalShipped)
+                .build();
+    }
 }

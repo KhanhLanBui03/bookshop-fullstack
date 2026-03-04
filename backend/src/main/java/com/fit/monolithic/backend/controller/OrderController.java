@@ -1,6 +1,7 @@
 package com.fit.monolithic.backend.controller;
 
 import com.fit.monolithic.backend.dto.request.CreateOrderRequest;
+import com.fit.monolithic.backend.dto.response.OrderDashboardStats;
 import com.fit.monolithic.backend.dto.response.OrderResponse;
 import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.security.CustomUserDetails;
@@ -8,10 +9,7 @@ import com.fit.monolithic.backend.service.OrderService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -27,6 +25,14 @@ public class OrderController {
                 201,
                 "Success",
                 orderService.createOrder(createOrderRequest,customUserDetails)
+        );
+    }
+    @GetMapping("/admin/order-stats")
+    public ApiResponse<OrderDashboardStats>  getOrderDashboardStat(){
+        return new ApiResponse<>(
+                200,
+                "Success",
+                orderService.getOrderDashboardStat()
         );
     }
 }
