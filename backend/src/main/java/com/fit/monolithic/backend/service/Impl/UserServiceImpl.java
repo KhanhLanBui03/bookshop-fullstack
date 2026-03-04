@@ -3,6 +3,7 @@ package com.fit.monolithic.backend.service.Impl;
 import com.fit.monolithic.backend.dto.response.AddressResponse;
 import com.fit.monolithic.backend.dto.response.OrderResponse;
 import com.fit.monolithic.backend.dto.response.ProfileResponse;
+import com.fit.monolithic.backend.dto.response.UserDashboardStats;
 import com.fit.monolithic.backend.entity.Address;
 import com.fit.monolithic.backend.entity.User;
 import com.fit.monolithic.backend.repository.AddressRepository;
@@ -62,5 +63,10 @@ public class UserServiceImpl implements UserService {
                 .orders(orders)
                 .build();
 
+    }
+
+    @Override
+    public UserDashboardStats getDashboardOverview() {
+        return userRepository.getDashboardOverview();
     }
 }

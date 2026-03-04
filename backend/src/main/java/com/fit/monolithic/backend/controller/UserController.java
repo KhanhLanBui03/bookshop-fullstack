@@ -1,9 +1,11 @@
 package com.fit.monolithic.backend.controller;
 
 import com.fit.monolithic.backend.dto.response.ProfileResponse;
+import com.fit.monolithic.backend.dto.response.UserDashboardStats;
 import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.security.CustomUserDetails;
 import com.fit.monolithic.backend.service.UserService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +27,14 @@ public class UserController {
                 200,
                 "Success",
                 userService.getProfile(userDetails)
+        );
+    }
+    @GetMapping("/admin/user-stats")
+    public ApiResponse<UserDashboardStats> getAdminUserStats() {
+        return new ApiResponse<>(
+                200,
+                "Success",
+                userService.getDashboardOverview()
         );
     }
 }

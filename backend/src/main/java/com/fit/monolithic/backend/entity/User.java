@@ -28,7 +28,7 @@ public class User {
     private String password;
     private String phoneNumber;
     @CreationTimestamp
-    LocalDate createAt = LocalDate.now();
+    LocalDate createAt;
     private AuthProvider  authProvider;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

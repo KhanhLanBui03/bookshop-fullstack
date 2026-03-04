@@ -10,6 +10,7 @@ public class Endpoints {
             "/api/v1/categories/**",
             "/api/v1/dashboards/**",
             "/api/v1/orders/**",
+            "/api/v1/users/**",
     };
     public static final String[] PUBLISH_POST_ENDPOINTS = {
             "/api/v1/publishers/**",
