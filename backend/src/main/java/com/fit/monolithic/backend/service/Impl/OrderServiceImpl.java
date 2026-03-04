@@ -1,6 +1,7 @@
 package com.fit.monolithic.backend.service.Impl;
 
 import com.fit.monolithic.backend.dto.request.CreateOrderRequest;
+import com.fit.monolithic.backend.dto.response.OrderAdminResponse;
 import com.fit.monolithic.backend.dto.response.OrderDashboardStats;
 import com.fit.monolithic.backend.dto.response.OrderResponse;
 import com.fit.monolithic.backend.entity.*;
@@ -12,6 +13,8 @@ import com.fit.monolithic.backend.service.OrderService;
 import com.fit.monolithic.backend.service.VnpayService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -119,5 +122,10 @@ public class OrderServiceImpl implements OrderService {
                 .totalRevenue(total)
                 .totalShipping(totalShipped)
                 .build();
+    }
+
+    @Override
+    public Page<OrderAdminResponse> getAllOrderAdmins(String keyword, OrderStatus orderStatus, PaymentMethod paymentMethod, Pageable pageable) {
+        return orderRepository.getAllOrderAdmins(keyword, orderStatus, paymentMethod, pageable);
     }
 }

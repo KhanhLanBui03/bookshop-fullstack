@@ -1,7 +1,11 @@
 package com.fit.monolithic.backend.repository;
 
+import com.fit.monolithic.backend.dto.response.OrderAdminResponse;
 import com.fit.monolithic.backend.entity.Order;
 import com.fit.monolithic.backend.entity.User;
+import com.fit.monolithic.backend.enums.OrderStatus;
+import com.fit.monolithic.backend.enums.PaymentMethod;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -47,4 +51,54 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                 FROM Order o
             """)
     List<Object[]> getOrderDashboardStat();
+
+    @Query(
+            value = """
+                    SELECT new com.fit.monolithic.backend.dto.response.OrderAdminResponse(
+                        o.id,
+                        o.orderCode,
+                        u.fullName,
+                        u.email,
+                        COALESCE(SUM(oi.quantity), 0),
+                        o.paymentMethod,
+                        o.orderTotalAmount,
+                        o.orderStatus,
+                        o.orderDate
+                    )
+                    FROM Order o
+                    LEFT JOIN o.orderUser u
+                    LEFT JOIN o.orderItems oi
+                    WHERE
+                        (
+                            :keyword IS NULL OR
+                            LOWER(o.orderCode) LIKE LOWER(CONCAT('%',:keyword,'%')) OR
+                            LOWER(u.fullName) LIKE LOWER(CONCAT('%',:keyword,'%'))
+                        )
+                    AND (:orderStatus IS NULL OR o.orderStatus = :orderStatus)
+                    AND (:paymentMethod IS NULL OR o.paymentMethod = :paymentMethod)
+                    GROUP BY
+                        o.id,
+                        o.orderCode,
+                        u.fullName,
+                        u.email,
+                        o.paymentMethod,
+                        o.orderTotalAmount,
+                        o.orderStatus,
+                        o.orderDate
+                    """,
+            countQuery = """
+                    SELECT COUNT(DISTINCT o.id)
+                    FROM Order o
+                    LEFT JOIN o.orderUser u
+                    WHERE
+                        (
+                            :keyword IS NULL OR
+                            LOWER(o.orderCode) LIKE LOWER(CONCAT('%',:keyword,'%')) OR
+                            LOWER(u.fullName) LIKE LOWER(CONCAT('%',:keyword,'%'))
+                        )
+                    AND (:orderStatus IS NULL OR o.orderStatus = :orderStatus)
+                    AND (:paymentMethod IS NULL OR o.paymentMethod = :paymentMethod)
+                    """
+    )
+    Page<OrderAdminResponse> getAllOrderAdmins(String keyword, OrderStatus orderStatus, PaymentMethod paymentMethod, Pageable pageable);
 }
