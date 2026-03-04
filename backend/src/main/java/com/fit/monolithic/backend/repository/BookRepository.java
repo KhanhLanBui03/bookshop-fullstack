@@ -107,9 +107,19 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
     LEFT JOIN b.author a
     LEFT JOIN b.category c
     LEFT JOIN b.publisher p
-    ORDER BY b.createdAt DESC
+    WHERE
+        (
+            :keyword IS NULL OR
+            LOWER(b.title) LIKE LOWER(CONCAT('%',:keyword,'%')) OR
+            LOWER(a.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+    AND (:status IS NULL OR b.status = :status)
+    AND (:categoryId IS NULL OR c.id = :categoryId)
 """)
-    List<BookAdminResponse> getAllBookAdmins();
+    Page<BookAdminResponse> getAllBookAdmins( String keyword,
+                                              BookStatus status,
+                                              Long categoryId,
+                                              Pageable pageable);
 
 
 }

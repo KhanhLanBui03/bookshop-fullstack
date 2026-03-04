@@ -3,6 +3,7 @@ package com.fit.monolithic.backend.service;
 import com.fit.monolithic.backend.dto.request.BookRequest;
 import com.fit.monolithic.backend.dto.response.*;
 import com.fit.monolithic.backend.entity.Book;
+import com.fit.monolithic.backend.enums.BookStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,6 +19,11 @@ public interface BookService {
     List<BookCardResponse> getRelatedBooks(Long bookId);
     Page<BookCardResponse> getBooks(String keyword, BigDecimal minPrice, BigDecimal maxPrice, String category, BigDecimal minRating, Pageable pageable);
     BookDashboardStats getBookDashboardStats();
-    List<BookAdminResponse> getAllBookAdmins();
+    Page<BookAdminResponse> getAdminBooks(
+            String keyword,
+            BookStatus status,
+            Long categoryId,
+            Pageable pageable
+    );
 
 }

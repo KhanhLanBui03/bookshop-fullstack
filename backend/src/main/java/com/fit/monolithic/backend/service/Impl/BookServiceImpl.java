@@ -208,7 +208,12 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<BookAdminResponse> getAllBookAdmins() {
-        return bookRepository.getAllBookAdmins();
+    public Page<BookAdminResponse> getAdminBooks(
+            String keyword,
+            BookStatus status,
+            Long categoryId,
+            Pageable pageable
+    ) {
+        return bookRepository.getAllBookAdmins(keyword, status, categoryId, pageable);
     }
 }

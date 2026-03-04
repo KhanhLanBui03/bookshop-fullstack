@@ -7,6 +7,7 @@ import com.fit.monolithic.backend.dto.response.BookDashboardStats;
 import com.fit.monolithic.backend.dto.response.BookResponse;
 import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.entity.Book;
+import com.fit.monolithic.backend.enums.BookStatus;
 import com.fit.monolithic.backend.service.BookService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -111,13 +112,15 @@ public class BookController {
                 bookService.getBookDashboardStats()
         );
     }
-    @GetMapping("/admin/management")
-    public ApiResponse<List<BookAdminResponse>> getBookManagement() {
-        return new ApiResponse<>(
-                200,
-                "Success",
-                bookService.getAllBookAdmins()
-        );
+    @GetMapping("/admin/book-admin")
+    public ApiResponse<Page<BookAdminResponse>> getBooks(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) BookStatus status,
+            @RequestParam(required = false) Long categoryId,
+            @PageableDefault(size = 10) Pageable pageable
+    ) {
+        return new ApiResponse<>(200, "Success",
+                bookService.getAdminBooks(keyword, status, categoryId, pageable));
     }
 
 }
