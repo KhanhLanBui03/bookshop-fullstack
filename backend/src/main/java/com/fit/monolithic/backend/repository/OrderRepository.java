@@ -25,7 +25,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                     COALESCE(SUM(oi.quantity), 0)
                 FROM Order o
                 LEFT JOIN o.orderItems oi
-                WHERE o.orderStatus = com.fit.monolithic.backend.enums.OrderStatus.DELIVERED
+                WHERE o.orderStatus = com.fit.monolithic.backend.enums.OrderStatus.SHIPPING
             """)
     List<Object[]> getDashboardStats();
 

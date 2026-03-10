@@ -1,4 +1,6 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
+import type { StatsDashboardResponse } from "../dashboard.type"
+import { dashboardApi } from "@/api/dashboard.api"
 
 /* ════════ DATA ════════ */
 const ORDERS = [
@@ -91,7 +93,27 @@ export const DashboardPage = () => {
   const maxSold = sorted[0].sold
   const maxRev = Math.max(...WEEKLY.map(w => w.rev))
   const [hover, setHover] = useState<number | null>(null)
+  const [stats, setStats] = useState<StatsDashboardResponse | null>(null)
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await dashboardApi.getDashboardStats()
+        setStats(data)
+      } catch (error) {
+        console.error("Fetch stats error", error)
+      }
+    }
 
+    fetchStats()
+  }, [])
+  const statsData = stats
+    ? [
+      { label: "Revenue", value: `$${stats.revenue}`, trend: "", up: true },
+      { label: "Orders", value: stats.orders, trend: "", up: true },
+      { label: "Books Sold", value: stats.bookSold, trend: "", up: true },
+      { label: "Customers", value: stats.customers, trend: "", up: true },
+    ]
+    : []
   return (
     <div className="db">
       <style>{CSS}</style>
@@ -115,7 +137,7 @@ export const DashboardPage = () => {
 
         {/* ── Stats ── */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 16 }}>
-          {STATS.map((s, i) => (
+          {statsData.map((s, i) => (
             <div
               key={i}
               className="db-stat up"
