@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import type { StatsDashboardResponse, TopBookResponse, TopRecentOrder } from "../dashboard.type"
+import type { SaleByCategoryResponse, StatsDashboardResponse, TopBookResponse, TopRecentOrder } from "../dashboard.type"
 import { dashboardApi } from "@/api/dashboard.api"
 
 
@@ -12,14 +12,6 @@ const WEEKLY = [
   { day: "Fri", rev: 8300 },
   { day: "Sat", rev: 11200 },
   { day: "Sun", rev: 6700 },
-]
-
-const CATEGORIES = [
-  { name: "Fiction", value: 35, color: "var(--accent)" },
-  { name: "Self-Help", value: 22, color: "var(--green)" },
-  { name: "Technology", value: 18, color: "var(--blue)" },
-  { name: "Business", value: 14, color: "var(--amber)" },
-  { name: "Other", value: 11, color: "var(--red)" },
 ]
 
 /* ════════ CSS ════════ */
@@ -66,7 +58,13 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   Pending: { bg: "rgba(245,158,11,0.15)", color: "var(--amber)" },
   Cancelled: { bg: "rgba(255,255,255,0.06)", color: "var(--muted2)" },
 }
-
+const CATEGORY_COLORS = [
+  "var(--accent)",
+  "var(--green)",
+  "var(--blue)",
+  "var(--amber)",
+  "var(--red)"
+]
 /* ════════ PAGE ════════ */
 export const DashboardPage = () => {
   const maxRev = Math.max(...WEEKLY.map(w => w.rev))
@@ -74,20 +72,23 @@ export const DashboardPage = () => {
   const [stats, setStats] = useState<StatsDashboardResponse | null>(null)
   const [orders, setOrders] = useState<TopRecentOrder[]>([])
   const [books, setBooks] = useState<TopBookResponse[]>([])
+  const [categories, setCategories] = useState<SaleByCategoryResponse[]>([])
   const [loading, setLoading] = useState(true)
 
 useEffect(() => {
   const fetchDashboard = async () => {
     try {
-      const [books, orders, stats] = await Promise.all([
+      const [books, orders, stats, categories] = await Promise.all([
         dashboardApi.getTopBook(),
         dashboardApi.getTopRecentOrder(),
-        dashboardApi.getDashboardStats()
+        dashboardApi.getDashboardStats(),
+        dashboardApi.getTopBookByCategory(),
       ])
 
       setBooks(books)
       setOrders(orders)
       setStats(stats)
+      setCategories(categories)
 
     } catch (error) {
       console.error(error)
@@ -271,17 +272,17 @@ useEffect(() => {
             </div>
 
             <div style={{ ...glass, padding: "20px 18px" }}>
-              {CATEGORIES.map((c, i) => (
-                <div key={i} style={{ marginBottom: i < CATEGORIES.length - 1 ? 14 : 0 }}>
+              {categories?.map((c, i) => (
+                <div key={i} style={{ marginBottom: i < categories.length - 1 ? 14 : 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, color: "var(--muted2)" }}>{c.name}</span>
-                    <span style={{ ...mono, fontSize: 11, color: "var(--text)" }}>{c.value}%</span>
+                    <span style={{ fontSize: 12, color: "var(--muted2)" }}>{c.categoryName}</span>
+                    <span style={{ ...mono, fontSize: 11, color: "var(--text)" }}>{Math.floor(c.percent)}%</span>
                   </div>
                   <div style={{ height: 6, background: "var(--border2)", borderRadius: 99 }}>
                     <div style={{
                       height: "100%",
-                      width: `${c.value}%`,
-                      background: c.color,
+                      width: `${c.totalSold}%`,
+                      background: CATEGORY_COLORS[i % CATEGORY_COLORS.length],
                       borderRadius: 99,
                       transition: "width .3s ease",
                     }} />

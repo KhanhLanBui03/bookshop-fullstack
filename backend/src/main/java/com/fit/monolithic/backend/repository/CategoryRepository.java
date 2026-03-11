@@ -18,13 +18,13 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
                         (
                             SELECT SUM(oi2.quantity)
                             FROM OrderItem oi2
-                            WHERE oi2.order.orderStatus = com.fit.monolithic.backend.enums.OrderStatus.DELIVERED
+                            WHERE oi2.order.orderStatus = com.fit.monolithic.backend.enums.OrderStatus.SHIPPING
                         )
                     ) as percent
                 FROM OrderItem oi
                 JOIN oi.book b
                 JOIN b.category c
-                WHERE oi.order.orderStatus = com.fit.monolithic.backend.enums.OrderStatus.DELIVERED
+                WHERE oi.order.orderStatus = com.fit.monolithic.backend.enums.OrderStatus.SHIPPING
                 GROUP BY c.name
                 ORDER BY SUM(oi.quantity) DESC
             """)
