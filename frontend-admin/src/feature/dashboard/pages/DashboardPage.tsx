@@ -1,28 +1,8 @@
 import React, { useEffect, useState } from "react"
-import type { StatsDashboardResponse } from "../dashboard.type"
+import type { StatsDashboardResponse, TopBookResponse, TopRecentOrder } from "../dashboard.type"
 import { dashboardApi } from "@/api/dashboard.api"
 
-/* ════════ DATA ════════ */
-const ORDERS = [
-  { id: "ORD001", name: "Nguyen Van A", date: "20 Feb", total: 120, status: "Completed" },
-  { id: "ORD002", name: "Tran Thi B", date: "21 Feb", total: 85, status: "Pending" },
-  { id: "ORD003", name: "Le Van C", date: "22 Feb", total: 240, status: "Completed" },
-  { id: "ORD004", name: "Pham Thi D", date: "22 Feb", total: 64, status: "Cancelled" },
-]
 
-const BOOKS = [
-  { id: "1", title: "Atomic Habits", author: "James Clear", rating: 5, sold: 120, stock: 18 },
-  { id: "2", title: "Deep Work", author: "Cal Newport", rating: 4, sold: 95, stock: 42 },
-  { id: "3", title: "Clean Code", author: "Robert C. Martin", rating: 5, sold: 140, stock: 5 },
-  { id: "4", title: "The Pragmatic Programmer", author: "Andrew Hunt", rating: 4, sold: 88, stock: 0 },
-]
-
-const STATS = [
-  { label: "Revenue", value: "$48,291", trend: "+12.4%", up: true },
-  { label: "Orders", value: "124", trend: "+8.1%", up: true },
-  { label: "Books Sold", value: "3,847", trend: "−3.2%", up: false },
-  { label: "Customers", value: "1,209", trend: "+21.7%", up: true },
-]
 
 const WEEKLY = [
   { day: "Mon", rev: 5200 },
@@ -89,23 +69,35 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
 
 /* ════════ PAGE ════════ */
 export const DashboardPage = () => {
-  const sorted = [...BOOKS].sort((a, b) => b.sold - a.sold)
-  const maxSold = sorted[0].sold
   const maxRev = Math.max(...WEEKLY.map(w => w.rev))
   const [hover, setHover] = useState<number | null>(null)
   const [stats, setStats] = useState<StatsDashboardResponse | null>(null)
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const data = await dashboardApi.getDashboardStats()
-        setStats(data)
-      } catch (error) {
-        console.error("Fetch stats error", error)
-      }
-    }
+  const [orders, setOrders] = useState<TopRecentOrder[]>([])
+  const [books, setBooks] = useState<TopBookResponse[]>([])
+  const [loading, setLoading] = useState(true)
 
-    fetchStats()
-  }, [])
+useEffect(() => {
+  const fetchDashboard = async () => {
+    try {
+      const [books, orders, stats] = await Promise.all([
+        dashboardApi.getTopBook(),
+        dashboardApi.getTopRecentOrder(),
+        dashboardApi.getDashboardStats()
+      ])
+
+      setBooks(books)
+      setOrders(orders)
+      setStats(stats)
+
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  fetchDashboard()
+}, [])
   const statsData = stats
     ? [
       { label: "Revenue", value: `$${stats.revenue}`, trend: "", up: true },
@@ -312,8 +304,8 @@ export const DashboardPage = () => {
               <span style={{ fontSize: 12, color: "var(--muted)", cursor: "pointer" }}>View all →</span>
             </div>
             <div style={{ ...glass, overflow: "hidden" }}>
-              {ORDERS.map((o, i) => {
-                const s = STATUS_STYLE[o.status]
+              {orders.map((o, i) => {
+                const s = STATUS_STYLE[o.orderStatus] || STATUS_STYLE["Cancelled"]
                 return (
                   <div
                     key={o.id}
@@ -323,7 +315,7 @@ export const DashboardPage = () => {
                       alignItems: "center",
                       gap: 12,
                       padding: "13px 16px",
-                      borderBottom: i < ORDERS.length - 1 ? div6 : "none",
+                      borderBottom: i < orders.length - 1 ? div6 : "none",
                       transition: "background .1s ease",
                     }}
                   >
@@ -341,13 +333,13 @@ export const DashboardPage = () => {
                       fontWeight: 700,
                       color: "var(--accent)",
                     }}>
-                      {o.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
+                      {o.fullName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>
-                        {o.name}
+                        {o.fullName}
                       </p>
-                      <p style={{ ...mono, fontSize: 10, color: "var(--muted)", marginTop: 1 }}>{o.date}</p>
+                      <p style={{ ...mono, fontSize: 10, color: "var(--muted)", marginTop: 1 }}>{o.orderDate}</p>
                     </div>
                     <span style={{
                       fontSize: 10,
@@ -358,10 +350,10 @@ export const DashboardPage = () => {
                       color: s.color,
                       whiteSpace: "nowrap",
                     }}>
-                      {o.status}
+                      {o.orderStatus}
                     </span>
                     <span style={{ ...mono, fontSize: 13, fontWeight: 600, flexShrink: 0, color: "var(--text)" }}>
-                      ${o.total}
+                      ${o.orderTotalAmount}
                     </span>
                   </div>
                 )
@@ -378,7 +370,7 @@ export const DashboardPage = () => {
               <span style={{ fontSize: 12, color: "var(--muted)", cursor: "pointer" }}>Catalog →</span>
             </div>
             <div style={{ ...glass, overflow: "hidden" }}>
-              {sorted.map((b, i) => {
+              {books?.map((b, i) => {
                 const isLow = b.stock > 0 && b.stock <= 10
                 const isOut = b.stock === 0
                 return (
@@ -390,7 +382,7 @@ export const DashboardPage = () => {
                       alignItems: "center",
                       gap: 12,
                       padding: "13px 16px",
-                      borderBottom: i < sorted.length - 1 ? div6 : "none",
+                      borderBottom: i < books.length - 1 ? div6 : "none",
                       transition: "background .1s ease",
                     }}
                   >
@@ -408,11 +400,11 @@ export const DashboardPage = () => {
                       <p style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>
                         {b.title}
                       </p>
-                      <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 1 }}>{b.author}</p>
+                      <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 1 }}>{b.authorName}</p>
                       <div style={{ marginTop: 7, height: 3, background: "var(--border)", borderRadius: 99 }}>
                         <div style={{
                           height: "100%",
-                          width: `${(b.sold / maxSold) * 100}%`,
+                          width: `${(b.sold / Math.max(...books.map(book => book.sold))) * 100}%`,
                           background: "rgba(255,107,53,0.5)",
                           borderRadius: 99,
                         }} />
