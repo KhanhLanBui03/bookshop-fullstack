@@ -34,8 +34,8 @@ A **full-stack online bookstore system** built with **modern technologies**, foc
 
 ### 📦 Product Management
 
-![Admin Product](docs/images/admin-books.png)
 ### 👤 Authentication & Authorization
+
 
 * User **Register / Login**
 * **JWT Access Token**
