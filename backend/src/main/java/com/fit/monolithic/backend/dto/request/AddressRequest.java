@@ -1,6 +1,5 @@
 package com.fit.monolithic.backend.dto.request;
 
-import com.fit.monolithic.backend.enums.AddressType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,4 +13,5 @@ public class AddressRequest {
     private String state;
     private String zip;
     private String country;
+
 }
