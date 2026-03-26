@@ -6,7 +6,7 @@ A **full-stack online bookstore system** built with **modern technologies**, foc
 
 ## 🚀 Tech Stack
 
-### 🔹 Frontend
+### 🔹 FrontendK
 
 * **ReactJS** + **TypeScript**
 * **Vite** (fast build tool)
@@ -30,7 +30,11 @@ A **full-stack online bookstore system** built with **modern technologies**, foc
 ---
 
 ## ✨ Key Features
+## 🛠️ Admin Dashboard
 
+### 📦 Product Management
+
+![Admin Product](docs/images/admin-books.png)
 ### 👤 Authentication & Authorization
 
 * User **Register / Login**
