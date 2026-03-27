@@ -26,6 +26,7 @@ public class Endpoints {
             "/api/v1/publishers/**",
             "/api/v1/authors/**",
             "/api/v1/discounts/**",
+            "api/v1/books/**"
     };
     public static final String[] PUBLISH_DELETE_ENDPOINTS = {
             "/api/v1/publishers/**",

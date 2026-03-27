@@ -60,7 +60,7 @@ public class Book {
     @JoinColumn(name = "author_id", nullable = false)
     @JsonIgnore
     private Author author;
-    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL,orphanRemoval = true)
     @OrderBy("id ASC")
     private List<Image> images = new ArrayList<>();
     @ManyToOne(fetch = FetchType.LAZY)

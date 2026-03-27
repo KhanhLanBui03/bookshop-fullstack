@@ -31,7 +31,7 @@ export const bookApi = {
         return res.data.data
     },
 
-    updateBook: async (id: number, payload: BookRequestPayload) => {
+    updateBook: async (id: number, payload: UpdateBookPayload) => {
         const res = await axiosClient.put(`/books/${id}`, payload)
         return res.data.data
     },

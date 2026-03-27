@@ -3,6 +3,7 @@ package com.fit.monolithic.backend.service.Impl;
 import com.fit.monolithic.backend.dto.request.BookRequest;
 import com.fit.monolithic.backend.dto.request.ImageRequest;
 import com.fit.monolithic.backend.dto.request.PublisherRequest;
+import com.fit.monolithic.backend.dto.request.UpdateBookRequest;
 import com.fit.monolithic.backend.dto.response.*;
 import com.fit.monolithic.backend.entity.*;
 import com.fit.monolithic.backend.enums.BookStatus;
@@ -34,7 +35,7 @@ public class BookServiceImpl implements BookService {
     private final CategoryRepository categoryRepository;
     private final AuthorRepository authorRepository;
     private final PublisherRepository publisherRepository;
-
+    private final OrderItemRepository orderItemRepository;
     public BookResponse mapToResponse(Book book) {
         BookResponse res = new BookResponse();
         res.setId(book.getId());
@@ -222,5 +223,60 @@ public class BookServiceImpl implements BookService {
             throw new RuntimeException("Book not found");
         }
         bookRepository.deleteById(id);
+    }
+    // ========================
+    // 4. IMAGES (replace)
+    // ========================
+    @Override
+    public void updateBook(Long id, UpdateBookRequest req) {
+
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+
+        boolean hasOrders = orderItemRepository.existsByBookId(id);
+
+        if (req.getTitle() != null)       book.setTitle(req.getTitle());
+        if (req.getDescription() != null) book.setDescription(req.getDescription());
+        if (req.getStock() != null)       book.setStock(req.getStock());
+        if (req.getStatus() != null)      book.setStatus(req.getStatus());
+
+        if (req.getSalePrice() != null) {
+            if (hasOrders) throw new RuntimeException("Cannot update price for book already in orders");
+            book.setSalePrice(req.getSalePrice());
+        }
+
+        if (req.getCategoryId() != null) {
+            Category category = categoryRepository.findById(req.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            book.setCategory(category);
+        }
+        if (req.getAuthorId() != null) {
+            Author author = authorRepository.findById(req.getAuthorId())
+                    .orElseThrow(() -> new RuntimeException("Author not found"));
+            book.setAuthor(author);
+        }
+        if (req.getPublisherId() != null) {
+            Publisher publisher = publisherRepository.findById(req.getPublisherId())
+                    .orElseThrow(() -> new RuntimeException("Publisher not found"));
+            book.setPublisher(publisher);
+        }
+
+        // ── Images: clear → flush → add mới ──────────────────────────────────
+        // Phải flush sau clear để JPA thực thi DELETE trước khi INSERT,
+        // tránh vi phạm unique constraint hoặc foreign-key còn trỏ vào row cũ.
+        if (req.getImages() != null && !req.getImages().isEmpty()) {
+            book.getImages().clear();
+            bookRepository.saveAndFlush(book);   // <── flush DELETE ra DB trước
+
+            for (ImageRequest img : req.getImages()) {
+                Image image = new Image();
+                image.setName(img.getName());
+                image.setUrl(img.getUrl());
+                image.setBook(book);
+                book.getImages().add(image);
+            }
+        }
+
+        bookRepository.save(book);
     }
 }

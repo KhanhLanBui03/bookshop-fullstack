@@ -1,6 +1,7 @@
 package com.fit.monolithic.backend.controller;
 
 import com.fit.monolithic.backend.dto.request.BookRequest;
+import com.fit.monolithic.backend.dto.request.UpdateBookRequest;
 import com.fit.monolithic.backend.dto.response.BookAdminResponse;
 import com.fit.monolithic.backend.dto.response.BookCardResponse;
 import com.fit.monolithic.backend.dto.response.BookDashboardStats;
@@ -131,6 +132,21 @@ public class BookController {
     ) {
         return new ApiResponse<>(200, "Success",
                 bookService.getAdminBooks(keyword, status, categoryId, pageable));
+    }
+    @PutMapping("/{id}")
+    public ApiResponse<Void> updateBook(
+            @PathVariable Long id,
+            @RequestBody UpdateBookRequest request
+    ) {
+
+        bookService.updateBook(id, request);
+
+        return new ApiResponse<>(
+                        200,
+                        "Update book successfully",
+                        null
+                );
+
     }
 
 }

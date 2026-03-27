@@ -1,6 +1,7 @@
 package com.fit.monolithic.backend.service;
 
 import com.fit.monolithic.backend.dto.request.BookRequest;
+import com.fit.monolithic.backend.dto.request.UpdateBookRequest;
 import com.fit.monolithic.backend.dto.response.*;
 import com.fit.monolithic.backend.entity.Book;
 import com.fit.monolithic.backend.enums.BookStatus;
@@ -26,5 +27,6 @@ public interface BookService {
             Pageable pageable
     );
     void deleteBook(Long id);
+    void updateBook(Long id, UpdateBookRequest req);
 
 }

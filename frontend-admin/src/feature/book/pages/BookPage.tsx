@@ -550,23 +550,55 @@ export const BookManagementPage = () => {
     }
 
     /* ── Create / Update ── */
+    /* ── Create / Update ─────────────────────────────────────────────────── */
     const handleSave = async (form: BookForm, bookId?: number) => {
-        const payload: BookRequestPayload = {
-            title: form.title,
-            salePrice: Number(form.salePrice),
-            originalPrice: form.originalPrice ? Number(form.originalPrice) : null,
-            description: form.description || undefined,
-            stock: Number(form.stock),
-            categoryId: Number(form.categoryId),
-            authorId: Number(form.authorId),
-            publisherId: Number(form.publisherId),
-            images: form.images.map(img => ({ name: img.name, url: img.url })),
-        }
 
         if (bookId) {
+            /* ── UPDATE: chỉ gửi những field thực sự có giá trị ── */
+            const payload: UpdateBookPayload = {}
+
+            if (form.title) payload.title = form.title
+            if (form.description) payload.description = form.description
+            if (form.salePrice) payload.salePrice = Number(form.salePrice)
+            if (form.originalPrice !== undefined)
+                payload.originalPrice = form.originalPrice
+                    ? Number(form.originalPrice)
+                    : null
+            if (form.stock) payload.stock = Number(form.stock)
+            if (form.status) payload.status = form.status
+            if (form.categoryId) payload.categoryId = Number(form.categoryId)
+            if (form.authorId) payload.authorId = Number(form.authorId)
+            if (form.publisherId) payload.publisherId = Number(form.publisherId)
+
+            /* Images:
+             * - form.images chứa cả ảnh cũ (url = https://…) lẫn ảnh mới (url = data:…)
+             * - Luôn gửi toàn bộ list để backend replace đúng thứ tự
+             * - Nếu list rỗng → không gửi (backend giữ nguyên ảnh cũ)
+             */
+            if (form.images.length > 0) {
+                payload.images = form.images.map(img => ({
+                    name: img.name,
+                    url: img.url,   // url cũ (https) hoặc base64 mới đều OK
+                }))
+            }
+
             await bookApi.updateBook(bookId, payload)
             showToast("Book updated successfully")
+
         } else {
+            /* ── CREATE: gửi đầy đủ BookRequestPayload ── */
+            const payload: BookRequestPayload = {
+                title: form.title,
+                salePrice: Number(form.salePrice),
+                originalPrice: form.originalPrice ? Number(form.originalPrice) : null,
+                description: form.description || undefined,
+                stock: Number(form.stock),
+                categoryId: Number(form.categoryId),
+                authorId: Number(form.authorId),
+                publisherId: Number(form.publisherId),
+                images: form.images.map(img => ({ name: img.name, url: img.url })),
+            }
+
             await bookApi.createBook(payload)
             showToast("Book added to catalog")
         }
