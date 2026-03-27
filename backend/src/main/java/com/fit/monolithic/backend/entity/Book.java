@@ -69,4 +69,6 @@ public class Book {
     private Publisher publisher;
     @OneToMany(mappedBy = "book")
     private List<OrderItem> orderItems;
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> reviews;
 }

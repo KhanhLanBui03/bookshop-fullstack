@@ -46,6 +46,22 @@ export interface BookRequestPayload {
     publisherId: number
     images: { name: string; url: string }[]
 }
+export interface BookDetail {
+    id: number
+    title: string
+    description: string
+    originalPrice: number
+    salePrice: number
+    rating: number
+    stock: number
+    soldCount: number
+    status: BookStatus
+    categoryName: string
+    authorName: string
+    publisher: { id: number; name: string; description: string; country: string }
+    images: { id: number; name: string; url: string }[]
+    createdAt: string
+}
 export interface PageResponse<T> {
     content: T[];
     totalPages: number;

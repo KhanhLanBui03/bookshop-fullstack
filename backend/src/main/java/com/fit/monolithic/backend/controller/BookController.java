@@ -55,6 +55,16 @@ public class BookController {
                 bookService.getBooksByAuthor(id)
         );
     }
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Void> deleteBookById(@PathVariable Long id) {
+        bookService.deleteBook(id);
+        return new ApiResponse<>(
+                200,
+                "Success",
+                null
+        );
+    }
     @GetMapping("/top-best-seller")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<List<BookCardResponse>> getTopBookBestSeller() {

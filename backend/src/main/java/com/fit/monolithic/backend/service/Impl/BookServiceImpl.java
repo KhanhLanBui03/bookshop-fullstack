@@ -72,7 +72,6 @@ public class BookServiceImpl implements BookService {
     }
 
     public BookCardResponse mapToCardResponse(Book book) {
-
         String thumbnail = null;
         if (book.getImages() != null && !book.getImages().isEmpty()) {
             thumbnail = book.getImages().get(0).getUrl(); // lấy ảnh đầu
@@ -215,5 +214,13 @@ public class BookServiceImpl implements BookService {
             Pageable pageable
     ) {
         return bookRepository.getAllBookAdmins(keyword, status, categoryId, pageable);
+    }
+
+    @Override
+    public void deleteBook(Long id) {
+        if(!bookRepository.existsById(id)) {
+            throw new RuntimeException("Book not found");
+        }
+        bookRepository.deleteById(id);
     }
 }

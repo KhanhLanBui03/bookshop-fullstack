@@ -5,7 +5,6 @@ export interface DropdownItem { id: number; name: string }
 export const categoryApi = {
     findAll: async (): Promise<DropdownItem[]> => {
         const res = await axiosClient.get("/categories")
-        // ApiResponse<List<CategoryResponse>> → data.data
         return (res.data.data as { id: number; name: string }[]).map(c => ({ id: c.id, name: c.name }))
     },
 }

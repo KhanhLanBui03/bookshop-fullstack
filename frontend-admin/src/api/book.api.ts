@@ -1,4 +1,4 @@
-import type { BookAdminResponse, BookDashboardStats, BookStatus, GetAdminBooksParams, PageResponse } from "@/feature/book/book.type";
+import type { BookAdminResponse, BookDashboardStats, BookDetail, BookRequestPayload, BookStatus, GetAdminBooksParams, PageResponse } from "@/feature/book/book.type";
 import axiosClient from "./axios";
 
 
@@ -38,5 +38,9 @@ export const bookApi = {
 
     deleteBook: async (id: number) => {
         await axiosClient.delete(`/books/${id}`)
+    },
+    getBookById: async (id: number): Promise<BookDetail> => {
+        const res = await axiosClient.get(`/books/${id}`)
+        return res.data.data
     },
 }

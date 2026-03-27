@@ -25,5 +25,6 @@ public interface BookService {
             Long categoryId,
             Pageable pageable
     );
+    void deleteBook(Long id);
 
 }

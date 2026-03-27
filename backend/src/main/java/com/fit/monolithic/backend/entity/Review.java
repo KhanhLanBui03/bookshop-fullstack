@@ -60,7 +60,7 @@ public class Review {
     @JoinColumn(name = "parent_id")
     private Review parent;
 
-    // Danh sách reply
+
     @OneToMany(
             mappedBy = "parent",
             cascade = CascadeType.ALL,
