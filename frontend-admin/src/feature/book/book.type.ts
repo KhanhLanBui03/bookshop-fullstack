@@ -34,6 +34,18 @@ export interface GetAdminBooksParams {
     sortDir?: "asc" | "desc";
 }
 
+export interface BookRequestPayload {
+    title: string
+    originalPrice?: number | null
+    salePrice: number
+    description?: string
+    rating?: number
+    stock: number
+    categoryId: number
+    authorId: number
+    publisherId: number
+    images: { name: string; url: string }[]
+}
 export interface PageResponse<T> {
     content: T[];
     totalPages: number;
@@ -42,6 +54,24 @@ export interface PageResponse<T> {
     size: number;
     first: boolean;
     last: boolean;
+}
+export interface ImagePreview {
+    id: string
+    url: string
+    name: string
+    size: number
+}
+export interface BookForm {
+    title: string
+    originalPrice: string
+    salePrice: string
+    description: string
+    status: BookStatus
+    stock: string
+    categoryId: string
+    authorId: string
+    publisherId: string
+    images: ImagePreview[]
 }
 
     
