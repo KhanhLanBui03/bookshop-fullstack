@@ -549,7 +549,6 @@ export const BookManagementPage = () => {
         setPage(1)
     }
 
-    /* ── Create / Update ── */
     /* ── Create / Update ─────────────────────────────────────────────────── */
     const handleSave = async (form: BookForm, bookId?: number) => {
 

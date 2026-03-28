@@ -6,6 +6,7 @@ import com.fit.monolithic.backend.dto.response.TopBookResponse;
 import com.fit.monolithic.backend.dto.response.TopRecentOrder;
 import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.service.DashboardService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
+@Tag(name = "Dashboard APIs",description = "Operations related to dashboard")
 @RequestMapping("/api/v1/dashboards")
 @RequiredArgsConstructor
 public class DashboardController {

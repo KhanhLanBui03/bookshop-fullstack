@@ -13,6 +13,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
+
 @Service
 @RequiredArgsConstructor
 public class VnpayServiceImpl implements VnpayService {
@@ -26,18 +28,28 @@ public class VnpayServiceImpl implements VnpayService {
         vnpParams.put("vnp_Version", "2.1.0");
         vnpParams.put("vnp_Command", "pay");
         vnpParams.put("vnp_TmnCode", config.getTmnCode());
+
         vnpParams.put("vnp_Amount",
-                order.getOrderTotalAmount().multiply(BigDecimal.valueOf(100)).toBigInteger().toString());
+                order.getOrderTotalAmount()
+                        .multiply(BigDecimal.valueOf(100))
+                        .toBigInteger().toString());
+
         vnpParams.put("vnp_CurrCode", "VND");
         vnpParams.put("vnp_TxnRef", order.getOrderCode());
-        vnpParams.put("vnp_OrderInfo", "Thanh toan don hang");
+        vnpParams.put("vnp_OrderInfo", "Thanh toan don hang " + order.getOrderCode());
         vnpParams.put("vnp_OrderType", "other");
         vnpParams.put("vnp_Locale", "vn");
         vnpParams.put("vnp_ReturnUrl", config.getReturnUrl());
         vnpParams.put("vnp_IpAddr", request.getRemoteAddr());
+        vnpParams.put("vnp_ExpireDate", util.getExpireTime(15));
+        // thêm thời gian
+        vnpParams.put("vnp_CreateDate", util.getCurrentTime());
 
-        String queryUrl = buildQueryUrl(vnpParams);
-        String secureHash = util.hashAllFields(vnpParams, config.getHashSecret());
+        //  SORT KEY
+        Map<String, String> sortedParams = new TreeMap<>(vnpParams);
+
+        String queryUrl = buildQueryUrl(sortedParams);
+        String secureHash = util.hashAllFields(sortedParams, config.getHashSecret());
 
         return config.getPayUrl() + "?" + queryUrl + "&vnp_SecureHash=" + secureHash;
     }

@@ -14,6 +14,7 @@ import { createBrowserRouter } from "react-router-dom"
 import BookListPage from "@/pages/BookListPage"
 import CheckoutPage from "@/pages/CheckoutPage"
 import ProfilePage from "@/pages/ProfilePage"
+import VnpayReturnPage from "@/pages/VnpayReturnPage"
 
 const router = createBrowserRouter([
     {
@@ -30,7 +31,8 @@ const router = createBrowserRouter([
             { path: "/author-detail", element: <AuthorBooksPage /> },
             {path: "/list-books", element: <BookListPage/>},
             {path: "/checkout", element: <ProtectedRoute><CheckoutPage /></ProtectedRoute>},
-            {path: "/profile", element: <ProfilePage />}
+            {path: "/profile", element: <ProfilePage />},
+            {path: "/payment/vnpay-return", element: <VnpayReturnPage /> }
         ]
     },
     {

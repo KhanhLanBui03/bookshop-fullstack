@@ -7,6 +7,7 @@ import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.security.CustomUserDetails;
 import com.fit.monolithic.backend.service.CartService;
 import com.fit.monolithic.backend.service.Impl.CustomUserDetailsService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
@@ -14,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
+@Tag(name = "Cart APIs",description = "Operations related to carts")
 @RestController
 @RequestMapping("/api/v1/carts")
 @RequiredArgsConstructor

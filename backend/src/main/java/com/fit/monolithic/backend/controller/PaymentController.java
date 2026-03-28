@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.TreeMap;
 
 @RestController
 @RequestMapping("/api/v1/payment")
@@ -25,46 +26,53 @@ public class PaymentController {
     private final OrderRepository orderRepository;
     private final VnpayConfig config;
     private final VnpayUtil vnpayUtil;
-    private final VnpayService  vnpayService;
+    private final VnpayService vnpayService;
+
     @GetMapping("/create-vnpay")
     public ApiResponse<String> createPayment(
             @RequestParam String orderCode,
             HttpServletRequest request) {
 
         Order order = orderRepository.findByOrderCode(orderCode)
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("Order not found"));
 
         String paymentUrl = vnpayService.createPaymentUrl(order, request);
-
         return new ApiResponse<>(200, "Success", paymentUrl);
     }
-    @GetMapping("/vnpay-return")
-    public ApiResponse<?> vnpayReturn(@RequestParam Map<String,String> params){
+
+    // ✅ Endpoint này frontend gọi sau khi VNPay redirect về
+    @GetMapping("/vnpay-verify")
+    public ApiResponse<?> vnpayVerify(@RequestParam Map<String, String> params) {
 
         String secureHash = params.remove("vnp_SecureHash");
         params.remove("vnp_SecureHashType");
 
-        String signValue = vnpayUtil.hashAllFields(params, config.getHashSecret());
+        Map<String, String> sortedParams = new TreeMap<>(params);
+        String signValue = vnpayUtil.hashAllFields(sortedParams, config.getHashSecret());
 
-        if(!signValue.equals(secureHash)){
+        if (!signValue.equals(secureHash)) {
             return new ApiResponse<>(400, "Invalid signature", null);
         }
 
         String orderCode = params.get("vnp_TxnRef");
         String responseCode = params.get("vnp_ResponseCode");
-        String transactionNo = params.get("vnp_TransactionNo");
 
-        Order order = orderRepository.findByOrderCode(orderCode).orElseThrow();
+        Order order = orderRepository.findByOrderCode(orderCode)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        if("00".equals(responseCode)){
-            order.setOrderStatus(OrderStatus.CANCELLED);
-            order.setTransactionId(transactionNo);
-        }else{
-            order.setOrderStatus(OrderStatus.CANCELLED);
+        if ("00".equals(responseCode)) {
+            order.setOrderStatus(OrderStatus.PAID);
+        } else {
+            order.setOrderStatus(OrderStatus.FAILED);
+            // ✅ hoàn kho khi thanh toán thất bại nếu cần
         }
 
         orderRepository.save(order);
 
-        return new ApiResponse<>(200, "Payment processed", null);
+        return new ApiResponse<>(200, "Payment processed", Map.of(
+                "success", "00".equals(responseCode),
+                "orderId", order.getId(),
+                "orderCode", order.getOrderCode()
+        ));
     }
 }

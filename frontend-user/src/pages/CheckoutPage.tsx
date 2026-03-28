@@ -69,7 +69,7 @@ export default function CheckoutPage() {
     }
 
     const handlePlaceOrder = async () => {
-        if (!selectedAddrId || !payMethod) return;
+        if (!selectedAddrId || !payMethod) return
 
         const orderPayload: CreateOrderRequest = {
             addressId: selectedAddrId,
@@ -77,10 +77,23 @@ export default function CheckoutPage() {
             cartItemIds: selectedIds
         }
 
-        const orderRes = await orderService.createOrder(orderPayload)
+        try {
+            const orderRes = await orderService.createOrder(orderPayload)
+            clearSelectedCheckoutIds()
 
-        clearSelectedCheckoutIds()
-        setCreatedOrderId(orderRes.id)
+            // ✅ VNPAY → redirect sang cổng thanh toán
+            if (typeof orderRes === 'string') {
+                window.location.href = orderRes
+                return
+            }
+
+            // COD / BANK → hiển thị confirmation
+            setCreatedOrderId(orderRes.id)
+
+        } catch (err) {
+            alert("Đặt hàng thất bại, vui lòng thử lại")
+            console.error(err)
+        }
     }
     if (createdOrderId) {
         return (

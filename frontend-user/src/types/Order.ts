@@ -1,22 +1,22 @@
+export type PaymentMethod = 'COD' | 'BANK' | 'VNPAY'
 
+export const PAYMENT_METHOD = {
+    COD: 'COD' as PaymentMethod,
+    BANK: 'BANK' as PaymentMethod,
+    VNPAY: 'VNPAY' as PaymentMethod,
+}
+
+export interface CreateOrderRequest {
+    addressId: number
+    paymentMethod: PaymentMethod
+    cartItemIds: number[]
+}
 
 export interface OrderResponse {
-    id: number;
-    paymentMethod: PaymentMethod;
-    totalAmount: number;
-    orderCode: string;
-    createdAt: string;
+    id: number
+    orderCode: string
+    totalAmount: number
+    status: string
+    createdAt: string
+    paymentMethod: PaymentMethod
 }
-export interface CreateOrderRequest{
-    addressId: number;
-    paymentMethod: PaymentMethod;
-    cartItemIds: number[];
-
-}
-export const PAYMENT_METHOD = {
-    COD: "COD",
-    BANK: "BANK",
-} as const;
-
-export type PaymentMethod =
-    typeof PAYMENT_METHOD[keyof typeof PAYMENT_METHOD];

@@ -3,9 +3,9 @@ import type { CreateOrderRequest, OrderResponse } from "@/types/Order";
 
 
 export const orderService = {
-    async createOrder(data: CreateOrderRequest):Promise<OrderResponse> {
-        const res = await orderApi.createOrder(data);
-        return res.data.data as OrderResponse;
+    async createOrder(data: CreateOrderRequest): Promise<OrderResponse | string> {
+        const res = await orderApi.createOrder(data)
+        return res.data.data
     }
        
 }

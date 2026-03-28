@@ -7,6 +7,7 @@ import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.enums.AuthProvider;
 import com.fit.monolithic.backend.security.CustomUserDetails;
 import com.fit.monolithic.backend.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,7 @@ import java.util.Locale;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
+@Tag(name = "User APIs",description = "Operations related to users")
 public class UserController {
     private final UserService userService;
     @GetMapping("/profile")
