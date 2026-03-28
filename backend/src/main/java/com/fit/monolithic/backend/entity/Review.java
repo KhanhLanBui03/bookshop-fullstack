@@ -35,7 +35,7 @@ public class Review {
     private String content;
     @Min(1)
     @Max(5)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Integer rating;
 
     @Enumerated(EnumType.STRING)
@@ -67,4 +67,9 @@ public class Review {
             orphanRemoval = true
     )
     private List<Review> replies = new ArrayList<>();
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReviewHelpful> helpfuls = new ArrayList<>();
+
+
 }
