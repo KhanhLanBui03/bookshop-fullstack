@@ -1,27 +1,21 @@
 package com.fit.monolithic.backend.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fit.monolithic.backend.enums.CommentStatus;
+import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
-@AllArgsConstructor
-@NoArgsConstructor
+
 @Data
+@Builder
 public class ReviewResponse {
     private Long id;
-
-    private Long bookId;
-
-    private Long userId;
-
-    private String userName;
-
     private String content;
-
     private Integer rating;
-
-    private LocalDateTime createdAt;
-
+    private CommentStatus status;
+    private String createdAt;
+    private ReviewUserResponse user;
+    private Long parentId;
+    private List<ReviewResponse> replies;
+    private int helpfulCount;
+    private boolean helpful;     // đã helpful chưa (current user)
 }
