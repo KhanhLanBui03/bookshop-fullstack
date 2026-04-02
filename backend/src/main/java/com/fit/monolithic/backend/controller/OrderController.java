@@ -75,4 +75,11 @@ public class OrderController {
                 orderService.getAllOrderAdmins(keyword, orderStatus, paymentMethod, pageable)
         );
     }
+    @GetMapping("/check-purchased")
+    public ApiResponse<Boolean> checkPurchased(
+            @RequestParam Long userId,
+            @RequestParam Long bookId
+    ) {
+        return new ApiResponse<>(200, "Success", orderService.checkPurchased(userId, bookId));
+    }
 }

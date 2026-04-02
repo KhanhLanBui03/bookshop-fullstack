@@ -19,4 +19,5 @@ Object createOrder(CreateOrderRequest request,
                    HttpServletRequest httpRequest);
     OrderDashboardStats getOrderDashboardStat();
     Page<OrderAdminResponse> getAllOrderAdmins(String keyword, OrderStatus orderStatus, PaymentMethod paymentMethod, Pageable pageable);
+    boolean checkPurchased(Long userId, Long bookId);
 }

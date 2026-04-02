@@ -2,6 +2,8 @@ package com.fit.monolithic.backend.controller;
 
 import com.fit.monolithic.backend.dto.request.*;
 import com.fit.monolithic.backend.dto.response.*;
+import com.fit.monolithic.backend.dto.response.based.ApiResponse;
+import com.fit.monolithic.backend.repository.ReviewRepository;
 import com.fit.monolithic.backend.security.CustomUserDetails;
 import com.fit.monolithic.backend.service.ReviewService;
 import jakarta.validation.Valid;
@@ -18,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class ReviewController {
 
     private final ReviewService reviewService;
-
+    private final ReviewRepository reviewRepo;
     /** GET /api/reviews/book/{bookId}?page=0&size=10 */
     @GetMapping("/book/{bookId}")
     public ResponseEntity<PageResponse<ReviewResponse>> getBookReviews(
@@ -91,5 +93,13 @@ public class ReviewController {
     private Long extractId(UserDetails ud) {
         if (ud instanceof CustomUserDetails cud) return cud.getId();
         throw new IllegalStateException("Cannot extract user id from principal");
+    }
+    @GetMapping("/check-reviewed")
+    public ApiResponse<Boolean> checkReviewed(
+            @RequestParam Long userId,
+            @RequestParam Long bookId
+    ) {
+        boolean result = reviewRepo.existsByUserIdAndBookIdAndParentIsNull(userId, bookId);
+        return new ApiResponse<>(200, "Success", result);
     }
 }

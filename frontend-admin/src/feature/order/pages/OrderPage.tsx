@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useEffect } from "react"
+import type { OrderDashboardStats } from "../order.types";
+import { orderApi } from "@/api/order.api";
 
 /* ════════ TYPES ════════ */
 type OrderStatus = "PENDING" | "CONFIRMED" | "SHIPPING" | "DELIVERED" | "CANCELLED" | "REFUNDED"
-type PaymentMethod = "COD" | "VNPAY" | "MOMO" | "CREDIT_CARD"
+type PaymentMethod = "COD" | "VNPAY" | "BANK"
 
 interface BookSnap { id: number; title: string; salePrice: number }
 interface OrderItem { bookSnap: BookSnap; quantity: number; unitPrice: number }
@@ -44,7 +46,7 @@ const mkAddr = (id: number, name: string, phone: string, street: string, city: s
 const ORDERS: Order[] = [
     {
         id: 101, orderCode: "ORD-2024-0101", orderTotalAmount: 55.49, orderDate: "2024-02-10",
-        orderStatus: "DELIVERED", paymentMethod: "MOMO", transactionId: undefined,
+        orderStatus: "DELIVERED", paymentMethod: "BANK", transactionId: undefined,
         shippingAddress: mkAddr(1, "Nguyen Van An", "0901234567", "12 Le Loi St", "Ho Chi Minh"),
         discount: { code: "SALE10", value: 10 },
         items: [{ bookSnap: BOOKS[0], quantity: 2, unitPrice: 18.99 }, { bookSnap: BOOKS[1], quantity: 1, unitPrice: 16.50 }],
@@ -68,7 +70,7 @@ const ORDERS: Order[] = [
     },
     {
         id: 104, orderCode: "ORD-2024-0104", orderTotalAmount: 61.99, orderDate: "2024-02-18",
-        orderStatus: "DELIVERED", paymentMethod: "CREDIT_CARD", transactionId: "TXN-9928A1",
+        orderStatus: "DELIVERED", paymentMethod: "COD", transactionId: "TXN-9928A1",
         shippingAddress: mkAddr(2, "Tran Thi Bich", "0912345678", "24 Tran Phu St", "Da Nang"),
         discount: undefined,
         items: [{ bookSnap: BOOKS[2], quantity: 1, unitPrice: 39.99 }, { bookSnap: BOOKS[5], quantity: 1, unitPrice: 17.80 }],
@@ -84,7 +86,7 @@ const ORDERS: Order[] = [
     },
     {
         id: 106, orderCode: "ORD-2024-0106", orderTotalAmount: 96.77, orderDate: "2024-02-25",
-        orderStatus: "DELIVERED", paymentMethod: "MOMO", transactionId: "TXN-CC1132",
+        orderStatus: "DELIVERED", paymentMethod: "BANK", transactionId: "TXN-CC1132",
         shippingAddress: mkAddr(3, "Le Minh Cuong", "0923456789", "36 Hoang Dieu St", "Hanoi"),
         discount: { code: "BOOK20", value: 20 },
         items: [
@@ -104,7 +106,7 @@ const ORDERS: Order[] = [
     },
     {
         id: 108, orderCode: "ORD-2024-0108", orderTotalAmount: 18.99, orderDate: "2024-04-02",
-        orderStatus: "REFUNDED", paymentMethod: "MOMO", transactionId: "TXN-MO-7741",
+        orderStatus: "REFUNDED", paymentMethod: "BANK", transactionId: "TXN-BK-7741",
         shippingAddress: mkAddr(5, "Hoang Van Em", "0945678901", "60 Nguyen Hue St", "Can Tho"),
         discount: undefined,
         items: [{ bookSnap: BOOKS[0], quantity: 1, unitPrice: 18.99 }],
@@ -112,7 +114,7 @@ const ORDERS: Order[] = [
     },
     {
         id: 109, orderCode: "ORD-2024-0109", orderTotalAmount: 122.77, orderDate: "2024-04-05",
-        orderStatus: "PENDING", paymentMethod: "CREDIT_CARD", transactionId: "TXN-CC9901",
+        orderStatus: "PENDING", paymentMethod: "BANK", transactionId: "TXN-BK9901",
         shippingAddress: mkAddr(6, "Vu Thi Phuong", "0956789012", "72 Nam Ky St", "Ho Chi Minh"),
         discount: undefined,
         items: [{ bookSnap: BOOKS[2], quantity: 2, unitPrice: 39.99 }, { bookSnap: BOOKS[3], quantity: 1, unitPrice: 44.99 }],
@@ -120,7 +122,7 @@ const ORDERS: Order[] = [
     },
     {
         id: 110, orderCode: "ORD-2024-0110", orderTotalAmount: 43.49, orderDate: "2024-04-10",
-        orderStatus: "CONFIRMED", paymentMethod: "MOMO", transactionId: "TXN-MO-8812",
+        orderStatus: "CONFIRMED", paymentMethod: "BANK", transactionId: "TXN-BK-8812",
         shippingAddress: mkAddr(7, "Dinh Van Hung", "0967890123", "84 Pham Ngu Lao", "Ho Chi Minh"),
         discount: { code: "NEWUSER", value: 5 },
         items: [{ bookSnap: BOOKS[6], quantity: 1, unitPrice: 19.50 }, { bookSnap: BOOKS[7], quantity: 1, unitPrice: 23.99 }],
@@ -165,8 +167,8 @@ const STATUS_CFG: Record<OrderStatus, { label: string; bg: string; color: string
 const PAYMENT_CFG: Record<PaymentMethod, { label: string; icon: string; color: string }> = {
     COD: { label: "COD", icon: "💵", color: "var(--muted2)" },
     VNPAY: { label: "VNPay", icon: "🏦", color: "#1a94ff" },
-    MOMO: { label: "MoMo", icon: "💜", color: "#ae2070" },
-    CREDIT_CARD: { label: "Credit Card", icon: "💳", color: "var(--blue)" },
+    BANK: { label: "Bank", icon: "💜", color: "#ae2070" },
+
 }
 
 /* ════════ CSS ════════ */
@@ -579,6 +581,8 @@ const Row = ({ label, value }: { label: React.ReactNode; value: React.ReactNode 
 
 /* ════════ MAIN PAGE ════════ */
 export const OrderManagementPage = () => {
+    const [stats, setStats] = useState<OrderDashboardStats|null>(null)
+    console.log(stats)
     const [orders, setOrders] = useState<Order[]>(ORDERS)
     const [search, setSearch] = useState("")
     const [filterStatus, setFilterStatus] = useState<OrderStatus | "ALL">("ALL")
@@ -625,11 +629,23 @@ export const OrderManagementPage = () => {
     const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
     /* Summary stats */
-    const totalRevenue = orders.filter(o => o.orderStatus === "DELIVERED").reduce((s, o) => s + o.orderTotalAmount, 0)
-    const pendingCount = orders.filter(o => o.orderStatus === "PENDING").length
-    const shippingCount = orders.filter(o => o.orderStatus === "SHIPPING").length
-    const deliveredCount = orders.filter(o => o.orderStatus === "DELIVERED").length
+    // const totalRevenue = orders.filter(o => o.orderStatus === "DELIVERED").reduce((s, o) => s + o.orderTotalAmount, 0)
 
+    // const pendingCount = orders.filter(o => o.orderStatus === "PENDING").length
+    // const shippingCount = orders.filter(o => o.orderStatus === "SHIPPING").length
+    // const deliveredCount = orders.filter(o => o.orderStatus === "DELIVERED").length
+    useEffect(() => {
+        const fetchOrderData = async () => {
+            try {
+                const res = await orderApi.getOrderDashboardStats()
+                setStats(res)
+            } catch (error) {
+                console.error("Failed to fetch stats:", error)
+            }
+        }
+        fetchOrderData()
+    }, []) // <-- placeholder for stats API call
+    
     const SortIcon = ({ col }: { col: typeof sortBy }) => (
         <span style={{ ...mono, fontSize: 9, marginLeft: 4, opacity: sortBy === col ? 1 : 0.3 }}>
             {sortBy === col ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
@@ -678,10 +694,10 @@ export const OrderManagementPage = () => {
                 {/* ── Stats ── */}
                 <div className="om-up" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20, animationDelay: "40ms" }}>
                     {[
-                        { label: "Total Revenue", value: fmt(totalRevenue), icon: "💰", color: "var(--accent)", sub: "from delivered" },
-                        { label: "Pending", value: pendingCount, icon: "⏳", color: "var(--amber)", sub: "awaiting confirm" },
-                        { label: "In Shipping", value: shippingCount, icon: "🚚", color: "#c4b5fd", sub: "on the way" },
-                        { label: "Delivered", value: deliveredCount, icon: "📦", color: "var(--green)", sub: "completed" },
+                        { label: "Total Revenue", value: stats?.totalRevenue, icon: "💰", color: "var(--accent)", sub: "from delivered" },
+                        { label: "Pending", value: stats?.totalPending, icon: "⏳", color: "var(--amber)", sub: "awaiting confirm" },
+                        { label: "In Shipping", value: stats?.totalShipping, icon: "🚚", color: "#c4b5fd", sub: "on the way" },
+                        { label: "Delivered", value: stats?.totalDelivered, icon: "📦", color: "var(--green)", sub: "completed" },
                     ].map((s, i) => (
                         <div key={i} style={{ ...glass(), padding: "16px 18px", display: "flex", alignItems: "center", gap: 14 }}>
                             <span style={{ fontSize: 24 }}>{s.icon}</span>

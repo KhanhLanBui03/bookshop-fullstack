@@ -162,7 +162,7 @@ public class OrderServiceImpl implements OrderService {
     private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
     private final VnpayService vnpayService;
-
+    private final OrderItemRepository orderItemRepository;
     @Override
     public Object createOrder(CreateOrderRequest request,
                               CustomUserDetails userDetails,
@@ -279,4 +279,11 @@ public class OrderServiceImpl implements OrderService {
 
         return orderRepository.getAllOrderAdmins(keyword, orderStatus, paymentMethod, pageable);
     }
+    @Override
+    public boolean checkPurchased(Long userId, Long bookId) {
+        return orderItemRepository.hasPurchased(userId, bookId, OrderStatus.DELIVERED);
+    }
+
+    // OrderController.java — thêm endpoint
+
 }

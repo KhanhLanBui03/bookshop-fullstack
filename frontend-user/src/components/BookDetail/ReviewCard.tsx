@@ -1,34 +1,215 @@
-import { Star } from "lucide-react";
-import { Button } from "../ui/button";
+import { useState } from "react";
+import { Star, ThumbsUp, CornerDownRight, Trash2 } from "lucide-react";
+import type { ReviewResponse } from "@/types/Review";
 
-const ReviewCard = ({ review }) => {
+interface ReviewCardProps {
+    review: ReviewResponse;
+    currentUserId?: number;
+    onToggleHelpful: (reviewId: number) => Promise<void>;
+    onDelete: (reviewId: number) => Promise<void>;
+    onReply: (parentId: number, content: string) => Promise<void>;
+}
+
+const STATUS_MAP: Record<string, { label: string; className: string }> = {
+    PENDING: { label: "Chờ duyệt", className: "bg-amber-50 text-amber-700" },
+    APPROVED: { label: "Đã duyệt", className: "bg-green-50 text-green-700" },
+    REJECTED: { label: "Từ chối", className: "bg-red-50 text-red-700" },
+};
+
+const DEFAULT_STATUS = { label: "Chờ duyệt", className: "bg-amber-50 text-amber-700" };
+
+function Stars({ rating }: { rating: number }) {
     return (
-        <div className="border-b pb-6 last:border-b-0">
-            <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                        {review.user[0]}
-                    </div>
-                    <div>
-                        <p className="font-medium">{review.user}</p>
-                        <div className="flex items-center gap-1 mt-1">
-                            {[...Array(5)].map((_, i) => (
-                                <Star
-                                    key={i}
-                                    className={`w-4 h-4 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                                        }`}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                </div>
-                <span className="text-sm text-gray-500">{review.date}</span>
-            </div>
-            <p className="text-gray-700">{review.comment}</p>
-            <Button className="mt-3 text-sm text-gray-600 hover:text-blue-600">
-                Hữu ích ({review.helpful})
-            </Button>
+        <div className="flex gap-0.5">
+            {[1, 2, 3, 4, 5].map((i) => (
+                <Star
+                    key={i}
+                    className={`w-3.5 h-3.5 ${i <= rating ? "fill-amber-400 text-amber-400" : "text-gray-200"
+                        }`}
+                />
+            ))}
         </div>
     );
-};
-export default ReviewCard;
+}
+
+function Avatar({ fullName, size = 36 }: { fullName: string; size?: number }) {
+    const initials = (fullName ?? "?")
+        .split(" ")
+        .slice(-2)
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase();
+
+    return (
+        <div
+            className="rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-medium shrink-0"
+            style={{ width: size, height: size, fontSize: size / 2.8 }}
+        >
+            {initials}
+        </div>
+    );
+}
+
+function ReplyCard({ reply }: { reply: ReviewResponse }) {
+    return (
+        <div className="flex gap-2.5">
+            <Avatar fullName={reply.user?.fullName ?? "?"} size={28} />
+            <div>
+                <p className="text-xs font-medium text-gray-700">
+                    {reply.user?.fullName}
+                    <span className="font-normal text-gray-400 ml-2">{reply.createdAt}</span>
+                </p>
+                <p className="text-sm text-gray-600 mt-0.5 leading-relaxed">
+                    {reply.content}
+                </p>
+                {reply.status === "PENDING" && (
+                    <span className="text-xs bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded mt-1 inline-block">
+                        Chờ duyệt
+                    </span>
+                )}
+            </div>
+        </div>
+    );
+}
+
+export default function ReviewCard({
+    review,
+    currentUserId,
+    onToggleHelpful,
+    onDelete,
+    onReply,
+}: ReviewCardProps) {
+    const [showReplyForm, setShowReplyForm] = useState<boolean>(false);
+    const [replyText, setReplyText] = useState<string>("");
+    const [submitting, setSubmitting] = useState<boolean>(false);
+
+    const isOwn = review.user?.id === currentUserId;
+    const status = STATUS_MAP[review.status] ?? DEFAULT_STATUS;
+
+    const handleReply = async () => {
+        if (!replyText.trim()) return;
+        setSubmitting(true);
+        try {
+            await onReply(review.id, replyText);
+            setReplyText("");
+            setShowReplyForm(false);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!confirm("Bạn có chắc muốn xoá đánh giá này?")) return;
+        await onDelete(review.id);
+    };
+
+    return (
+        <div className="py-5">
+            {/* Header */}
+            <div className="flex items-center gap-2.5 mb-2">
+                <Avatar fullName={review.user?.fullName ?? "?"} />
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">
+                        {review.user?.fullName}
+                        {isOwn && (
+                            <span className="text-xs text-gray-400 font-normal ml-1">(bạn)</span>
+                        )}
+                    </p>
+                    <p className="text-xs text-gray-400">{review.createdAt}</p>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${status.className}`}>
+                    {status.label}
+                </span>
+            </div>
+
+            {/* Stars */}
+            {review.rating != null && (
+                <div className="mb-2">
+                    <Stars rating={review.rating} />
+                </div>
+            )}
+
+            {/* Content */}
+            <p className="text-sm text-gray-700 leading-relaxed mb-3">{review.content}</p>
+
+            {/* Actions */}
+            <div className="flex items-center gap-1">
+                <button
+                    type="button"
+                    onClick={() => onToggleHelpful(review.id)}
+                    className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md transition-colors ${review.helpful
+                            ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
+                            : "text-gray-500 hover:bg-gray-100"
+                        }`}
+                >
+                    <ThumbsUp className="w-3 h-3" />
+                    Hữu ích ({review.helpfulCount})
+                </button>
+
+                {currentUserId && (
+                    <button
+                        type="button"
+                        onClick={() => setShowReplyForm((v) => !v)}
+                        className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md text-gray-500 hover:bg-gray-100 transition-colors"
+                    >
+                        <CornerDownRight className="w-3 h-3" />
+                        Phản hồi
+                    </button>
+                )}
+
+                {isOwn && (
+                    <button
+                        type="button"
+                        onClick={handleDelete}
+                        className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md text-red-500 hover:bg-red-50 transition-colors ml-auto"
+                    >
+                        <Trash2 className="w-3 h-3" />
+                        Xoá
+                    </button>
+                )}
+            </div>
+
+            {/* Reply form */}
+            {showReplyForm && (
+                <div className="mt-3 bg-gray-50 rounded-lg p-3">
+                    <textarea
+                        className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 resize-none outline-none focus:border-blue-300 bg-white"
+                        rows={2}
+                        placeholder="Viết phản hồi..."
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                    />
+                    <div className="flex gap-2 mt-2">
+                        <button
+                            type="button"
+                            onClick={handleReply}
+                            disabled={submitting || !replyText.trim()}
+                            className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-40 transition-colors"
+                        >
+                            {submitting ? "Đang gửi..." : "Gửi"}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setShowReplyForm(false);
+                                setReplyText("");
+                            }}
+                            className="text-xs px-3 py-1.5 border rounded-md hover:bg-gray-100 transition-colors"
+                        >
+                            Huỷ
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Replies */}
+            {(review.replies?.length ?? 0) > 0 && (
+                <div className="mt-3 pl-4 border-l-2 border-gray-100 flex flex-col gap-3">
+                    {review.replies.map((rep) => (
+                        <ReplyCard key={rep.id} reply={rep} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}

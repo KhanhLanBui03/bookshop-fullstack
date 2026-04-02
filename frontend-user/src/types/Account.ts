@@ -22,7 +22,7 @@ export type RegisterResponse = {
 }
 
 export type User = {
-    userId: string;
+    userId: number;
     email: string;
     fullName: string;
     roles: string[];

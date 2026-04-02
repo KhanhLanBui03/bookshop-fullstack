@@ -19,6 +19,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 public class ReviewHelpful {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
