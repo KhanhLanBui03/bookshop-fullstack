@@ -33,13 +33,29 @@ export type PaymentMethod =
     | "BANK"
     | "VNPAY"
 export interface OrderAdminResponse {
-    id: number;
-    orderCode: string;
-    customerName: string;
-    customerEmail: string;
-    countItem: number;
-    paymentMethod: PaymentMethod;
-    orderTotalAmount: number;
-    status: OrderStatus;
-    orderDate: string;
+    id: number
+    orderCode: string
+    customerName: string
+    customerEmail: string
+    countItem: number
+    paymentMethod: PaymentMethod
+    orderTotalAmount: number
+    orderStatus: OrderStatus   // matches backend field name
+    orderDate: string
+}
+export interface OrderAdminParams {
+    keyword?: string
+    orderStatus?: string
+    paymentMethod?: string
+    page?: number
+    size?: number
+    sort?: string
+}
+
+export interface PageResponse<T> {
+    content: T[]
+    totalElements: number
+    totalPages: number
+    number: number
+    size: number
 }

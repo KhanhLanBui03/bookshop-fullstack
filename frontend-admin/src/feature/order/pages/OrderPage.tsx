@@ -1,175 +1,33 @@
-import React, { useState, useMemo, useEffect } from "react"
-import type { OrderDashboardStats } from "../order.types";
-import { orderApi } from "@/api/order.api";
+import React, { useState, useEffect, useCallback, useRef } from "react"
+import type { OrderAdminResponse, OrderDashboardStats, OrderStatus, PaymentMethod } from "../order.types"
+import { orderApi } from "@/api/order.api"
 
-/* ════════ TYPES ════════ */
-type OrderStatus = "PENDING" | "CONFIRMED" | "SHIPPING" | "DELIVERED" | "CANCELLED" | "REFUNDED"
-type PaymentMethod = "COD" | "VNPAY" | "BANK"
-
-interface BookSnap { id: number; title: string; salePrice: number }
-interface OrderItem { bookSnap: BookSnap; quantity: number; unitPrice: number }
-interface Address { id: number; fullName: string; phone: string; street: string; district: string; city: string }
-interface Discount { code: string; value: number }
-
-interface Order {
-    id: number
-    orderCode: string
-    orderTotalAmount: number
-    orderDate: string          // LocalDate → ISO string
-    orderStatus: OrderStatus
-    paymentMethod: PaymentMethod
-    transactionId?: string
-    shippingAddress: Address
-    discount?: Discount
-    items: OrderItem[]
-    orderUser: { id: number; fullName: string; email: string; avatarColor: string }
+/* ════════ CONFIG ════════ */
+const STATUS_CFG: Record<OrderStatus, { label: string; bg: string; color: string; dot: string; icon: string }> = {
+    PENDING: { label: "Pending", bg: "rgba(245,158,11,0.12)", color: "#f59e0b", dot: "#f59e0b", icon: "⏳" },
+    PENDING_PAYMENT: { label: "Awaiting Pay", bg: "rgba(251,113,133,0.12)", color: "#fb7185", dot: "#fb7185", icon: "💳" },
+    CONFIRMED: { label: "Confirmed", bg: "rgba(96,165,250,0.12)", color: "#60a5fa", dot: "#60a5fa", icon: "✅" },
+    SHIPPING: { label: "Shipping", bg: "rgba(167,139,250,0.12)", color: "#c4b5fd", dot: "#c4b5fd", icon: "🚚" },
+    DELIVERED: { label: "Delivered", bg: "rgba(34,197,94,0.12)", color: "#22c55e", dot: "#22c55e", icon: "📦" },
+    CANCELLED: { label: "Cancelled", bg: "rgba(255,255,255,0.06)", color: "#6b6880", dot: "#6b6880", icon: "✕" },
+    REFUNDED: { label: "Refunded", bg: "rgba(239,68,68,0.12)", color: "#ef4444", dot: "#ef4444", icon: "↩" },
 }
 
-/* ════════ MOCK DATA ════════ */
-const BOOKS: BookSnap[] = [
-    { id: 1, title: "Atomic Habits", salePrice: 18.99 },
-    { id: 2, title: "Deep Work", salePrice: 16.50 },
-    { id: 3, title: "Clean Code", salePrice: 39.99 },
-    { id: 4, title: "The Pragmatic Programmer", salePrice: 44.99 },
-    { id: 5, title: "Sapiens", salePrice: 21.00 },
-    { id: 6, title: "Zero to One", salePrice: 17.80 },
-    { id: 7, title: "The Lean Startup", salePrice: 19.50 },
-    { id: 8, title: "Thinking, Fast and Slow", salePrice: 23.99 },
-]
-
-const COLORS = ["#ff6b35", "#22c55e", "#60a5fa", "#f59e0b", "#a78bfa", "#34d399", "#fb7185", "#38bdf8"]
-const mkUser = (id: number, name: string, email: string) => ({ id, fullName: name, email, avatarColor: COLORS[id % COLORS.length] })
-
-const mkAddr = (id: number, name: string, phone: string, street: string, city: string): Address =>
-    ({ id, fullName: name, phone, street, district: "District 1", city })
-
-const ORDERS: Order[] = [
-    {
-        id: 101, orderCode: "ORD-2024-0101", orderTotalAmount: 55.49, orderDate: "2024-02-10",
-        orderStatus: "DELIVERED", paymentMethod: "BANK", transactionId: undefined,
-        shippingAddress: mkAddr(1, "Nguyen Van An", "0901234567", "12 Le Loi St", "Ho Chi Minh"),
-        discount: { code: "SALE10", value: 10 },
-        items: [{ bookSnap: BOOKS[0], quantity: 2, unitPrice: 18.99 }, { bookSnap: BOOKS[1], quantity: 1, unitPrice: 16.50 }],
-        orderUser: mkUser(1, "Nguyen Van An", "an.nguyen@gmail.com"),
-    },
-    {
-        id: 102, orderCode: "ORD-2024-0102", orderTotalAmount: 39.99, orderDate: "2024-03-05",
-        orderStatus: "DELIVERED", paymentMethod: "VNPAY", transactionId: "TXN-VNP-8821",
-        shippingAddress: mkAddr(1, "Nguyen Van An", "0901234567", "12 Le Loi St", "Ho Chi Minh"),
-        discount: undefined,
-        items: [{ bookSnap: BOOKS[2], quantity: 1, unitPrice: 39.99 }],
-        orderUser: mkUser(1, "Nguyen Van An", "an.nguyen@gmail.com"),
-    },
-    {
-        id: 103, orderCode: "ORD-2024-0103", orderTotalAmount: 21.00, orderDate: "2024-04-20",
-        orderStatus: "CANCELLED", paymentMethod: "COD", transactionId: undefined,
-        shippingAddress: mkAddr(1, "Nguyen Van An", "0901234567", "12 Le Loi St", "Ho Chi Minh"),
-        discount: undefined,
-        items: [{ bookSnap: BOOKS[4], quantity: 1, unitPrice: 21.00 }],
-        orderUser: mkUser(1, "Nguyen Van An", "an.nguyen@gmail.com"),
-    },
-    {
-        id: 104, orderCode: "ORD-2024-0104", orderTotalAmount: 61.99, orderDate: "2024-02-18",
-        orderStatus: "DELIVERED", paymentMethod: "COD", transactionId: "TXN-9928A1",
-        shippingAddress: mkAddr(2, "Tran Thi Bich", "0912345678", "24 Tran Phu St", "Da Nang"),
-        discount: undefined,
-        items: [{ bookSnap: BOOKS[2], quantity: 1, unitPrice: 39.99 }, { bookSnap: BOOKS[5], quantity: 1, unitPrice: 17.80 }],
-        orderUser: mkUser(2, "Tran Thi Bich", "bich.tran@company.vn"),
-    },
-    {
-        id: 105, orderCode: "ORD-2024-0105", orderTotalAmount: 44.99, orderDate: "2024-03-22",
-        orderStatus: "SHIPPING", paymentMethod: "VNPAY", transactionId: "TXN-VNP-9934",
-        shippingAddress: mkAddr(2, "Tran Thi Bich", "0912345678", "24 Tran Phu St", "Da Nang"),
-        discount: undefined,
-        items: [{ bookSnap: BOOKS[3], quantity: 1, unitPrice: 44.99 }],
-        orderUser: mkUser(2, "Tran Thi Bich", "bich.tran@company.vn"),
-    },
-    {
-        id: 106, orderCode: "ORD-2024-0106", orderTotalAmount: 96.77, orderDate: "2024-02-25",
-        orderStatus: "DELIVERED", paymentMethod: "BANK", transactionId: "TXN-CC1132",
-        shippingAddress: mkAddr(3, "Le Minh Cuong", "0923456789", "36 Hoang Dieu St", "Hanoi"),
-        discount: { code: "BOOK20", value: 20 },
-        items: [
-            { bookSnap: BOOKS[3], quantity: 1, unitPrice: 44.99 },
-            { bookSnap: BOOKS[0], quantity: 1, unitPrice: 18.99 },
-            { bookSnap: BOOKS[4], quantity: 1, unitPrice: 21.00 },
-        ],
-        orderUser: mkUser(3, "Le Minh Cuong", "cuong.le@dev.io"),
-    },
-    {
-        id: 107, orderCode: "ORD-2024-0107", orderTotalAmount: 35.29, orderDate: "2024-03-15",
-        orderStatus: "DELIVERED", paymentMethod: "COD", transactionId: undefined,
-        shippingAddress: mkAddr(5, "Hoang Van Em", "0945678901", "60 Nguyen Hue St", "Can Tho"),
-        discount: undefined,
-        items: [{ bookSnap: BOOKS[1], quantity: 1, unitPrice: 16.50 }, { bookSnap: BOOKS[5], quantity: 1, unitPrice: 17.80 }],
-        orderUser: mkUser(5, "Hoang Van Em", "em.hoang@outlook.com"),
-    },
-    {
-        id: 108, orderCode: "ORD-2024-0108", orderTotalAmount: 18.99, orderDate: "2024-04-02",
-        orderStatus: "REFUNDED", paymentMethod: "BANK", transactionId: "TXN-BK-7741",
-        shippingAddress: mkAddr(5, "Hoang Van Em", "0945678901", "60 Nguyen Hue St", "Can Tho"),
-        discount: undefined,
-        items: [{ bookSnap: BOOKS[0], quantity: 1, unitPrice: 18.99 }],
-        orderUser: mkUser(5, "Hoang Van Em", "em.hoang@outlook.com"),
-    },
-    {
-        id: 109, orderCode: "ORD-2024-0109", orderTotalAmount: 122.77, orderDate: "2024-04-05",
-        orderStatus: "PENDING", paymentMethod: "BANK", transactionId: "TXN-BK9901",
-        shippingAddress: mkAddr(6, "Vu Thi Phuong", "0956789012", "72 Nam Ky St", "Ho Chi Minh"),
-        discount: undefined,
-        items: [{ bookSnap: BOOKS[2], quantity: 2, unitPrice: 39.99 }, { bookSnap: BOOKS[3], quantity: 1, unitPrice: 44.99 }],
-        orderUser: mkUser(6, "Vu Thi Phuong", "phuong.vu@studio.com"),
-    },
-    {
-        id: 110, orderCode: "ORD-2024-0110", orderTotalAmount: 43.49, orderDate: "2024-04-10",
-        orderStatus: "CONFIRMED", paymentMethod: "BANK", transactionId: "TXN-BK-8812",
-        shippingAddress: mkAddr(7, "Dinh Van Hung", "0967890123", "84 Pham Ngu Lao", "Ho Chi Minh"),
-        discount: { code: "NEWUSER", value: 5 },
-        items: [{ bookSnap: BOOKS[6], quantity: 1, unitPrice: 19.50 }, { bookSnap: BOOKS[7], quantity: 1, unitPrice: 23.99 }],
-        orderUser: mkUser(7, "Dinh Van Hung", "hung.dinh@gmail.com"),
-    },
-    {
-        id: 111, orderCode: "ORD-2024-0111", orderTotalAmount: 79.98, orderDate: "2024-04-12",
-        orderStatus: "SHIPPING", paymentMethod: "VNPAY", transactionId: "TXN-VNP-1123",
-        shippingAddress: mkAddr(8, "Nguyen Thi Lan", "0978901234", "96 Bui Vien St", "Ho Chi Minh"),
-        discount: undefined,
-        items: [{ bookSnap: BOOKS[7], quantity: 2, unitPrice: 23.99 }, { bookSnap: BOOKS[4], quantity: 1, unitPrice: 21.00 }],
-        orderUser: mkUser(8, "Nguyen Thi Lan", "lan.nguyen@yahoo.com"),
-    },
-    {
-        id: 112, orderCode: "ORD-2024-0112", orderTotalAmount: 17.80, orderDate: "2024-04-18",
-        orderStatus: "PENDING", paymentMethod: "COD", transactionId: undefined,
-        shippingAddress: mkAddr(9, "Pham Van Khanh", "0989012345", "108 Le Duan St", "Hanoi"),
-        discount: undefined,
-        items: [{ bookSnap: BOOKS[5], quantity: 1, unitPrice: 17.80 }],
-        orderUser: mkUser(9, "Pham Van Khanh", "khanh.pham@hotmail.com"),
-    },
-]
-
-/* ════════ STATUS FLOW ════════ */
 const STATUS_NEXT: Partial<Record<OrderStatus, OrderStatus[]>> = {
     PENDING: ["CONFIRMED", "CANCELLED"],
+    PENDING_PAYMENT: ["CANCELLED"],
     CONFIRMED: ["SHIPPING", "CANCELLED"],
     SHIPPING: ["DELIVERED", "REFUNDED"],
     DELIVERED: ["REFUNDED"],
 }
 
-/* ════════ CONFIG ════════ */
-const STATUS_CFG: Record<OrderStatus, { label: string; bg: string; color: string; dot: string; icon: string }> = {
-    PENDING: { label: "Pending", bg: "rgba(245,158,11,0.12)", color: "var(--amber,#f59e0b)", dot: "#f59e0b", icon: "⏳" },
-    CONFIRMED: { label: "Confirmed", bg: "rgba(96,165,250,0.12)", color: "var(--blue,#60a5fa)", dot: "#60a5fa", icon: "✅" },
-    SHIPPING: { label: "Shipping", bg: "rgba(167,139,250,0.12)", color: "#c4b5fd", dot: "#c4b5fd", icon: "🚚" },
-    DELIVERED: { label: "Delivered", bg: "rgba(34,197,94,0.12)", color: "var(--green,#22c55e)", dot: "#22c55e", icon: "📦" },
-    CANCELLED: { label: "Cancelled", bg: "rgba(255,255,255,0.06)", color: "var(--muted2)", dot: "#6b6880", icon: "✕" },
-    REFUNDED: { label: "Refunded", bg: "rgba(239,68,68,0.12)", color: "var(--red,#ef4444)", dot: "#ef4444", icon: "↩" },
-}
-
 const PAYMENT_CFG: Record<PaymentMethod, { label: string; icon: string; color: string }> = {
-    COD: { label: "COD", icon: "💵", color: "var(--muted2)" },
+    COD: { label: "COD", icon: "💵", color: "#9490a8" },
     VNPAY: { label: "VNPay", icon: "🏦", color: "#1a94ff" },
     BANK: { label: "Bank", icon: "💜", color: "#ae2070" },
-
 }
+
+const STATUS_ORDER: OrderStatus[] = ["PENDING", "PENDING_PAYMENT", "CONFIRMED", "SHIPPING", "DELIVERED", "CANCELLED", "REFUNDED"]
 
 /* ════════ CSS ════════ */
 const CSS = `
@@ -181,32 +39,23 @@ const CSS = `
     color: var(--text, #e8e4f0);
   }
 
-  @keyframes omUp {
-    from { opacity:0; transform:translateY(12px); }
-    to   { opacity:1; transform:translateY(0); }
-  }
+  @keyframes omUp   { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
   @keyframes omFade { from { opacity:0; } to { opacity:1; } }
-  @keyframes omSlide {
-    from { opacity:0; transform:translateX(32px); }
-    to   { opacity:1; transform:translateX(0); }
-  }
-  @keyframes omPulse {
-    0%,100% { opacity:1; } 50% { opacity:.4; }
-  }
+  @keyframes omSlide{ from { opacity:0; transform:translateX(32px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes omPulse{ 0%,100%{opacity:1} 50%{opacity:.4} }
+  @keyframes omSpin { to { transform: rotate(360deg); } }
 
-  .om-up     { animation: omUp .32s cubic-bezier(.22,1,.36,1) both; }
-  .om-row    { transition: background .1s ease; cursor: pointer; }
+  .om-up      { animation: omUp .32s cubic-bezier(.22,1,.36,1) both; }
+  .om-row     { transition: background .1s ease; cursor: pointer; }
   .om-row:hover { background: rgba(255,255,255,0.03) !important; }
-
   .om-overlay { animation: omFade .2s ease both; }
   .om-drawer  { animation: omSlide .28s cubic-bezier(.22,1,.36,1) both; }
   .om-modal   { animation: omUp .22s cubic-bezier(.22,1,.36,1) both; }
 
   .om-btn-primary { transition: all .15s ease; cursor: pointer; border: none; }
-  .om-btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,107,53,.35); }
+  .om-btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
   .om-btn-primary:active { transform: translateY(0); }
-
-  .om-btn-ghost { transition: background .15s ease; cursor: pointer; border: none; }
+  .om-btn-ghost   { transition: background .15s ease; cursor: pointer; border: none; }
   .om-btn-ghost:hover { background: rgba(255,255,255,.07) !important; }
 
   .om-input { transition: border-color .15s ease; outline: none; }
@@ -219,7 +68,7 @@ const CSS = `
   .om-icon-btn { transition: background .12s ease; cursor: pointer; }
   .om-icon-btn:hover { background: rgba(255,255,255,.1) !important; }
 
-  .om-page-btn { transition: all .15s ease; cursor: pointer; border: 1px solid var(--border,rgba(255,255,255,.07)); }
+  .om-page-btn { transition: all .15s ease; cursor: pointer; border: 1px solid rgba(255,255,255,.07); }
   .om-page-btn:hover:not(:disabled) { border-color: var(--accent,#ff6b35) !important; color: var(--accent,#ff6b35) !important; background: rgba(255,107,53,.06) !important; }
   .om-page-btn:disabled { opacity: .28; cursor: not-allowed; }
   .om-page-btn.pg-active { background: var(--accent,#ff6b35) !important; border-color: var(--accent,#ff6b35) !important; color:#fff !important; }
@@ -227,12 +76,19 @@ const CSS = `
   .om-status-btn { transition: all .14s ease; cursor: pointer; border: none; }
   .om-status-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
 
-  .om-step-line { transition: background .3s ease; }
-  .om-tab { cursor: pointer; transition: all .15s ease; border: none; background: none; }
-  .om-tab.active { border-bottom: 2px solid var(--accent,#ff6b35) !important; color: var(--text) !important; }
-  .om-tab:not(.active):hover { color: var(--muted2,#9490a8) !important; }
-
-  .om-live { animation: omPulse 2s ease infinite; }
+  .om-spinner {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.1);
+    border-top-color: var(--accent,#ff6b35);
+    animation: omSpin .7s linear infinite;
+  }
+  .om-skeleton {
+    background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+    background-size: 200% 100%;
+    animation: omSkeleton 1.4s ease infinite;
+    border-radius: 6px;
+  }
+  @keyframes omSkeleton { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 `
 
 /* ════════ HELPERS ════════ */
@@ -240,27 +96,31 @@ const mono: React.CSSProperties = { fontFamily: "var(--font-mono,'DM Mono',monos
 const glass = (extra?: React.CSSProperties): React.CSSProperties => ({
     background: "var(--bg3,#18181f)", border: "1px solid var(--border,rgba(255,255,255,.07))", borderRadius: 14, ...extra,
 })
-const fmt = (n: number) => `$${n.toFixed(2)}`
+const fmt = (n: number) => `$${Number(n ?? 0).toFixed(2)}`
 const fmtDate = (d: string) => new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-const initials = (name: string) => name.split(" ").filter(Boolean).slice(-2).map(w => w[0]).join("").toUpperCase()
+const initials = (name: string) =>
+    (name ?? "?").split(" ").filter(Boolean).slice(-2).map(w => w[0]).join("").toUpperCase()
 
-const STATUS_ORDER: OrderStatus[] = ["PENDING", "CONFIRMED", "SHIPPING", "DELIVERED", "CANCELLED", "REFUNDED"]
+const AVATAR_COLORS = ["#ff6b35", "#22c55e", "#60a5fa", "#f59e0b", "#a78bfa", "#34d399", "#fb7185", "#38bdf8"]
+const avatarColor = (id: number) => AVATAR_COLORS[id % AVATAR_COLORS.length]
 
-/* ════════ MINI AVATAR ════════ */
-const Avatar = ({ user, size = 32 }: { user: Order["orderUser"]; size?: number }) => (
-    <div style={{
-        width: size, height: size, borderRadius: "50%", flexShrink: 0,
-        background: user.avatarColor + "28", border: `2px solid ${user.avatarColor}50`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        ...mono, fontSize: size * 0.33, fontWeight: 700, color: user.avatarColor,
-    }}>
-        {initials(user.fullName)}
-    </div>
-)
+/* ════════ COMPONENTS ════════ */
+const Avatar = ({ name, id, size = 32 }: { name: string; id: number; size?: number }) => {
+    const color = avatarColor(id)
+    return (
+        <div style={{
+            width: size, height: size, borderRadius: "50%", flexShrink: 0,
+            background: color + "28", border: `2px solid ${color}50`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            ...mono, fontSize: size * 0.33, fontWeight: 700, color,
+        }}>
+            {initials(name)}
+        </div>
+    )
+}
 
-/* ════════ STATUS BADGE ════════ */
 const StatusBadge = ({ status }: { status: OrderStatus }) => {
-    const cfg = STATUS_CFG[status]
+    const cfg = STATUS_CFG[status] ?? STATUS_CFG.PENDING
     const isLive = status === "SHIPPING"
     return (
         <span style={{
@@ -279,13 +139,27 @@ const StatusBadge = ({ status }: { status: OrderStatus }) => {
     )
 }
 
-/* ════════ TIMELINE STEPPER ════════ */
+const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+    <p style={{ ...mono, fontSize: 10, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10 }}>
+        {children}
+    </p>
+)
+
+const Row = ({ label, value }: { label: React.ReactNode; value: React.ReactNode }) => (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+        <span style={{ fontSize: 12, color: "var(--muted2,#9490a8)" }}>{label}</span>
+        <span style={{ ...mono, fontSize: 11, fontWeight: 500, color: "var(--text)" }}>{value}</span>
+    </div>
+)
+
+/* ════════ TIMELINE ════════ */
 const OrderTimeline = ({ status }: { status: OrderStatus }) => {
     const steps: OrderStatus[] = ["PENDING", "CONFIRMED", "SHIPPING", "DELIVERED"]
     const isCancelled = status === "CANCELLED"
     const isRefunded = status === "REFUNDED"
+    const isPendingPay = status === "PENDING_PAYMENT"
 
-    if (isCancelled || isRefunded) {
+    if (isCancelled || isRefunded || isPendingPay) {
         const cfg = STATUS_CFG[status]
         return (
             <div style={{
@@ -297,7 +171,7 @@ const OrderTimeline = ({ status }: { status: OrderStatus }) => {
                 <div>
                     <p style={{ ...mono, fontSize: 12, fontWeight: 700, color: cfg.color }}>{cfg.label}</p>
                     <p style={{ ...mono, fontSize: 10, color: "var(--muted)", marginTop: 2 }}>
-                        {isCancelled ? "This order was cancelled" : "Refund has been processed"}
+                        {isCancelled ? "This order was cancelled" : isRefunded ? "Refund has been processed" : "Waiting for payment confirmation"}
                     </p>
                 </div>
             </div>
@@ -305,41 +179,34 @@ const OrderTimeline = ({ status }: { status: OrderStatus }) => {
     }
 
     const activeIdx = steps.indexOf(status)
-
     return (
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 0, position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 0 }}>
             {steps.map((step, i) => {
                 const cfg = STATUS_CFG[step]
                 const done = i <= activeIdx
                 const active = i === activeIdx
                 return (
                     <div key={step} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-                        {/* Connector line */}
                         {i < steps.length - 1 && (
                             <div style={{
                                 position: "absolute", top: 14, left: "50%", width: "100%", height: 2,
-                                background: i < activeIdx ? cfg.dot : "rgba(255,255,255,0.08)",
-                                transition: "background .3s ease",
+                                background: i < activeIdx ? cfg.dot : "rgba(255,255,255,0.08)", transition: "background .3s ease",
                             }} />
                         )}
-                        {/* Circle */}
                         <div style={{
                             width: 28, height: 28, borderRadius: "50%", zIndex: 1, flexShrink: 0,
                             background: done ? cfg.bg : "rgba(255,255,255,0.04)",
                             border: `2px solid ${done ? cfg.dot : "rgba(255,255,255,0.1)"}`,
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 12,
-                            boxShadow: active ? `0 0 0 4px ${cfg.dot}20` : "none",
-                            transition: "all .3s ease",
+                            boxShadow: active ? `0 0 0 4px ${cfg.dot}20` : "none", transition: "all .3s ease",
                         }}>
-                            {done ? <span style={{ fontSize: 11 }}>{cfg.icon}</span> : <span style={{ ...mono, fontSize: 9, color: "var(--muted)" }}>{i + 1}</span>}
+                            {done
+                                ? <span style={{ fontSize: 11 }}>{cfg.icon}</span>
+                                : <span style={{ ...mono, fontSize: 9, color: "var(--muted)" }}>{i + 1}</span>}
                         </div>
-                        {/* Label */}
-                        <p style={{
-                            ...mono, fontSize: 9, marginTop: 6, textAlign: "center",
-                            color: done ? cfg.color : "var(--muted)",
-                            fontWeight: active ? 700 : 400,
-                        }}>{cfg.label}</p>
+                        <p style={{ ...mono, fontSize: 9, marginTop: 6, textAlign: "center", color: done ? cfg.color : "var(--muted)", fontWeight: active ? 700 : 400 }}>
+                            {cfg.label}
+                        </p>
                     </div>
                 )
             })}
@@ -349,32 +216,44 @@ const OrderTimeline = ({ status }: { status: OrderStatus }) => {
 
 /* ════════ ORDER DETAIL DRAWER ════════ */
 function OrderDrawer({
-    order, onClose, onStatusChange,
+    order,
+    onClose,
+    onStatusChange,
 }: {
-    order: Order
+    order: OrderAdminResponse
     onClose: () => void
     onStatusChange: (id: number, status: OrderStatus) => void
 }) {
     const [confirmStatus, setConfirmStatus] = useState<OrderStatus | null>(null)
+    const [updating, setUpdating] = useState(false)
     const nextSteps = STATUS_NEXT[order.orderStatus] ?? []
-    const subtotal = order.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0)
-    const discountAmt = order.discount ? subtotal * (order.discount.value / 100) : 0
+    const pay = PAYMENT_CFG[order.paymentMethod]
+
+    const handleConfirm = async () => {
+        if (!confirmStatus) return
+        setUpdating(true)
+        try {
+            // Call API if endpoint exists; fall back to optimistic update
+            // await orderApi.updateOrderStatus(order.id, confirmStatus)
+            onStatusChange(order.id, confirmStatus)
+        } finally {
+            setUpdating(false)
+            setConfirmStatus(null)
+            onClose()
+        }
+    }
 
     return (
-        <div className="om-overlay" onClick={e => e.target === e.currentTarget && onClose()}
-            style={{
-                position: "fixed", inset: 0,
-                background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)",
-                zIndex: 50, display: "flex", justifyContent: "flex-end",
-            }}
+        <div className="om-overlay"
+            onClick={e => e.target === e.currentTarget && onClose()}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", zIndex: 50, display: "flex", justifyContent: "flex-end" }}
         >
             <div className="om-drawer" style={{
-                width: "min(540px,100vw)", height: "100vh", overflowY: "auto",
+                width: "min(500px,100vw)", height: "100vh", overflowY: "auto",
                 background: "var(--bg2,#111117)", borderLeft: "1px solid var(--border)",
                 display: "flex", flexDirection: "column",
             }}>
-
-                {/* ── Drawer header ── */}
+                {/* Header */}
                 <div style={{ padding: "22px 24px 20px", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
                         <div>
@@ -395,73 +274,39 @@ function OrderDrawer({
                             display: "flex", alignItems: "center", justifyContent: "center",
                         }}>✕</button>
                     </div>
-
-                    {/* Timeline */}
                     <OrderTimeline status={order.orderStatus} />
                 </div>
 
-                {/* ── Body ── */}
+                {/* Body */}
                 <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
 
                     {/* Customer */}
                     <section>
                         <SectionTitle>Customer</SectionTitle>
                         <div style={{ ...glass(), padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-                            <Avatar user={order.orderUser} size={42} />
+                            <Avatar name={order.customerName} id={order.id} size={42} />
                             <div>
-                                <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 2 }}>{order.orderUser.fullName}</p>
-                                <p style={{ ...mono, fontSize: 11, color: "var(--muted)" }}>{order.orderUser.email}</p>
+                                <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 2 }}>{order.customerName}</p>
+                                <p style={{ ...mono, fontSize: 11, color: "var(--muted)" }}>{order.customerEmail}</p>
                             </div>
                             <span style={{ ...mono, fontSize: 10, color: "var(--muted)", marginLeft: "auto" }}>
-                                #{String(order.orderUser.id).padStart(4, "0")}
+                                #{String(order.id).padStart(5, "0")}
                             </span>
                         </div>
                     </section>
 
-                    {/* Items */}
+                    {/* Order Summary */}
                     <section>
-                        <SectionTitle>{order.items.length} Item{order.items.length !== 1 ? "s" : ""}</SectionTitle>
-                        <div style={{ ...glass(), overflow: "hidden" }}>
-                            {order.items.map((item, i) => (
-                                <div key={i} style={{
-                                    display: "flex", alignItems: "center", gap: 12,
-                                    padding: "12px 16px",
-                                    borderBottom: i < order.items.length - 1 ? "1px solid var(--border)" : "none",
-                                }}>
-                                    <div style={{
-                                        width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-                                        background: "rgba(255,107,53,0.08)", border: "1px solid rgba(255,107,53,0.15)",
-                                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16,
-                                    }}>📚</div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                            {item.bookSnap.title}
-                                        </p>
-                                        <p style={{ ...mono, fontSize: 10, color: "var(--muted)", marginTop: 2 }}>
-                                            {fmt(item.unitPrice)} × {item.quantity}
-                                        </p>
-                                    </div>
-                                    <span style={{ ...mono, fontSize: 13, fontWeight: 700, color: "var(--text)", flexShrink: 0 }}>
-                                        {fmt(item.unitPrice * item.quantity)}
-                                    </span>
-                                </div>
-                            ))}
-
-                            {/* Subtotal / discount / total */}
-                            <div style={{ padding: "12px 16px", background: "rgba(255,255,255,0.02)", borderTop: "1px solid var(--border)" }}>
-                                <Row label="Subtotal" value={fmt(subtotal)} />
-                                {order.discount && (
-                                    <Row
-                                        label={<span>Discount <span style={{ ...mono, fontSize: 9, background: "rgba(34,197,94,0.12)", color: "var(--green)", padding: "1px 6px", borderRadius: 99 }}>{order.discount.code} −{order.discount.value}%</span></span>}
-                                        value={<span style={{ color: "var(--green)" }}>−{fmt(discountAmt)}</span>}
-                                    />
-                                )}
-                                <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <span style={{ ...mono, fontSize: 11, fontWeight: 700, color: "var(--muted2)" }}>Total</span>
-                                    <span style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 20, fontWeight: 700, color: "var(--accent)" }}>
-                                        {fmt(order.orderTotalAmount)}
-                                    </span>
-                                </div>
+                        <SectionTitle>Order Summary</SectionTitle>
+                        <div style={{ ...glass(), padding: "14px 16px" }}>
+                            <Row label="Order Code" value={<span style={{ color: "var(--accent,#ff6b35)" }}>{order.orderCode}</span>} />
+                            <Row label="Books ordered" value={`${order.countItem} item${order.countItem !== 1 ? "s" : ""}`} />
+                            <Row label="Order Date" value={fmtDate(order.orderDate)} />
+                            <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <span style={{ ...mono, fontSize: 11, fontWeight: 700, color: "var(--muted2)" }}>Total</span>
+                                <span style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 22, fontWeight: 700, color: "var(--accent,#ff6b35)" }}>
+                                    {fmt(order.orderTotalAmount)}
+                                </span>
                             </div>
                         </div>
                     </section>
@@ -472,45 +317,24 @@ function OrderDrawer({
                         <div style={{ ...glass(), padding: "14px 16px" }}>
                             <Row
                                 label="Method"
-                                value={<span style={{ color: PAYMENT_CFG[order.paymentMethod].color }}>
-                                    {PAYMENT_CFG[order.paymentMethod].icon} {PAYMENT_CFG[order.paymentMethod].label}
-                                </span>}
+                                value={<span style={{ color: pay.color }}>{pay.icon} {pay.label}</span>}
                             />
-                            {order.transactionId && (
-                                <Row label="Transaction ID" value={<span style={{ color: "var(--blue)" }}>{order.transactionId}</span>} />
-                            )}
                             <Row
                                 label="Status"
-                                value={order.paymentMethod === "COD"
-                                    ? <span style={{ color: order.orderStatus === "DELIVERED" ? "var(--green)" : "var(--amber)" }}>
-                                        {order.orderStatus === "DELIVERED" ? "✓ Collected" : "⏳ Pending"}
-                                    </span>
-                                    : <span style={{ color: "var(--green)" }}>✓ Paid</span>
+                                value={
+                                    order.paymentMethod === "COD"
+                                        ? <span style={{ color: order.orderStatus === "DELIVERED" ? "#22c55e" : "#f59e0b" }}>
+                                            {order.orderStatus === "DELIVERED" ? "✓ Collected" : "⏳ Pending"}
+                                        </span>
+                                        : order.orderStatus === "PENDING_PAYMENT"
+                                            ? <span style={{ color: "#fb7185" }}>⏳ Awaiting payment</span>
+                                            : <span style={{ color: "#22c55e" }}>✓ Paid</span>
                                 }
                             />
                         </div>
                     </section>
 
-                    {/* Shipping address */}
-                    <section>
-                        <SectionTitle>Shipping Address</SectionTitle>
-                        <div style={{ ...glass(), padding: "14px 16px" }}>
-                            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>
-                                {order.shippingAddress.fullName || order.orderUser.fullName}
-                            </p>
-                            <p style={{ ...mono, fontSize: 11, color: "var(--muted2)", lineHeight: 1.8 }}>
-                                {order.shippingAddress.street}<br />
-                                {order.shippingAddress.district}, {order.shippingAddress.city}
-                            </p>
-                            {order.shippingAddress.phone && (
-                                <p style={{ ...mono, fontSize: 11, color: "var(--muted)", marginTop: 6 }}>
-                                    📞 {order.shippingAddress.phone}
-                                </p>
-                            )}
-                        </div>
-                    </section>
-
-                    {/* Status actions */}
+                    {/* Status Actions */}
                     {nextSteps.length > 0 && (
                         <section>
                             <SectionTitle>Update Status</SectionTitle>
@@ -534,12 +358,9 @@ function OrderDrawer({
                 </div>
             </div>
 
-            {/* Status confirm mini-modal */}
+            {/* Confirm modal */}
             {confirmStatus && (
-                <div style={{
-                    position: "fixed", inset: 0, zIndex: 60,
-                    display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
-                }}>
+                <div style={{ position: "fixed", inset: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
                     <div className="om-modal" style={{ ...glass(), borderRadius: 16, padding: 24, maxWidth: 360, width: "100%" }}>
                         <p style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
                             Confirm Status Change
@@ -553,10 +374,13 @@ function OrderDrawer({
                                 flex: 1, ...mono, fontSize: 12, padding: "9px 0", borderRadius: 8,
                                 background: "rgba(255,255,255,0.05)", color: "var(--muted2)",
                             }}>Cancel</button>
-                            <button className="om-btn-primary" onClick={() => { onStatusChange(order.id, confirmStatus); setConfirmStatus(null); onClose() }} style={{
+                            <button className="om-btn-primary" onClick={handleConfirm} disabled={updating} style={{
                                 flex: 1, ...mono, fontSize: 12, fontWeight: 600, padding: "9px 0", borderRadius: 8,
                                 background: STATUS_CFG[confirmStatus].dot, color: "#fff",
-                            }}>Confirm</button>
+                                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                            }}>
+                                {updating ? <span className="om-spinner" style={{ width: 14, height: 14 }} /> : "Confirm"}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -565,35 +389,91 @@ function OrderDrawer({
     )
 }
 
-/* ════════ TINY HELPERS ════════ */
-const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-    <p style={{ ...mono, fontSize: 10, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10 }}>
-        {children}
-    </p>
-)
-
-const Row = ({ label, value }: { label: React.ReactNode; value: React.ReactNode }) => (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-        <span style={{ fontSize: 12, color: "var(--muted2)" }}>{label}</span>
-        <span style={{ ...mono, fontSize: 11, fontWeight: 500, color: "var(--text)" }}>{value}</span>
-    </div>
+/* ════════ SKELETON ROWS ════════ */
+const SkeletonRow = () => (
+    <tr style={{ borderBottom: "1px solid var(--border)" }}>
+        {[48, 130, 160, 60, 80, 70, 90, 80, 60].map((w, i) => (
+            <td key={i} style={{ padding: "16px 14px" }}>
+                <div className="om-skeleton" style={{ height: 12, width: w }} />
+            </td>
+        ))}
+    </tr>
 )
 
 /* ════════ MAIN PAGE ════════ */
 export const OrderManagementPage = () => {
-    const [stats, setStats] = useState<OrderDashboardStats|null>(null)
-    console.log(stats)
-    const [orders, setOrders] = useState<Order[]>(ORDERS)
+    const [stats, setStats] = useState<OrderDashboardStats | null>(null)
+    const [orders, setOrders] = useState<OrderAdminResponse[]>([])
+    const [totalPages, setTotalPages] = useState(1)
+    const [totalElements, setTotalElements] = useState(0)
+    const [loading, setLoading] = useState(false)
+    const [statsLoading, setStatsLoading] = useState(true)
+
     const [search, setSearch] = useState("")
+    const [debouncedSearch, setDebouncedSearch] = useState("")
     const [filterStatus, setFilterStatus] = useState<OrderStatus | "ALL">("ALL")
     const [filterPayment, setFilterPayment] = useState<PaymentMethod | "ALL">("ALL")
     const [sortBy, setSortBy] = useState<"orderDate" | "orderTotalAmount" | "orderCode">("orderDate")
     const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
     const [page, setPage] = useState(1)
-    const PAGE_SIZE = 7
-    const [selected, setSelected] = useState<Order | null>(null)
+    const PAGE_SIZE = 10
+
+    const [selected, setSelected] = useState<OrderAdminResponse | null>(null)
     const [toast, setToast] = useState<string | null>(null)
 
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    /* ── Debounce search ── */
+    useEffect(() => {
+        if (debounceRef.current) clearTimeout(debounceRef.current)
+        debounceRef.current = setTimeout(() => {
+            setDebouncedSearch(search)
+            setPage(1)
+        }, 400)
+        return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+    }, [search])
+
+    /* ── Fetch stats ── */
+    useEffect(() => {
+        const fetch = async () => {
+            setStatsLoading(true)
+            try {
+                const res = await orderApi.getOrderDashboardStats()
+                setStats(res)
+            } catch (e) {
+                console.error("Failed to fetch stats:", e)
+            } finally {
+                setStatsLoading(false)
+            }
+        }
+        fetch()
+    }, [])
+
+    /* ── Fetch orders (server-side) ── */
+    const fetchOrders = useCallback(async () => {
+        setLoading(true)
+        try {
+            const res = await orderApi.getAllOrderAdmins({
+                keyword: debouncedSearch || undefined,
+                orderStatus: filterStatus !== "ALL" ? filterStatus : undefined,
+                paymentMethod: filterPayment !== "ALL" ? filterPayment : undefined,
+                page: page - 1,          // Spring is 0-indexed
+                size: PAGE_SIZE,
+                sort: `${sortBy},${sortDir}`,
+            })
+            setOrders(res.content)
+            setTotalPages(res.totalPages)
+            setTotalElements(res.totalElements)
+        } catch (e) {
+            console.error("Failed to fetch orders:", e)
+        } finally {
+            setLoading(false)
+        }
+    }, [debouncedSearch, filterStatus, filterPayment, page, sortBy, sortDir])
+
+    useEffect(() => { fetchOrders() }, [fetchOrders])
+
+    /* ── Helpers ── */
     const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2800) }
 
     const toggleSort = (col: typeof sortBy) => {
@@ -605,47 +485,16 @@ export const OrderManagementPage = () => {
     const handleStatusChange = (id: number, status: OrderStatus) => {
         setOrders(os => os.map(o => o.id === id ? { ...o, orderStatus: status } : o))
         showToast(`Order updated → ${STATUS_CFG[status].label}`)
+        // Re-fetch to get accurate data from server
+        fetchOrders()
     }
 
-    /* Derived */
-    const filtered = useMemo(() => orders
-        .filter(o => {
-            const q = search.toLowerCase()
-            const matchQ = !q || o.orderCode.toLowerCase().includes(q) || o.orderUser.fullName.toLowerCase().includes(q) || o.orderUser.email.toLowerCase().includes(q)
-            const matchS = filterStatus === "ALL" || o.orderStatus === filterStatus
-            const matchP = filterPayment === "ALL" || o.paymentMethod === filterPayment
-            return matchQ && matchS && matchP
-        })
-        .sort((a, b) => {
-            const dir = sortDir === "asc" ? 1 : -1
-            if (sortBy === "orderDate") return dir * a.orderDate.localeCompare(b.orderDate)
-            if (sortBy === "orderTotalAmount") return dir * (a.orderTotalAmount - b.orderTotalAmount)
-            if (sortBy === "orderCode") return dir * a.orderCode.localeCompare(b.orderCode)
-            return 0
-        }), [orders, search, filterStatus, filterPayment, sortBy, sortDir])
+    const clearFilters = () => {
+        setSearch(""); setDebouncedSearch("")
+        setFilterStatus("ALL"); setFilterPayment("ALL"); setPage(1)
+    }
+    const hasFilters = filterStatus !== "ALL" || filterPayment !== "ALL" || search !== ""
 
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-    const safePage = Math.min(page, totalPages)
-    const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
-
-    /* Summary stats */
-    // const totalRevenue = orders.filter(o => o.orderStatus === "DELIVERED").reduce((s, o) => s + o.orderTotalAmount, 0)
-
-    // const pendingCount = orders.filter(o => o.orderStatus === "PENDING").length
-    // const shippingCount = orders.filter(o => o.orderStatus === "SHIPPING").length
-    // const deliveredCount = orders.filter(o => o.orderStatus === "DELIVERED").length
-    useEffect(() => {
-        const fetchOrderData = async () => {
-            try {
-                const res = await orderApi.getOrderDashboardStats()
-                setStats(res)
-            } catch (error) {
-                console.error("Failed to fetch stats:", error)
-            }
-        }
-        fetchOrderData()
-    }, []) // <-- placeholder for stats API call
-    
     const SortIcon = ({ col }: { col: typeof sortBy }) => (
         <span style={{ ...mono, fontSize: 9, marginLeft: 4, opacity: sortBy === col ? 1 : 0.3 }}>
             {sortBy === col ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
@@ -654,7 +503,7 @@ export const OrderManagementPage = () => {
 
     const thSort = (col: typeof sortBy): React.CSSProperties => ({
         ...mono, fontSize: 10, fontWeight: 600, letterSpacing: 1,
-        color: sortBy === col ? "var(--accent)" : "var(--muted)",
+        color: sortBy === col ? "var(--accent,#ff6b35)" : "var(--muted)",
         textTransform: "uppercase", padding: "10px 14px", textAlign: "left",
         cursor: "pointer", userSelect: "none", whiteSpace: "nowrap",
     })
@@ -663,6 +512,18 @@ export const OrderManagementPage = () => {
         textTransform: "uppercase", padding: "10px 14px", textAlign: "left", whiteSpace: "nowrap", letterSpacing: 1,
     }
 
+    /* ── Pagination pages array ── */
+    const pageNums = (): (number | "…")[] => {
+        if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
+        const arr: (number | "…")[] = [1]
+        if (page > 3) arr.push("…")
+        for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) arr.push(i)
+        if (page < totalPages - 2) arr.push("…")
+        arr.push(totalPages)
+        return arr
+    }
+
+    /* ════════ RENDER ════════ */
     return (
         <div className="om">
             <style>{CSS}</style>
@@ -672,63 +533,85 @@ export const OrderManagementPage = () => {
                 <div style={{
                     position: "fixed", bottom: 24, right: 24, zIndex: 100,
                     background: "var(--bg3)", border: "1px solid rgba(255,255,255,0.12)",
-                    borderLeft: "3px solid var(--accent)", borderRadius: 10,
+                    borderLeft: "3px solid var(--accent,#ff6b35)", borderRadius: 10,
                     padding: "12px 18px", ...mono, fontSize: 12, color: "var(--text)",
                     animation: "omUp .3s cubic-bezier(.22,1,.36,1) both",
                     boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
                 }}>✓ {toast}</div>
             )}
 
-            <div style={{ maxWidth: 1140, margin: "0 auto", padding: "32px 28px" }}>
+            <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 28px" }}>
 
                 {/* ── Header ── */}
                 <div className="om-up" style={{ marginBottom: 28 }}>
                     <p style={{ ...mono, fontSize: 10, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6 }}>
                         Store Management
                     </p>
-                    <h1 style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 28, fontWeight: 700, letterSpacing: "-0.5px" }}>
-                        Orders
-                    </h1>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <h1 style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 28, fontWeight: 700, letterSpacing: "-0.5px" }}>
+                            Orders
+                        </h1>
+                        {loading && (
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <div className="om-spinner" />
+                                <span style={{ ...mono, fontSize: 11, color: "var(--muted)" }}>Syncing…</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* ── Stats ── */}
                 <div className="om-up" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20, animationDelay: "40ms" }}>
                     {[
-                        { label: "Total Revenue", value: stats?.totalRevenue, icon: "💰", color: "var(--accent)", sub: "from delivered" },
-                        { label: "Pending", value: stats?.totalPending, icon: "⏳", color: "var(--amber)", sub: "awaiting confirm" },
-                        { label: "In Shipping", value: stats?.totalShipping, icon: "🚚", color: "#c4b5fd", sub: "on the way" },
-                        { label: "Delivered", value: stats?.totalDelivered, icon: "📦", color: "var(--green)", sub: "completed" },
+                        { label: "Total Revenue", value: stats ? fmt(stats.totalRevenue) : null, icon: "💰", color: "var(--accent,#ff6b35)", sub: "from delivered" },
+                        { label: "Pending", value: stats ? String(stats.totalPending) : null, icon: "⏳", color: "#f59e0b", sub: "awaiting confirm" },
+                        { label: "In Shipping", value: stats ? String(stats.totalShipping) : null, icon: "🚚", color: "#c4b5fd", sub: "on the way" },
+                        { label: "Delivered", value: stats ? String(stats.totalDelivered) : null, icon: "📦", color: "#22c55e", sub: "completed" },
                     ].map((s, i) => (
                         <div key={i} style={{ ...glass(), padding: "16px 18px", display: "flex", alignItems: "center", gap: 14 }}>
                             <span style={{ fontSize: 24 }}>{s.icon}</span>
                             <div>
                                 <p style={{ ...mono, fontSize: 10, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{s.label}</p>
-                                <p style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</p>
+                                {statsLoading || !s.value
+                                    ? <div className="om-skeleton" style={{ height: 28, width: 70, marginBottom: 6 }} />
+                                    : <p style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</p>
+                                }
                                 <p style={{ ...mono, fontSize: 9, color: "var(--muted)", marginTop: 3 }}>{s.sub}</p>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* ── Status overview bar ── */}
+                {/* ── Status breakdown bar ── */}
                 <div className="om-up" style={{ ...glass(), padding: "14px 18px", marginBottom: 16, animationDelay: "60ms" }}>
                     <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                         <span style={{ ...mono, fontSize: 10, color: "var(--muted)", marginRight: 4 }}>BREAKDOWN</span>
-                        {(Object.keys(STATUS_CFG) as OrderStatus[]).map(s => {
-                            const count = orders.filter(o => o.orderStatus === s).length
+                        {/* "ALL" chip */}
+                        <div onClick={() => { setFilterStatus("ALL"); setPage(1) }}
+                            style={{
+                                display: "flex", alignItems: "center", gap: 6,
+                                padding: "5px 10px", borderRadius: 8, cursor: "pointer",
+                                background: filterStatus === "ALL" ? "rgba(255,107,53,0.12)" : "rgba(255,255,255,0.03)",
+                                border: `1px solid ${filterStatus === "ALL" ? "#ff6b3550" : "var(--border)"}`,
+                                transition: "all .15s ease",
+                            }}>
+                            <span style={{ ...mono, fontSize: 10, color: filterStatus === "ALL" ? "var(--accent,#ff6b35)" : "var(--muted2)" }}>All</span>
+                            <span style={{ ...mono, fontSize: 11, fontWeight: 700, color: filterStatus === "ALL" ? "var(--accent,#ff6b35)" : "var(--text)" }}>{totalElements}</span>
+                        </div>
+                        {STATUS_ORDER.map(s => {
                             const cfg = STATUS_CFG[s]
+                            const isActive = filterStatus === s
                             return (
-                                <div key={s} onClick={() => { setFilterStatus(filterStatus === s ? "ALL" : s); setPage(1) }}
+                                <div key={s} onClick={() => { setFilterStatus(isActive ? "ALL" : s); setPage(1) }}
                                     style={{
                                         display: "flex", alignItems: "center", gap: 6,
                                         padding: "5px 10px", borderRadius: 8, cursor: "pointer",
-                                        background: filterStatus === s ? cfg.bg : "rgba(255,255,255,0.03)",
-                                        border: `1px solid ${filterStatus === s ? cfg.dot + "50" : "var(--border)"}`,
+                                        background: isActive ? cfg.bg : "rgba(255,255,255,0.03)",
+                                        border: `1px solid ${isActive ? cfg.dot + "50" : "var(--border)"}`,
                                         transition: "all .15s ease",
                                     }}>
                                     <span style={{ width: 7, height: 7, borderRadius: "50%", background: cfg.dot, flexShrink: 0 }} />
-                                    <span style={{ ...mono, fontSize: 10, color: filterStatus === s ? cfg.color : "var(--muted2)" }}>{cfg.label}</span>
-                                    <span style={{ ...mono, fontSize: 11, fontWeight: 700, color: filterStatus === s ? cfg.color : "var(--text)" }}>{count}</span>
+                                    <span style={{ ...mono, fontSize: 10, color: isActive ? cfg.color : "var(--muted2)" }}>{cfg.label}</span>
                                 </div>
                             )
                         })}
@@ -747,38 +630,37 @@ export const OrderManagementPage = () => {
                         borderRadius: 8, padding: "8px 12px",
                     }}>
                         <span style={{ fontSize: 13, color: "var(--muted)" }}>🔍</span>
-                        <input className="om-input" value={search}
-                            onChange={e => { setSearch(e.target.value); setPage(1) }}
-                            placeholder="Search order code or customer..."
+                        <input
+                            className="om-input" value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder="Search order code or customer name…"
                             style={{ background: "transparent", border: "none", outline: "none", fontSize: 13, color: "var(--text)", width: "100%", ...mono }}
                         />
-                        {search && <button onClick={() => { setSearch(""); setPage(1) }} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 14 }}>✕</button>}
+                        {search && (
+                            <button onClick={() => { setSearch(""); setDebouncedSearch(""); setPage(1) }}
+                                style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 14 }}>✕</button>
+                        )}
                     </div>
 
                     {/* Payment filter */}
-                    <select className="om-input" value={filterPayment} onChange={e => { setFilterPayment(e.target.value as any); setPage(1) }}
-                        style={{
-                            ...mono, fontSize: 11, background: "var(--bg2)", border: "1px solid var(--border)",
-                            borderRadius: 8, padding: "7px 12px", color: "var(--muted2)", cursor: "pointer",
-                        }}>
+                    <select className="om-input" value={filterPayment}
+                        onChange={e => { setFilterPayment(e.target.value as any); setPage(1) }}
+                        style={{ ...mono, fontSize: 11, background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 8, padding: "7px 12px", color: "var(--muted2)", cursor: "pointer" }}>
                         <option value="ALL">All Payments</option>
                         {(Object.keys(PAYMENT_CFG) as PaymentMethod[]).map(p => (
                             <option key={p} value={p}>{PAYMENT_CFG[p].icon} {PAYMENT_CFG[p].label}</option>
                         ))}
                     </select>
 
-                    {(filterStatus !== "ALL" || filterPayment !== "ALL" || search) && (
-                        <button className="om-btn-ghost" onClick={() => { setFilterStatus("ALL"); setFilterPayment("ALL"); setSearch(""); setPage(1) }}
-                            style={{
-                                ...mono, fontSize: 11, padding: "7px 14px", borderRadius: 8,
-                                background: "rgba(255,255,255,0.05)", color: "var(--muted2)",
-                            }}>
+                    {hasFilters && (
+                        <button className="om-btn-ghost" onClick={clearFilters}
+                            style={{ ...mono, fontSize: 11, padding: "7px 14px", borderRadius: 8, background: "rgba(255,255,255,0.05)", color: "var(--muted2)" }}>
                             Clear filters ✕
                         </button>
                     )}
 
                     <span style={{ ...mono, fontSize: 10, color: "var(--muted)", marginLeft: "auto" }}>
-                        {filtered.length} order{filtered.length !== 1 ? "s" : ""} · {totalPages} page{totalPages !== 1 ? "s" : ""}
+                        {totalElements} order{totalElements !== 1 ? "s" : ""} · {totalPages} page{totalPages !== 1 ? "s" : ""}
                     </span>
                 </div>
 
@@ -800,24 +682,24 @@ export const OrderManagementPage = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginated.length === 0 ? (
+                                {loading ? (
+                                    Array.from({ length: PAGE_SIZE }).map((_, i) => <SkeletonRow key={i} />)
+                                ) : orders.length === 0 ? (
                                     <tr>
                                         <td colSpan={9} style={{ textAlign: "center", padding: "52px 0", color: "var(--muted)" }}>
                                             <div style={{ fontSize: 32, marginBottom: 10 }}>📭</div>
                                             <p style={{ ...mono, fontSize: 12 }}>No orders found</p>
                                         </td>
                                     </tr>
-                                ) : paginated.map((o, i) => {
+                                ) : orders.map((o, i) => {
                                     const pay = PAYMENT_CFG[o.paymentMethod]
-                                    const totalQty = o.items.reduce((s, it) => s + it.quantity, 0)
-
                                     return (
                                         <tr key={o.id} className="om-row" onClick={() => setSelected(o)}
                                             style={{ borderBottom: "1px solid var(--border)" }}>
 
                                             {/* # */}
                                             <td style={{ ...mono, fontSize: 11, color: "var(--muted)", padding: "13px 14px" }}>
-                                                {String((safePage - 1) * PAGE_SIZE + i + 1).padStart(2, "0")}
+                                                {String((page - 1) * PAGE_SIZE + i + 1).padStart(2, "0")}
                                             </td>
 
                                             {/* Order code */}
@@ -825,21 +707,18 @@ export const OrderManagementPage = () => {
                                                 <p style={{ ...mono, fontSize: 12, fontWeight: 700, color: "var(--text)", whiteSpace: "nowrap" }}>
                                                     {o.orderCode}
                                                 </p>
-                                                {o.discount && (
-                                                    <span style={{ ...mono, fontSize: 9, color: "var(--green)" }}>🏷 {o.discount.code}</span>
-                                                )}
                                             </td>
 
                                             {/* Customer */}
                                             <td style={{ padding: "13px 14px" }}>
                                                 <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 160 }}>
-                                                    <Avatar user={o.orderUser} size={30} />
+                                                    <Avatar name={o.customerName} id={o.id} size={30} />
                                                     <div style={{ minWidth: 0 }}>
-                                                        <p style={{ fontSize: 12, fontWeight: 600, color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 140 }}>
-                                                            {o.orderUser.fullName}
+                                                        <p style={{ fontSize: 12, fontWeight: 600, color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 150 }}>
+                                                            {o.customerName}
                                                         </p>
-                                                        <p style={{ ...mono, fontSize: 10, color: "var(--muted)", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 140 }}>
-                                                            {o.orderUser.email}
+                                                        <p style={{ ...mono, fontSize: 10, color: "var(--muted)", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 150 }}>
+                                                            {o.customerEmail}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -847,34 +726,22 @@ export const OrderManagementPage = () => {
 
                                             {/* Items */}
                                             <td style={{ padding: "13px 14px" }}>
-                                                <p style={{ ...mono, fontSize: 12, fontWeight: 600, color: "var(--text)" }}>
-                                                    {o.items.length} title{o.items.length !== 1 ? "s" : ""}
+                                                <p style={{ ...mono, fontSize: 13, fontWeight: 600, color: "var(--text)" }}>
+                                                    {o.countItem}
                                                 </p>
-                                                <p style={{ ...mono, fontSize: 10, color: "var(--muted)", marginTop: 1 }}>
-                                                    {totalQty} book{totalQty !== 1 ? "s" : ""}
-                                                </p>
+                                                <p style={{ ...mono, fontSize: 10, color: "var(--muted)", marginTop: 1 }}>book{o.countItem !== 1 ? "s" : ""}</p>
                                             </td>
 
                                             {/* Payment */}
                                             <td style={{ padding: "13px 14px" }}>
-                                                <span style={{
-                                                    ...mono, fontSize: 10, fontWeight: 600,
-                                                    padding: "3px 9px", borderRadius: 99,
-                                                    background: "rgba(255,255,255,0.05)", color: pay.color,
-                                                    whiteSpace: "nowrap",
-                                                }}>
+                                                <span style={{ ...mono, fontSize: 10, fontWeight: 600, padding: "3px 9px", borderRadius: 99, background: "rgba(255,255,255,0.05)", color: pay.color, whiteSpace: "nowrap" }}>
                                                     {pay.icon} {pay.label}
                                                 </span>
-                                                {o.transactionId && (
-                                                    <p style={{ ...mono, fontSize: 9, color: "var(--muted)", marginTop: 3 }}>
-                                                        {o.transactionId}
-                                                    </p>
-                                                )}
                                             </td>
 
                                             {/* Total */}
                                             <td style={{ padding: "13px 14px" }}>
-                                                <p style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 15, fontWeight: 700, color: "var(--accent)" }}>
+                                                <p style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 15, fontWeight: 700, color: "var(--accent,#ff6b35)" }}>
                                                     {fmt(o.orderTotalAmount)}
                                                 </p>
                                             </td>
@@ -889,7 +756,7 @@ export const OrderManagementPage = () => {
                                                 {fmtDate(o.orderDate)}
                                             </td>
 
-                                            {/* Action */}
+                                            {/* Actions */}
                                             <td style={{ padding: "13px 14px", textAlign: "right" }}>
                                                 <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }} onClick={e => e.stopPropagation()}>
                                                     <button className="om-icon-btn" title="View detail" onClick={() => setSelected(o)} style={{
@@ -897,8 +764,7 @@ export const OrderManagementPage = () => {
                                                         borderRadius: 7, width: 30, height: 30, fontSize: 13, cursor: "pointer", color: "var(--muted2)",
                                                         display: "flex", alignItems: "center", justifyContent: "center",
                                                     }}>👁</button>
-
-                                                    {/* Quick next-status button */}
+                                                    {/* Quick next-status */}
                                                     {STATUS_NEXT[o.orderStatus]?.[0] && (() => {
                                                         const next = STATUS_NEXT[o.orderStatus]![0]
                                                         const cfg = STATUS_CFG[next]
@@ -925,37 +791,29 @@ export const OrderManagementPage = () => {
                 </div>
 
                 {/* ── Pagination ── */}
-                {filtered.length > 0 && (
+                {totalPages > 0 && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 4px", flexWrap: "wrap", gap: 12 }}>
                         <p style={{ ...mono, fontSize: 11, color: "var(--muted)" }}>
                             Showing{" "}
-                            <span style={{ color: "var(--text)", fontWeight: 600 }}>{(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)}</span>
-                            {" "}of <span style={{ color: "var(--text)", fontWeight: 600 }}>{filtered.length}</span> orders
+                            <span style={{ color: "var(--text)", fontWeight: 600 }}>
+                                {Math.min((page - 1) * PAGE_SIZE + 1, totalElements)}–{Math.min(page * PAGE_SIZE, totalElements)}
+                            </span>
+                            {" "}of <span style={{ color: "var(--text)", fontWeight: 600 }}>{totalElements}</span> orders
                         </p>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <button className="om-page-btn" disabled={safePage === 1} onClick={() => setPage(p => Math.max(1, p - 1))}
+                            <button className="om-page-btn" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}
                                 style={{ ...mono, fontSize: 12, background: "var(--bg3)", borderRadius: 8, color: "var(--muted2)", width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center" }}>
                                 ←
                             </button>
-                            {(() => {
-                                const pages: (number | "…")[] = []
-                                if (totalPages <= 7) for (let i = 1; i <= totalPages; i++) pages.push(i)
-                                else {
-                                    pages.push(1)
-                                    if (safePage > 3) pages.push("…")
-                                    for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++) pages.push(i)
-                                    if (safePage < totalPages - 2) pages.push("…")
-                                    pages.push(totalPages)
-                                }
-                                return pages.map((p, idx) => p === "…"
+                            {pageNums().map((p, idx) =>
+                                p === "…"
                                     ? <span key={`e${idx}`} style={{ ...mono, fontSize: 11, color: "var(--muted)", width: 20, textAlign: "center" }}>…</span>
-                                    : <button key={p} className={`om-page-btn${safePage === p ? " pg-active" : ""}`} onClick={() => setPage(p as number)}
-                                        style={{ ...mono, fontSize: 12, fontWeight: safePage === p ? 700 : 400, background: "var(--bg3)", borderRadius: 8, color: "var(--muted2)", width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    : <button key={p} className={`om-page-btn${page === p ? " pg-active" : ""}`} onClick={() => setPage(p as number)}
+                                        style={{ ...mono, fontSize: 12, fontWeight: page === p ? 700 : 400, background: "var(--bg3)", borderRadius: 8, color: "var(--muted2)", width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center" }}>
                                         {p}
                                     </button>
-                                )
-                            })()}
-                            <button className="om-page-btn" disabled={safePage === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            )}
+                            <button className="om-page-btn" disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                 style={{ ...mono, fontSize: 12, background: "var(--bg3)", borderRadius: 8, color: "var(--muted2)", width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center" }}>
                                 →
                             </button>
