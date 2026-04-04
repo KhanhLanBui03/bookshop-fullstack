@@ -15,6 +15,7 @@ export type Page =
   | "customers"
   | "analytics"
   | "settings"
+  | "categories"
 
 interface NavItem {
   id: Page
@@ -36,6 +37,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "dashboard", icon: <LayoutDashboard size={16} />, label: "Dashboard" },
       { id: "books", icon: <Book size={16} />, label: "Books", badgeColor: "var(--accent, #ff6b35)" },
+      { id: "categories", icon: <Book size={16} />, label: "Categories", badgeColor: "var(--accent, #ff6b35)" },
       { id: "orders", icon: <ListOrdered size={16} />, label: "Orders", badgeColor: "var(--accent, #ff6b35)" },
       { id: "customers", icon: <UsersRound size={16} />, label: "Customers" },
     ],

@@ -23,6 +23,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = new Category();
         category.setName(request.getName());
         category.setDescription(request.getDescription());
+        category.setUrl(request.getUrl());
         categoryRepository.save(category);
         log.info("Category Saved Successfully");
         return new CategoryResponse(category.getId(), category.getName(), category.getDescription(),category.getUrl());
@@ -68,6 +69,9 @@ public class CategoryServiceImpl implements CategoryService {
         }
         if(!category.getDescription().equals(request.getDescription())){
             category.setDescription(request.getDescription());
+        }
+        if (!category.getUrl().equals(request.getUrl())){
+            category.setUrl(request.getUrl());
         }
         Category response = categoryRepository.save(category);
         log.info("Category Updated Successfully");

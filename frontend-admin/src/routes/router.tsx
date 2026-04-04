@@ -3,6 +3,7 @@ import { AnalyticsPage } from "@/feature/analytics/pages/AnalyticsPage"
 import LoginPage from "@/feature/auth/pages/LoginPage"
 import RegisterPage from "@/feature/auth/pages/RegisterPage"
 import { BookManagementPage } from "@/feature/book/pages/BookPage"
+import { CategoryPage } from "@/feature/category/pages/CategoryPage"
 import { CustomerPage } from "@/feature/customer/pages/CustomerPage"
 import { DashboardPage } from "@/feature/dashboard/pages/DashboardPage"
 import { OrderManagementPage} from "@/feature/order/pages/OrderPage"
@@ -23,7 +24,8 @@ const router = createBrowserRouter([
             {path:"/settings", element: <SettingsPage/>},
             {path:"/orders", element: <OrderManagementPage/>},
             {path:"/books", element:<BookManagementPage/>},
-            {path:"/customers",element:<CustomerPage/>}
+            {path:"/customers",element:<CustomerPage/>},
+            {path:"/categories", element: <CategoryPage/>}
         ],
     },
     {
