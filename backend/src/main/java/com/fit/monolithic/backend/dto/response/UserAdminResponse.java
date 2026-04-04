@@ -22,7 +22,7 @@ public class UserAdminResponse {
     private List<String> roles;
     private Long totalOrder;
     private Double totalSpent;
-    private LocalDate dateJoin;
+    private LocalDate createAt;
 
     public UserAdminResponse(
             Long id,
@@ -32,7 +32,7 @@ public class UserAdminResponse {
             AuthProvider authProvider,
             Long totalOrder,
             Double totalSpent,
-            LocalDate dateJoin
+            LocalDate createAt
     ) {
         this.id = id;
         this.fullName = fullName;
@@ -41,6 +41,6 @@ public class UserAdminResponse {
         this.authProvider = authProvider;
         this.totalOrder = totalOrder;
         this.totalSpent = totalSpent;
-        this.dateJoin = dateJoin;
+        this.createAt = createAt;
     }
 }

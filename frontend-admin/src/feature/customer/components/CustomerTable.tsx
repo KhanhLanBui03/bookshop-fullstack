@@ -15,7 +15,7 @@ const SkeletonRow = () => (
     </tr>
 )
 
-type SortCol = "fullName" | "dateJoin" | "totalOrder" | "totalSpent"
+type SortCol = "fullName" | "createAt" | "totalOrder" | "totalSpent"
 
 interface Props {
     users: UserAdminResponse[]
@@ -62,7 +62,7 @@ export const CustomerTable = ({
                             <th style={thStatic}>Roles</th>
                             <th onClick={() => onSort("totalOrder")} style={thSort("totalOrder")}>Orders <SortIcon col="totalOrder" /></th>
                             <th onClick={() => onSort("totalSpent")} style={thSort("totalSpent")}>Total Spent <SortIcon col="totalSpent" /></th>
-                            <th onClick={() => onSort("dateJoin")} style={thSort("dateJoin")}>Joined <SortIcon col="dateJoin" /></th>
+                            <th onClick={() => onSort("createAt")} style={thSort("createAt")}>Joined <SortIcon col="createAt" /></th>
                             <th style={{ ...thStatic, textAlign: "right" }}>Action</th>
                         </tr>
                     </thead>
@@ -154,7 +154,7 @@ export const CustomerTable = ({
 
                                     {/* Joined */}
                                     <td style={{ ...mono, fontSize: 11, color: "var(--muted2)", padding: "13px 14px", whiteSpace: "nowrap" }}>
-                                        {fmtDate(u.dateJoin)}
+                                        {fmtDate(u.createAt)}
                                     </td>
 
                                     {/* Action */}

@@ -11,7 +11,7 @@ export interface UserAdminResponse {
     roles: string[]        // e.g. ["ADMIN", "USER"] — ROLE_ prefix stripped by service
     totalOrder: number
     totalSpent: number
-    dateJoin: string       // LocalDate → ISO string "YYYY-MM-DD"
+    createAt: string    // LocalDate → ISO string "YYYY-MM-DD"
 }
 
 export interface UserDashboardStats {
