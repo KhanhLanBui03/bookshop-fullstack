@@ -1,5 +1,6 @@
 package com.fit.monolithic.backend.repository;
 
+import com.fit.monolithic.backend.dto.response.CategoryStatsResponse;
 import com.fit.monolithic.backend.entity.Category;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,4 +30,15 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
                 ORDER BY SUM(oi.quantity) DESC
             """)
     List<Object[]> getSalesByCategory(Pageable pageable);
+    @Query("""
+            SELECT new com.fit.monolithic.backend.dto.response.CategoryStatsResponse(
+                COUNT(DISTINCT c.id),
+                COUNT(b.id),
+                AVG(CASE WHEN SIZE(c.books) > 0 THEN SIZE(c.books) ELSE 0 END),
+                SUM(CASE WHEN SIZE(c.books) = 0 THEN 1 ELSE 0 END)
+            )
+            FROM Category c
+            LEFT JOIN c.books b
+            """)
+    CategoryStatsResponse getStats();
 }

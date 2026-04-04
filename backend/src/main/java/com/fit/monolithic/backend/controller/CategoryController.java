@@ -2,6 +2,7 @@ package com.fit.monolithic.backend.controller;
 
 import com.fit.monolithic.backend.dto.request.CategoryRequest;
 import com.fit.monolithic.backend.dto.response.CategoryResponse;
+import com.fit.monolithic.backend.dto.response.CategoryStatsResponse;
 import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.service.CategoryService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -62,5 +63,9 @@ public class CategoryController {
                 "Success",
                 categoryService.update(id, request)
         );
+    }
+    @GetMapping("/stats")
+    public ApiResponse<CategoryStatsResponse> getStats() {
+        return new ApiResponse<>(200, "Success", categoryService.getStats());
     }
 }
