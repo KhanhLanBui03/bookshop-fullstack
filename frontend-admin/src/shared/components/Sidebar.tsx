@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Book, ChartLine, LayoutDashboard,
   ListOrdered, Settings2, UsersRound, LogOut, Bell,
+  Tag,
 } from "lucide-react"
 import { useAuth } from "@/feature/auth/contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
@@ -37,7 +38,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "dashboard", icon: <LayoutDashboard size={16} />, label: "Dashboard" },
       { id: "books", icon: <Book size={16} />, label: "Books", badgeColor: "var(--accent, #ff6b35)" },
-      { id: "categories", icon: <Book size={16} />, label: "Categories", badgeColor: "var(--accent, #ff6b35)" },
+      { id: "categories", icon: <Tag size={16} />, label: "Categories", badgeColor: "var(--accent, #ff6b35)" },
       { id: "orders", icon: <ListOrdered size={16} />, label: "Orders", badgeColor: "var(--accent, #ff6b35)" },
       { id: "customers", icon: <UsersRound size={16} />, label: "Customers" },
     ],
