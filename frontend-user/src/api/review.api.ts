@@ -8,46 +8,44 @@ import type {
 } from "@/types/Review";
 import axiosClient from "./axios";
 
-// Helper: backend có thể wrap { code, message, data: T } hoặc trả thẳng T
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// unwrap response
 const unwrap = (r: any) => r.data?.data ?? r.data;
 
 export const reviewApi = {
-    /** GET /reviews/book/{bookId}?page=0&size=5 */
+    /** GET /api/v1/reviews/book/{bookId}?page=0&size=5 */
     getBookReviews: (bookId: number, page = 0, size = 5): Promise<PageResponse<ReviewResponse>> =>
         axiosClient
             .get(`/reviews/book/${bookId}`, { params: { page, size } })
             .then(unwrap),
 
-    /** POST /reviews */
-    createReview: (userId: number, body: CreateReviewRequest): Promise<ReviewResponse> =>
+    /** POST /api/v1/reviews */
+    createReview: (body: CreateReviewRequest): Promise<ReviewResponse> =>
         axiosClient
-            .post("/reviews", body, { headers: { "X-User-Id": userId } })
+            .post("/reviews", body)
             .then(unwrap),
 
-    /** PUT /reviews/{id} */
+    /** PUT /api/v1/reviews/{id} */
     updateReview: (
-        userId: number,
         reviewId: number,
         body: UpdateReviewRequest
     ): Promise<ReviewResponse> =>
         axiosClient
-            .put(`/reviews/${reviewId}`, body, { headers: { "X-User-Id": userId } })
+            .put(`/reviews/${reviewId}`, body)
             .then(unwrap),
 
-    /** DELETE /reviews/{id} */
-    deleteReview: (userId: number, reviewId: number): Promise<void> =>
+    /** DELETE /api/v1/reviews/{id} */
+    deleteReview: (reviewId: number): Promise<void> =>
         axiosClient
-            .delete(`/reviews/${reviewId}`, { headers: { "X-User-Id": userId } })
+            .delete(`/reviews/${reviewId}`)
             .then(() => undefined),
 
-    /** POST /reviews/{id}/helpful */
-    toggleHelpful: (userId: number, reviewId: number): Promise<ReviewResponse> =>
+    /** POST /api/v1/reviews/{id}/helpful */
+    toggleHelpful: (reviewId: number): Promise<ReviewResponse> =>
         axiosClient
-            .post(`/reviews/${reviewId}/helpful`, null, { headers: { "X-User-Id": userId } })
+            .post(`/reviews/${reviewId}/helpful`)
             .then(unwrap),
 
-    /** PATCH /reviews/{id}/status (admin) */
+    /** PATCH /api/v1/reviews/{id}/status (admin) */
     updateStatus: (reviewId: number, status: CommentStatus): Promise<ReviewResponse> =>
         axiosClient
             .patch(
@@ -56,24 +54,19 @@ export const reviewApi = {
             )
             .then(unwrap),
 
-    /** GET /reviews/check-reviewed?userId=&bookId= */
-    checkReviewed: (userId: number, bookId: number): Promise<boolean> =>
+    /** ✅ FIX: bỏ userId */
+    /** GET /api/v1/reviews/check-reviewed?bookId= */
+    checkReviewed: (bookId: number): Promise<boolean> =>
         axiosClient
-            .get("/reviews/check-reviewed", { params: { userId, bookId } })
-            .then((r) => {
-                // Trả về boolean trực tiếp hoặc wrapped
-                const val = r.data?.data ?? r.data;
-                return Boolean(val);
-            })
-            .catch(() => false), // nếu endpoint chưa có thì mặc định false
+            .get("/reviews/check-reviewed", { params: { bookId } })
+            .then((r) => Boolean(r.data?.data ?? r.data))
+            .catch(() => false),
 
-    /** GET /orders/check-purchased?userId=&bookId= */
-    checkPurchased: (userId: number, bookId: number): Promise<boolean> =>
+    /** (nếu backend cũng sửa JWT thì nên bỏ userId luôn) */
+    /** GET /api/v1/orders/check-purchased?bookId= */
+    checkPurchased: (bookId: number): Promise<boolean> =>
         axiosClient
-            .get("/orders/check-purchased", { params: { userId, bookId } })
-            .then((r) => {
-                const val = r.data?.data ?? r.data;
-                return Boolean(val);
-            })
-            .catch(() => false), // nếu endpoint chưa có thì mặc định false
+            .get("/orders/check-purchased", { params: { bookId } })
+            .then((r) => Boolean(r.data?.data ?? r.data))
+            .catch(() => false),
 };

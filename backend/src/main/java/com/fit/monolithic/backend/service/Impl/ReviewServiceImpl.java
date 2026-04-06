@@ -46,7 +46,8 @@ public class ReviewServiceImpl implements ReviewService {
         boolean purchased = orderItemRepo.hasPurchased(
                 userId,
                 req.getBookId(),
-                OrderStatus.DELIVERED
+                List.of(OrderStatus.PAID, OrderStatus.CONFIRMED,
+                        OrderStatus.SHIPPING, OrderStatus.DELIVERED)
         );
 
         if (!purchased) {

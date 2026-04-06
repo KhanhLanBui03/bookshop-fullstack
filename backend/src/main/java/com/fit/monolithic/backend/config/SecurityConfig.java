@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/api/v1/reviews/**").hasAnyAuthority("ROLE_USER")
+                           .requestMatchers(HttpMethod.POST,"/api/v1/reviews/**").hasAnyAuthority("ROLE_USER")
                         .requestMatchers(HttpMethod.GET,Endpoints.PUBLISH_GET_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST,Endpoints.PUBLISH_POST_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.PUT,Endpoints.PUBLISH_PUT_ENDPOINTS).permitAll()
@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE,Endpoints.ADMIN_DELETE_ENDPOINTS).hasAnyAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.POST,Endpoints.ADMIN_POST_ENDPOINTS).hasAnyAuthority("ROLE_ADMIN")
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/check-purchased").authenticated()
                         .requestMatchers(
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/register",

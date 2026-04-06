@@ -18,7 +18,7 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "book_id", insertable = false, updatable = false)
-    private Long bookId;     // lưu id để tracking
+    private Long bookId; // chỉ để đọc, không ghi   // lưu id để tracking
     private String bookTitle;  // snapshot tên
     private BigDecimal price;        // snapshot giá tại thời điểm mua
     private Integer quantity;

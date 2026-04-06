@@ -215,7 +215,7 @@ public class OrderServiceImpl implements OrderService {
 
             OrderItem orderItem = OrderItem.builder()
                     .order(order)
-                    .bookId(cartItem.getBook().getId())
+                    .book(cartItem.getBook())
                     .bookTitle(cartItem.getBook().getTitle())
                     .quantity(cartItem.getQuantity())
                     .price(cartItem.getBook().getSalePrice())
@@ -281,7 +281,11 @@ public class OrderServiceImpl implements OrderService {
     }
     @Override
     public boolean checkPurchased(Long userId, Long bookId) {
-        return orderItemRepository.hasPurchased(userId, bookId, OrderStatus.DELIVERED);
+        return orderItemRepository.hasPurchased(
+                userId, bookId,
+                List.of(OrderStatus.PAID, OrderStatus.CONFIRMED,
+                        OrderStatus.SHIPPING, OrderStatus.DELIVERED)
+        );
     }
 
     // OrderController.java — thêm endpoint

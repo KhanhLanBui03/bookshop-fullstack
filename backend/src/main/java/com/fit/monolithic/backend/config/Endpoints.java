@@ -9,7 +9,7 @@ public class Endpoints {
             "/api/v1/discounts/**",
             "/api/v1/categories/**",
             "/api/v1/dashboards/**",
-            "/api/v1/orders/**",
+//            "/api/v1/orders/**",
             "/api/v1/users/**",
             "/api/v1/analytics/**"
     };
@@ -19,7 +19,8 @@ public class Endpoints {
             "/api/v1/discounts/**",
             "/api/v1/books/**",
             "/api/v1/categories/**",
-            "/api/v1/carts/**"
+            "/api/v1/carts/**",
+            "/api/v1/reviews/**"
 
     };
 

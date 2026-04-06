@@ -8,7 +8,6 @@ public enum OrderStatus {
     CONFIRMED,       // admin xác nhận
     SHIPPING,
     DELIVERED,
-
     FAILED,          // 🔥 thanh toán thất bại
     CANCELLED,
     REFUNDED

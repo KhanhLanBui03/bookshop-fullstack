@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -76,10 +77,12 @@ public class OrderController {
         );
     }
     @GetMapping("/check-purchased")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<Boolean> checkPurchased(
-            @RequestParam Long userId,
-            @RequestParam Long bookId
+            @RequestParam Long bookId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return new ApiResponse<>(200, "Success", orderService.checkPurchased(userId, bookId));
+        return new ApiResponse<>(200, "Success",
+                orderService.checkPurchased(userDetails.getId(), bookId));
     }
 }

@@ -55,7 +55,7 @@ export default function CreateReviewForm({
         setError("");
         setSubmitting(true);
         try {
-            const review = await reviewApi.createReview(userId, {
+            const review = await reviewApi.createReview({
                 bookId,
                 content,
                 rating,

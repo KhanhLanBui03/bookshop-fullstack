@@ -11,42 +11,43 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/reviews")
+@RequestMapping("/api/v1/reviews") // ✅ FIX: thêm v1 cho đúng với frontend
 @RequiredArgsConstructor
 public class ReviewController {
 
     private final ReviewService reviewService;
     private final ReviewRepository reviewRepo;
-    /** GET /api/reviews/book/{bookId}?page=0&size=10 */
+
+    /** GET /api/v1/reviews/book/{bookId}?page=0&size=10 */
     @GetMapping("/book/{bookId}")
     public ResponseEntity<PageResponse<ReviewResponse>> getBookReviews(
             @PathVariable Long bookId,
-            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long userId = extractId(userDetails);
+        Long userId = userDetails != null ? userDetails.getId() : null;
         return ResponseEntity.ok(
-                reviewService.getBookReviews(bookId, page, size, userId));
+                reviewService.getBookReviews(bookId, page, size, userId)
+        );
     }
 
-    /** POST /api/reviews  (review gốc hoặc reply nếu có parentId) */
+    /** POST /api/v1/reviews */
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewResponse> createReview(
             @Valid @RequestBody CreateReviewRequest req,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long userId = extractId(userDetails);
+        Long userId = userDetails.getId();
         ReviewResponse res = reviewService.createReview(userId, req);
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
-    /** PUT /api/reviews/{id} */
+    /** PUT /api/v1/reviews/{id} */
     @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewResponse> updateReview(
@@ -55,21 +56,22 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         return ResponseEntity.ok(
-                reviewService.updateReview(extractId(userDetails), id, req));
+                reviewService.updateReview(userDetails.getId(), id, req)
+        );
     }
 
-    /** DELETE /api/reviews/{id} */
+    /** DELETE /api/v1/reviews/{id} */
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteReview(
             @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        reviewService.deleteReview(extractId(userDetails), id);
+        reviewService.deleteReview(userDetails.getId(), id);
         return ResponseEntity.noContent().build();
     }
 
-    /** PATCH /api/reviews/{id}/status  (admin) */
+    /** PATCH /api/v1/reviews/{id}/status (admin) */
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ReviewResponse> updateStatus(
@@ -79,7 +81,7 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.updateReviewStatus(id, req));
     }
 
-    /** POST /api/reviews/{id}/helpful */
+    /** POST /api/v1/reviews/{id}/helpful */
     @PostMapping("/{id}/helpful")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewResponse> toggleHelpful(
@@ -87,19 +89,23 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         return ResponseEntity.ok(
-                reviewService.toggleHelpful(extractId(userDetails), id));
+                reviewService.toggleHelpful(userDetails.getId(), id)
+        );
     }
 
-    private Long extractId(UserDetails ud) {
-        if (ud instanceof CustomUserDetails cud) return cud.getId();
-        throw new IllegalStateException("Cannot extract user id from principal");
-    }
+    /** ✅ FIXED: không cần userId nữa */
+    /** GET /api/v1/reviews/check-reviewed?bookId=2 */
     @GetMapping("/check-reviewed")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<Boolean> checkReviewed(
-            @RequestParam Long userId,
-            @RequestParam Long bookId
+            @RequestParam Long bookId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        boolean result = reviewRepo.existsByUserIdAndBookIdAndParentIsNull(userId, bookId);
+        Long userId = userDetails.getId();
+
+        boolean result = reviewRepo
+                .existsByUserIdAndBookIdAndParentIsNull(userId, bookId);
+
         return new ApiResponse<>(200, "Success", result);
     }
 }
