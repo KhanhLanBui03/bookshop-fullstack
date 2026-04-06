@@ -4,6 +4,8 @@ import {
   Book, ChartLine, LayoutDashboard,
   ListOrdered, Settings2, UsersRound, LogOut, Bell,
   Tag,
+  BellIcon,
+  MessageSquare,
 } from "lucide-react"
 import { useAuth } from "@/feature/auth/contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
@@ -17,6 +19,7 @@ export type Page =
   | "analytics"
   | "settings"
   | "categories"
+  | "reviews"
 
 interface NavItem {
   id: Page
@@ -41,6 +44,7 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "categories", icon: <Tag size={16} />, label: "Categories", badgeColor: "var(--accent, #ff6b35)" },
       { id: "orders", icon: <ListOrdered size={16} />, label: "Orders", badgeColor: "var(--accent, #ff6b35)" },
       { id: "customers", icon: <UsersRound size={16} />, label: "Customers" },
+      { id: "reviews", icon: <MessageSquare size={16} />, label: "Reviews" }
     ],
   },
   {
