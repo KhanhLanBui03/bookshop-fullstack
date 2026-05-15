@@ -3,6 +3,7 @@ package com.fit.monolithic.backend.service;
 import com.fit.monolithic.backend.dto.request.CreateOrderRequest;
 import com.fit.monolithic.backend.dto.response.OrderAdminResponse;
 import com.fit.monolithic.backend.dto.response.OrderDashboardStats;
+import com.fit.monolithic.backend.dto.response.OrderDetailResponse;
 import com.fit.monolithic.backend.dto.response.OrderResponse;
 import com.fit.monolithic.backend.entity.User;
 import com.fit.monolithic.backend.enums.OrderStatus;
@@ -19,5 +20,8 @@ Object createOrder(CreateOrderRequest request,
                    HttpServletRequest httpRequest);
     OrderDashboardStats getOrderDashboardStat();
     Page<OrderAdminResponse> getAllOrderAdmins(String keyword, OrderStatus orderStatus, PaymentMethod paymentMethod, Pageable pageable);
+    OrderDetailResponse getOrderDetail(Long id);
     boolean checkPurchased(Long userId, Long bookId);
+    void cancelOrder(Long id, CustomUserDetails userDetails);
+    void updateOrderStatus(Long id, OrderStatus status);
 }

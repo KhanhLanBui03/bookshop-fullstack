@@ -11,6 +11,21 @@ const axiosClient = axios.create({
     timeout: 10000,
 })
 
+// Biến để track trạng thái refresh
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
+
 // interceptor gắn token
 axiosClient.interceptors.request.use(
     (config) => {
@@ -24,14 +39,32 @@ axiosClient.interceptors.request.use(
         return Promise.reject(error);
     }
 );
+
 axiosClient.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
 
-        // Nếu token hết hạn (401) và chưa retry
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Nếu token hết hạn (401) và không phải là yêu cầu auth (tránh loop)
+        if (error.response?.status === 401 && 
+            !originalRequest._retry && 
+            !originalRequest.url?.includes('/auth/login') && 
+            !originalRequest.url?.includes('/auth/refresh-token')
+        ) {
+            
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({ resolve, reject });
+                }).then(token => {
+                    originalRequest.headers.Authorization = `Bearer ${token}`;
+                    return axiosClient(originalRequest);
+                }).catch(err => {
+                    return Promise.reject(err);
+                });
+            }
+
             originalRequest._retry = true;
+            isRefreshing = true;
 
             try {
                 const refreshToken = localStorage.getItem('refreshToken');
@@ -45,15 +78,17 @@ axiosClient.interceptors.response.use(
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', newRefreshToken);
 
+                processQueue(null, accessToken);
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                 return axiosClient(originalRequest);
             } catch (refreshError) {
-                // Refresh token cũng hết hạn -> logout
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                localStorage.removeItem('user');
+                processQueue(refreshError, null);
+                // Logout logic
+                localStorage.clear();
                 window.location.href = '/login';
                 return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
             }
         }
 

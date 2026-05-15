@@ -17,6 +17,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     /** Kiểm tra user đã review sách này chưa (chỉ review gốc) */
     boolean existsByUserIdAndBookIdAndParentIsNull(Long userId, Long bookId);
 
+    /** Lấy tất cả review gốc (cho admin) */
+    Page<Review> findAllByParentIsNull(Pageable pageable);
+
+    /** Lấy tất cả review gốc theo trạng thái (cho admin) */
+    Page<Review> findAllByStatusAndParentIsNull(CommentStatus status, Pageable pageable);
+
     /** Tính rating trung bình cho sách */
     @Query("""
         SELECT AVG(r.rating) FROM Review r

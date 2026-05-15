@@ -1,6 +1,6 @@
 
-import React from "react"
-import { glass, mono, fmt, fmtDate, PROVIDER_CFG, ROLE_CFG } from "../customer.config"
+import { type CSSProperties } from "react"
+import { glass, mono, fmt, fmtDate, PROVIDER_CFG } from "../customer.config"
 import { Avatar, RoleBadge } from "./CustomerAtoms"
 import type { UserAdminResponse } from "../customer.type"
 
@@ -38,13 +38,13 @@ export const CustomerTable = ({
         </span>
     )
 
-    const thSort = (col: SortCol): React.CSSProperties => ({
+    const thSort = (col: SortCol): CSSProperties => ({
         ...mono, fontSize: 10, fontWeight: 600, letterSpacing: 1,
         color: sortBy === col ? "var(--accent,#ff6b35)" : "var(--muted)",
         textTransform: "uppercase", padding: "10px 14px", textAlign: "left",
         cursor: "pointer", userSelect: "none", whiteSpace: "nowrap",
     })
-    const thStatic: React.CSSProperties = {
+    const thStatic: CSSProperties = {
         ...mono, fontSize: 10, fontWeight: 600, letterSpacing: 1,
         color: "var(--muted)", textTransform: "uppercase",
         padding: "10px 14px", textAlign: "left", whiteSpace: "nowrap",

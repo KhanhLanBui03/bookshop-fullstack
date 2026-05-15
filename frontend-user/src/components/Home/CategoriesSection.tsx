@@ -4,6 +4,8 @@ import { categoryService } from "@/services/category.service"
 import type { CategoryCard } from "@/types/Category"
 import { BookOpen, ChevronRight } from "lucide-react"
 import { Skeleton } from "../ui/skeleton"
+import { Button } from "../ui/button"
+import { Link } from "react-router-dom"
 
 
 //     {
@@ -18,6 +20,9 @@ import { Skeleton } from "../ui/skeleton"
 //         image: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f",
 //     },
 // ]
+
+import { EmptyState } from "../Common/EmptyState"
+import { LayoutGrid } from "lucide-react"
 
 const CategoriesSection = () => {
     const { data: categories, loading } = useFetch<CategoryCard[]>(
@@ -58,84 +63,84 @@ const CategoriesSection = () => {
     }
 
     if (!categories || categories.length === 0) {
-        return <div>Không có danh mục</div>
+        return (
+            <EmptyState 
+                icon={LayoutGrid} 
+                title="Không có danh mục" 
+                description="Hiện tại chưa có danh mục sách nào được đăng tải. Vui lòng quay lại sau." 
+            />
+        )
     }
 
     return (
-        <section className="relative dark:bg-zinc-900 py-12 lg:py-16 bg-gradient-to-b from-gray-50 to-white">
-            <div className="container mx-auto px-4 bg-black/5 dark:bg-white/5 rounded-3xl py-10 lg:py-16">
+        <section className="relative py-20 overflow-hidden">
+            <div className="container mx-auto px-4 relative z-10">
                 {/* Header */}
-                <div className="text-center mb-12 ">
-                    <div className="inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-4">
-                        <BookOpen className="w-4 h-4" />
+                <div className="text-center mb-16">
+                    <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
+                        <BookOpen className="size-4" />
                         <span>Khám phá theo chủ đề</span>
                     </div>
-                    <h2 className="text-3xl lg:text-4xl dark:text-white font-bold text-gray-900 mb-3">
-                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                            Danh mục
-                        </span>{" "}
-                        nổi bật
+                    <h2 className="text-4xl lg:text-5xl font-black text-foreground mb-4">
+                        Danh mục <span className="text-primary">nổi bật</span>
                     </h2>
-                    <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                        Tìm kiếm sách yêu thích theo danh mục được tuyển chọn kỹ lưỡng
+                    <p className="text-muted-foreground max-w-2xl mx-auto font-medium">
+                        Tìm kiếm sách yêu thích qua các chủ đề được tuyển chọn kỹ lưỡng từ đội ngũ chuyên gia.
                     </p>
                 </div>
 
-                {/* Categories Grid */}
-                <div className="flex gap-6 max-w-7xl mx-auto overflow-x-auto pb-6 scrollbar-hide">
+                {/* Categories Scroll */}
+                <div className="flex gap-8 max-w-7xl mx-auto overflow-x-auto pb-10 scrollbar-hide">
                     {categories.map((category, index) => (
-                        <div
+                        <Link
+                            to={`/list-books?genre=${category.name}`}
                             key={category.id}
-                            // onClick={() => handleCategoryClick(category.id)}
-                            className="group flex-shrink-0 w-64 cursor-pointer relative"
+                            className="group flex-shrink-0 w-72 cursor-pointer relative"
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
                             {/* Card */}
-                            <div className={`relative rounded-2xl  dark:bg-zinc-800 hover:border-gray-200 dark:hover:border-zinc-700 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 `}>
+                            <div className="relative rounded-3xl glass dark:bg-card hover:border-primary/30 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-3">
                                 {/* Image Container */}
-                                <div className="relative h-40 overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
+                                <div className="relative h-48 overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent z-10" />
                                     <img
                                         src={category.url || "/placeholder.png"}
                                         alt={category.name}
-                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                     />
+                                    <div className="absolute top-4 right-4 z-20 glass px-3 py-1 rounded-lg text-[10px] font-bold text-white uppercase tracking-tighter">
+                                        Trending
+                                    </div>
                                 </div>
 
                                 {/* Content */}
-                                <div className="p-5">
-                                    <h3
-                                        className="
-                                            font-bold text-xl mb-1
-                                            bg-gradient-to-r from-blue-600 to-purple-600
-                                            dark:from-blue-400 dark:to-purple-400
-                                            bg-clip-text text-transparent
-                                            transition-all duration-300
-                                        "
-                                    >
+                                <div className="p-6 relative z-20">
+                                    <h3 className="font-black text-2xl mb-2 text-foreground group-hover:text-primary transition-colors duration-300">
                                         {category.name}
                                     </h3>
-
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2 leading-relaxed">
                                         {category.description}
                                     </p>
-
-
+                                    <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest group-hover:gap-4 transition-all">
+                                        Khám phá <ChevronRight className="size-4" />
+                                    </div>
                                 </div>
 
                                 {/* Shine Effect */}
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                             </div>
-                        </div>
+                        </Link>
                     ))}
                 </div>
 
                 {/* View All Button */}
-                <div className="text-center mt-10">
-                    <button className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105">
-                        <span>Xem tất cả danh mục</span>
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
+                <div className="text-center mt-12">
+                    <Link to="/list-books">
+                        <Button size="lg" className="rounded-2xl px-10 h-14 font-bold shadow-xl transition-all hover:scale-105 active:scale-95">
+                            <span>Xem tất cả danh mục</span>
+                            <ChevronRight className="size-5" />
+                        </Button>
+                    </Link>
                 </div>
             </div>
 

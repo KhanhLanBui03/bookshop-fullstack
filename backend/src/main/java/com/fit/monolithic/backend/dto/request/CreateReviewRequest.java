@@ -2,6 +2,7 @@ package com.fit.monolithic.backend.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class CreateReviewRequest {
@@ -19,4 +20,6 @@ public class CreateReviewRequest {
 
     /** null → review gốc, non-null → reply */
     private Long parentId;
+
+    private List<String> imageUrls;
 }

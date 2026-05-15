@@ -1,4 +1,3 @@
-import React from "react"
 import { glass, mono } from "../book.config"
 import { Spinner } from "./BookAtoms"
 import type { BookAdminResponse } from "../book.type"

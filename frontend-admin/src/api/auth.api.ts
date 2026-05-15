@@ -1,4 +1,4 @@
-import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, User } from "@/types/Account";
+import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, User } from "@/feature/auth/auth.types";
 import axiosClient from "./axios";
 
 export const authApi = {

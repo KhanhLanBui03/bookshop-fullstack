@@ -1,6 +1,10 @@
-import React from "react"
-import { glass, mono } from "../category.config"
+import { 
+  Trash2, 
+  AlertTriangle, 
+  Loader2 
+} from "lucide-react"
 import type { CategoryResponse } from "../category.type"
+import { Button } from "@/components/ui/button"
 
 interface Props {
     category: CategoryResponse
@@ -9,78 +13,54 @@ interface Props {
     onConfirm: () => Promise<void>
 }
 
-export const CategoryDeleteConfirm = ({ category, deleting, onClose, onConfirm }: Props) => (
-    <div
-        className="cat-overlay"
-        onClick={e => !deleting && e.target === e.currentTarget && onClose()}
-        style={{
-            position: "fixed", inset: 0,
-            background: "rgba(0,0,0,.68)", backdropFilter: "blur(5px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            zIndex: 50, padding: 24,
-        }}
-    >
-        <div className="cat-modal" style={{ ...glass(), borderRadius: 18, padding: 28, maxWidth: 400, width: "100%" }}>
+export const CategoryDeleteConfirm = ({ category, deleting, onClose, onConfirm }: Props) => {
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onClick={e => !deleting && e.target === e.currentTarget && onClose()}>
+            <div className="glass w-full max-w-md rounded-[3rem] border-white/20 overflow-hidden animate-in zoom-in-95 fade-in duration-300 shadow-2xl">
+                
+                {/* ── Content ── */}
+                <div className="p-10 text-center space-y-6">
+                    <div className="size-20 bg-rose-500/10 text-rose-500 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner border border-rose-500/20">
+                        <Trash2 className="size-10" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <h3 className="text-2xl font-black text-foreground tracking-tight">Xác nhận xóa?</h3>
+                        <p className="text-sm font-bold text-muted-foreground leading-relaxed px-4">
+                            Bạn có chắc chắn muốn xóa danh mục <span className="text-rose-500">"{category.name}"</span>? Hành động này không thể hoàn tác.
+                        </p>
+                    </div>
 
-            {/* Icon */}
-            <div style={{
-                width: 48, height: 48, borderRadius: 14,
-                background: "rgba(239,68,68,.12)", border: "1px solid rgba(239,68,68,.25)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 22, marginBottom: 18,
-            }}>🗑️</div>
-
-            <h3 style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
-                Delete Category
-            </h3>
-
-            <p style={{ fontSize: 13, color: "var(--muted2,#9490a8)", lineHeight: 1.65, marginBottom: 10 }}>
-                Remove <strong style={{ color: "var(--text,#e8e4f0)" }}>"{category.name}"</strong> from the catalog?
-            </p>
-
-            {/* Warning if has books */}
-            {category.bookCount > 0 && (
-                <div style={{
-                    background: "rgba(245,158,11,.1)", border: "1px solid rgba(245,158,11,.25)",
-                    borderRadius: 10, padding: "10px 14px", marginBottom: 18,
-                    display: "flex", alignItems: "flex-start", gap: 8,
-                }}>
-                    <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>⚠️</span>
-                    <p style={{ ...mono, fontSize: 11, color: "#f59e0b", lineHeight: 1.55 }}>
-                        This category contains <strong>{category.bookCount}</strong> book{category.bookCount !== 1 ? "s" : ""}. Deleting it may affect those books.
-                    </p>
+                    {category.bookCount > 0 && (
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-3 text-left">
+                            <AlertTriangle className="size-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                            <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider leading-relaxed">
+                                Cảnh báo: Danh mục này đang chứa <span className="text-amber-700 font-black">{category.bookCount} cuốn sách</span>. Việc xóa danh mục có thể ảnh hưởng đến dữ liệu sách liên quan.
+                            </p>
+                        </div>
+                    )}
                 </div>
-            )}
 
-            {!category.bookCount && (
-                <p style={{ ...mono, fontSize: 11, color: "var(--muted,#6b6880)", marginBottom: 18 }}>
-                    This action cannot be undone.
-                </p>
-            )}
-
-            <div style={{ display: "flex", gap: 10 }}>
-                <button
-                    className="cat-btn-ghost"
-                    onClick={onClose}
-                    disabled={deleting}
-                    style={{ flex: 1, ...mono, fontSize: 12, padding: "10px 0", borderRadius: 9, background: "rgba(255,255,255,.05)", color: "var(--muted2,#9490a8)" }}
-                >
-                    Cancel
-                </button>
-                <button
-                    className="cat-btn-primary"
-                    onClick={onConfirm}
-                    disabled={deleting}
-                    style={{
-                        flex: 1, ...mono, fontSize: 12, fontWeight: 600, padding: "10px 0", borderRadius: 9,
-                        background: "var(--red,#ef4444)", color: "#fff",
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                    }}
-                >
-                    {deleting && <div className="cat-spinner" style={{ width: 13, height: 13 }} />}
-                    Delete
-                </button>
+                {/* ── Footer ── */}
+                <div className="p-8 bg-rose-500/5 border-t border-rose-500/10 flex flex-col gap-3">
+                    <Button 
+                        onClick={onConfirm} 
+                        disabled={deleting}
+                        className="w-full rounded-2xl font-black text-[10px] uppercase tracking-widest h-14 bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                        {deleting ? <Loader2 className="size-4 animate-spin mr-2" /> : <Trash2 className="size-4 mr-2" />}
+                        Xác nhận xóa danh mục
+                    </Button>
+                    <Button 
+                        variant="ghost" 
+                        onClick={onClose} 
+                        disabled={deleting}
+                        className="w-full rounded-2xl font-black text-[10px] uppercase tracking-widest h-14 text-muted-foreground hover:bg-white/5"
+                    >
+                        Hủy bỏ
+                    </Button>
+                </div>
             </div>
         </div>
-    </div>
-)
+    )
+}

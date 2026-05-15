@@ -33,12 +33,12 @@ export const Field = ({
     required?: boolean
     hint?: string
 }) => (
-    <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--muted2)", marginBottom: 6 }}>
-            {label}{required && <span style={{ color: "var(--accent)" }}> *</span>}
+    <div style={{ marginBottom: 4 }}>
+        <label style={{ display: "block", fontSize: 11, fontWeight: 900, color: "#6b6b7b", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+            {label}{required && <span style={{ color: "var(--primary)" }}> *</span>}
         </label>
         {children}
-        {hint && <p style={{ ...mono, fontSize: 10, color: "var(--muted)", marginTop: 4 }}>{hint}</p>}
+        {hint && <p style={{ ...mono, fontSize: 10, fontWeight: 700, color: "#4a4a5a", marginTop: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>{hint}</p>}
     </div>
 )
 

@@ -1,6 +1,19 @@
-import React, { useEffect, useRef, useState } from "react"
-import { glass, mono, inputStyle, EMPTY_FORM } from "../category.config"
+import { useEffect, useRef, useState } from "react"
+import {
+    X,
+    Tag,
+    AlignLeft,
+    Image as ImageIcon,
+    Upload,
+    Link as LinkIcon,
+    CheckCircle2,
+    AlertCircle,
+    Loader2
+} from "lucide-react"
 import type { CategoryForm, CategoryResponse } from "../category.type"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+
 
 interface Props {
     category: CategoryResponse | null   // null = Add mode
@@ -8,28 +21,20 @@ interface Props {
     onSave: (form: CategoryForm, id?: number) => Promise<void>
 }
 
-const Field = ({ label, required, hint, children }: {
-    label: string; required?: boolean; hint?: string; children: React.ReactNode
-}) => (
-    <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--muted2,#9490a8)", marginBottom: 6 }}>
-            {label}{required && <span style={{ color: "var(--accent,#ff6b35)" }}> *</span>}
-        </label>
-        {children}
-        {hint && <p style={{ ...mono, fontSize: 10, color: "var(--muted,#6b6880)", marginTop: 4 }}>{hint}</p>}
-    </div>
-)
+const EMPTY_FORM: CategoryForm = {
+    name: "",
+    description: "",
+    url: ""
+}
 
 export const CategoryModal = ({ category, onClose, onSave }: Props) => {
     const isEdit = !!category
-    const [form, setForm]     = useState<CategoryForm>({ ...EMPTY_FORM })
+    const [form, setForm] = useState<CategoryForm>({ ...EMPTY_FORM })
     const [errors, setErrors] = useState<Partial<CategoryForm>>({})
     const [saving, setSaving] = useState(false)
     const [urlTab, setUrlTab] = useState<"url" | "upload">("url")
-    const [dragOver, setDragOver] = useState(false)
     const fileRef = useRef<HTMLInputElement>(null)
 
-    /* Pre-fill on edit */
     useEffect(() => {
         if (category) {
             setForm({
@@ -43,11 +48,6 @@ export const CategoryModal = ({ category, onClose, onSave }: Props) => {
         setErrors({})
     }, [category])
 
-    const set = (k: keyof CategoryForm) =>
-        (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-            setForm(f => ({ ...f, [k]: e.target.value }))
-
-    /* Image upload via FileReader → base64 */
     const readFile = (file: File) => {
         if (!file.type.startsWith("image/")) return
         const reader = new FileReader()
@@ -57,7 +57,7 @@ export const CategoryModal = ({ category, onClose, onSave }: Props) => {
 
     const validate = () => {
         const e: Partial<CategoryForm> = {}
-        if (!form.name.trim()) e.name = "Name is required"
+        if (!form.name.trim()) e.name = "Tên danh mục không được để trống"
         setErrors(e)
         return Object.keys(e).length === 0
     }
@@ -65,186 +65,137 @@ export const CategoryModal = ({ category, onClose, onSave }: Props) => {
     const handleSubmit = async () => {
         if (!validate() || saving) return
         setSaving(true)
-        try { await onSave(form, category?.id) }
-        finally { setSaving(false) }
+        try {
+            await onSave(form, category?.id)
+            onClose()
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setSaving(false)
+        }
     }
 
     return (
-        <div
-            className="cat-overlay"
-            onClick={e => !saving && e.target === e.currentTarget && onClose()}
-            style={{
-                position: "fixed", inset: 0,
-                background: "rgba(0,0,0,.68)", backdropFilter: "blur(5px)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                zIndex: 50, padding: "24px 16px",
-            }}
-        >
-            <div className="cat-modal" style={{ ...glass(), width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto", borderRadius: 18 }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 overflow-y-auto" onClick={e => !saving && e.target === e.currentTarget && onClose()}>
+            <div className="glass w-full max-w-2xl rounded-[3rem] border-white/20 overflow-hidden animate-in zoom-in-95 fade-in duration-300">
 
                 {/* ── Header ── */}
-                <div style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    padding: "20px 24px 16px", borderBottom: "1px solid var(--border,rgba(255,255,255,.07))",
-                }}>
-                    <div>
-                        <p style={{ ...mono, fontSize: 10, color: "var(--muted,#6b6880)", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 4 }}>
-                            {isEdit ? "Edit Category" : "New Category"}
-                        </p>
-                        <h2 style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 20, fontWeight: 700 }}>
-                            {isEdit ? category.name : "Add Category"}
-                        </h2>
+                <div className="p-8 border-b border-white/10 flex items-center justify-between bg-white/5">
+                    <div className="flex items-center gap-3">
+                        <div className="size-10 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
+                            <Tag className="size-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-foreground tracking-tight">{isEdit ? "Chỉnh sửa danh mục" : "Thêm danh mục mới"}</h2>
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{isEdit ? "Cập nhật thông tin phân loại" : "Tạo phân loại sách mới cho hệ thống"}</p>
+                        </div>
                     </div>
-                    <button
-                        className="cat-icon-btn"
-                        onClick={onClose}
-                        disabled={saving}
-                        style={{
-                            background: "rgba(255,255,255,.05)", border: "1px solid var(--border,rgba(255,255,255,.07))",
-                            borderRadius: 8, width: 32, height: 32, fontSize: 15, color: "var(--muted2,#9490a8)",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                        }}
-                    >✕</button>
+                    <button onClick={onClose} disabled={saving} className="size-10 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors disabled:opacity-30">
+                        <X className="size-5 text-muted-foreground" />
+                    </button>
                 </div>
 
-                {/* ── Body ── */}
-                <div style={{ padding: "20px 24px" }}>
-
+                <div className="p-8 space-y-6">
                     {/* Name */}
-                    <Field label="Category Name" required>
-                        <input
-                            className="cat-input"
-                            style={inputStyle}
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                            <Tag className="size-3" /> Tên danh mục <span className="text-rose-500">*</span>
+                        </label>
+                        <Input
                             value={form.name}
-                            onChange={set("name")}
-                            placeholder="e.g. Science Fiction"
+                            onChange={e => setForm({ ...form, name: e.target.value })}
+                            placeholder="Ví dụ: Khoa học viễn tưởng"
+                            className="h-12 bg-background/50 border-border/50 rounded-2xl focus-visible:ring-primary/20"
                         />
-                        {errors.name && <p className="cat-err">{errors.name}</p>}
-                    </Field>
+                        {errors.name && <p className="text-[10px] font-bold text-rose-500 uppercase flex items-center gap-1"><AlertCircle className="size-3" /> {errors.name}</p>}
+                    </div>
 
                     {/* Description */}
-                    <Field label="Description" hint="Short summary shown on category card">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                            <AlignLeft className="size-3" /> Mô tả danh mục
+                        </label>
                         <textarea
-                            className="cat-input"
-                            style={{ ...inputStyle, resize: "vertical", minHeight: 88, lineHeight: 1.6 }}
                             value={form.description}
-                            onChange={set("description")}
-                            placeholder="What kinds of books are in this category?"
+                            onChange={e => setForm({ ...form, description: e.target.value })}
+                            placeholder="Mô tả ngắn gọn về loại sách này..."
+                            className="w-full min-h-[160px] bg-background/50 border-border/50 rounded-2xl focus-visible:ring-primary/20 resize-y p-5 text-sm leading-relaxed outline-none transition-all focus:border-primary/30"
                         />
-                    </Field>
+                    </div>
 
                     {/* Image */}
-                    <Field label="Cover Image" hint="Displayed as card background · Recommended 800×500">
-                        {/* Tab toggle */}
-                        <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-                            {(["url", "upload"] as const).map(t => (
-                                <button
-                                    key={t}
-                                    onClick={() => setUrlTab(t)}
-                                    style={{
-                                        ...mono, fontSize: 10, padding: "5px 12px", borderRadius: 7,
-                                        background: urlTab === t ? "rgba(255,107,53,.15)" : "rgba(255,255,255,.05)",
-                                        border: `1px solid ${urlTab === t ? "rgba(255,107,53,.4)" : "var(--border,rgba(255,255,255,.07))"}`,
-                                        color: urlTab === t ? "var(--accent,#ff6b35)" : "var(--muted2,#9490a8)",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    {t === "url" ? "🔗 URL" : "📁 Upload"}
-                                </button>
-                            ))}
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                            <ImageIcon className="size-3" /> Hình ảnh đại diện
+                        </label>
+
+                        <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/5 w-fit">
+                            <button
+                                onClick={() => setUrlTab("url")}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${urlTab === "url" ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:text-foreground"}`}
+                            >
+                                <LinkIcon className="size-3" /> Đường dẫn URL
+                            </button>
+                            <button
+                                onClick={() => setUrlTab("upload")}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${urlTab === "upload" ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:text-foreground"}`}
+                            >
+                                <Upload className="size-3" /> Tải lên file
+                            </button>
                         </div>
 
                         {urlTab === "url" ? (
-                            <input
-                                className="cat-input"
-                                style={inputStyle}
+                            <Input
                                 value={form.url}
-                                onChange={set("url")}
+                                onChange={e => setForm({ ...form, url: e.target.value })}
                                 placeholder="https://example.com/image.jpg"
+                                className="h-12 bg-background/50 border-border/50 rounded-2xl focus-visible:ring-primary/20"
                             />
                         ) : (
-                            <>
-                                <input
-                                    ref={fileRef} type="file"
-                                    accept="image/*" style={{ display: "none" }}
-                                    onChange={e => e.target.files?.[0] && readFile(e.target.files[0])}
-                                />
-                                <div
-                                    className="cat-img-zone"
-                                    onClick={() => fileRef.current?.click()}
-                                    onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-                                    onDragLeave={() => setDragOver(false)}
-                                    onDrop={e => { e.preventDefault(); setDragOver(false); e.dataTransfer.files?.[0] && readFile(e.dataTransfer.files[0]) }}
-                                    style={{
-                                        border: `2px dashed ${dragOver ? "var(--accent,#ff6b35)" : "rgba(255,255,255,.12)"}`,
-                                        borderRadius: 10, padding: "22px 16px",
-                                        textAlign: "center", cursor: "pointer",
-                                        background: dragOver ? "rgba(255,107,53,.06)" : "var(--bg2,#111117)",
-                                    }}
-                                >
-                                    <div style={{ fontSize: 28, marginBottom: 6 }}>🖼️</div>
-                                    <p style={{ ...mono, fontSize: 12, color: dragOver ? "var(--accent,#ff6b35)" : "var(--muted2,#9490a8)" }}>
-                                        {dragOver ? "Drop to upload" : "Click or drag image here"}
-                                    </p>
-                                </div>
-                            </>
+                            <div
+                                onClick={() => fileRef.current?.click()}
+                                className="border-2 border-dashed border-white/10 rounded-[2rem] p-8 text-center cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-all group"
+                            >
+                                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && readFile(e.target.files[0])} />
+                                <Upload className="size-8 text-muted-foreground mx-auto mb-3 group-hover:scale-110 group-hover:text-primary transition-all" />
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Kéo thả hoặc click để tải ảnh</p>
+                            </div>
                         )}
 
-                        {/* Preview */}
                         {form.url && (
-                            <div style={{ marginTop: 12, position: "relative", borderRadius: 10, overflow: "hidden", height: 120, border: "1px solid var(--border,rgba(255,255,255,.07))" }}>
-                                <img
-                                    src={form.url} alt="preview"
-                                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none" }}
-                                />
-                                <button
-                                    onClick={() => setForm(f => ({ ...f, url: "" }))}
-                                    style={{
-                                        position: "absolute", top: 8, right: 8,
-                                        background: "rgba(0,0,0,.6)", backdropFilter: "blur(4px)",
-                                        border: "none", borderRadius: 6, color: "#fff",
-                                        width: 26, height: 26, cursor: "pointer", fontSize: 11,
-                                        display: "flex", alignItems: "center", justifyContent: "center",
-                                    }}
-                                >✕</button>
-                                <div style={{
-                                    position: "absolute", bottom: 8, left: 8,
-                                    ...mono, fontSize: 9, background: "rgba(0,0,0,.6)", backdropFilter: "blur(4px)",
-                                    color: "#fff", padding: "2px 7px", borderRadius: 5,
-                                }}>
-                                    Preview
+                            <div className="relative rounded-[2rem] overflow-hidden aspect-video border border-white/10 group shadow-2xl">
+                                <img src={form.url} alt="Preview" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <button onClick={() => setForm({ ...form, url: "" })} className="size-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center shadow-lg">
+                                        <X className="size-5" />
+                                    </button>
+                                </div>
+                                <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                                    <p className="text-[8px] font-black text-white uppercase tracking-widest">Xem trước hình ảnh</p>
                                 </div>
                             </div>
                         )}
-                    </Field>
-
-                    {/* Footer */}
-                    <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
-                        <button
-                            className="cat-btn-ghost"
-                            onClick={onClose}
-                            disabled={saving}
-                            style={{ ...mono, fontSize: 12, padding: "9px 18px", borderRadius: 8, background: "rgba(255,255,255,.05)", color: "var(--muted2,#9490a8)" }}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            className="cat-btn-primary"
-                            onClick={handleSubmit}
-                            disabled={saving}
-                            style={{
-                                ...mono, fontSize: 12, fontWeight: 600, padding: "9px 24px", borderRadius: 8,
-                                background: "var(--accent,#ff6b35)", color: "#fff",
-                                display: "flex", alignItems: "center", gap: 8,
-                            }}
-                        >
-                            {saving && <div className="cat-spinner" style={{ width: 13, height: 13 }} />}
-                            {isEdit ? "Save Changes" : "Create Category"}
-                        </button>
                     </div>
+                </div>
+
+                <div className="p-8 bg-white/5 border-t border-white/10 flex justify-end gap-3">
+                    <Button variant="ghost" onClick={onClose} disabled={saving} className="rounded-2xl font-black text-[10px] uppercase tracking-widest h-12 px-8 border border-white/10 hover:bg-white/10">
+                        Hủy bỏ
+                    </Button>
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={saving}
+                        className="rounded-2xl font-black text-[10px] uppercase tracking-widest h-12 px-10 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] min-w-[160px]"
+                    >
+                        {saving ? <Loader2 className="size-4 animate-spin mr-2" /> : (isEdit ? <CheckCircle2 className="size-4 mr-2" /> : <Plus className="size-4 mr-2" />)}
+                        {isEdit ? "Lưu thay đổi" : "Tạo danh mục"}
+                    </Button>
                 </div>
             </div>
         </div>
     )
 }
+
+const Plus = ({ className }: { className?: string }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
+)

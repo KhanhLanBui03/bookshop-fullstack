@@ -1,4 +1,4 @@
-export type AuthProvider = "LOCAL" | "GOOGLE"
+export type AuthProvider = "LOCAL" | "GOOGLE" | "FACEBOOK" | "GITHUB"
 
 export type RoleName = "ADMIN" | "USER" | "STAFF"
 

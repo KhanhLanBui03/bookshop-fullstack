@@ -3,6 +3,7 @@ package com.fit.monolithic.backend.controller;
 import com.fit.monolithic.backend.dto.request.CreateOrderRequest;
 import com.fit.monolithic.backend.dto.response.OrderAdminResponse;
 import com.fit.monolithic.backend.dto.response.OrderDashboardStats;
+import com.fit.monolithic.backend.dto.response.OrderDetailResponse;
 import com.fit.monolithic.backend.dto.response.OrderResponse;
 import com.fit.monolithic.backend.dto.response.based.ApiResponse;
 import com.fit.monolithic.backend.enums.OrderStatus;
@@ -76,6 +77,14 @@ public class OrderController {
                 orderService.getAllOrderAdmins(keyword, orderStatus, paymentMethod, pageable)
         );
     }
+    @GetMapping("/admin/{id}")
+    public ApiResponse<OrderDetailResponse> getOrderDetail(@PathVariable Long id) {
+        return new ApiResponse<>(
+                200,
+                "Success",
+                orderService.getOrderDetail(id)
+        );
+    }
     @GetMapping("/check-purchased")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Boolean> checkPurchased(
@@ -84,5 +93,23 @@ public class OrderController {
     ) {
         return new ApiResponse<>(200, "Success",
                 orderService.checkPurchased(userDetails.getId(), bookId));
+    }
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<String> cancelOrder(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        orderService.cancelOrder(id, userDetails);
+        return new ApiResponse<>(200, "Order cancelled successfully", null);
+    }
+    @PatchMapping("/admin/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> updateOrderStatus(
+            @PathVariable Long id,
+            @RequestParam OrderStatus status
+    ) {
+        orderService.updateOrderStatus(id, status);
+        return new ApiResponse<>(200, "Success", null);
     }
 }

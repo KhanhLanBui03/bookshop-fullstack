@@ -14,4 +14,5 @@ public interface DiscountService {
     DiscountResponse create(DiscountRequest discountRequest);
     DiscountResponse updateDiscountById( Long id, DiscountRequest discountRequest);
     void deleteDiscountById(Long id);
+    DiscountResponse validateDiscount(String code);
 }

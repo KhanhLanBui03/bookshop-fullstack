@@ -1,5 +1,5 @@
 
-import AuthorList from "@/components/Home/AuthorList"
+import FeaturedAuthors from "@/components/Home/FeaturedAuthors"
 import BlogList from "@/components/Home/BlogList"
 import BookBestSeller from "@/components/Home/BookBestSeller"
 import BookList from "@/components/Home/BookList"
@@ -7,9 +7,15 @@ import CategoriesSection from "@/components/Home/CategoriesSection"
 import FlashSale from "@/components/Home/BookStack"
 import HeroBanner from "@/components/Home/HeroBanner"
 import { Button } from "@/components/ui/button"
+import { useSEO } from "@/hooks/useSEO"
 
 
 const HomePage = () => {
+  useSEO({
+    title: "Trang chủ",
+    description: "Chào mừng bạn đến với BookStore - Hệ thống nhà sách trực tuyến hàng đầu với hàng ngàn đầu sách phong phú.",
+    keywords: "nhà sách, mua sách online, sách hay, bookstore, sách giảm giá"
+  })
   return (
     <div className="items-center justify-center flex flex-col gap-8">
 
@@ -18,7 +24,7 @@ const HomePage = () => {
       <BookList />
       <BookBestSeller />
       <FlashSale />
-      <AuthorList />
+      <FeaturedAuthors />
       <BlogList />
       <section className="bg-blue-50 py-20 px-4 flex justify-center items-center w-full dark:bg-accent">
         <div className="max-w-4xl w-full bg-blue-400 p-10 md:p-16 text-center relative overflow-hidden rounded-sm dark:bg-gray-800">

@@ -13,4 +13,5 @@ public class CreateOrderRequest {
     private Long addressId;
     private PaymentMethod paymentMethod;
     private List<Long> cartItemIds;
+    private String discountCode;
 }

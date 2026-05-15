@@ -1,14 +1,15 @@
-import React, { useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import React from "react"
 import {
   Book, ChartLine, LayoutDashboard,
-  ListOrdered, Settings2, UsersRound, LogOut, Bell,
+  ListOrdered, Settings2, UsersRound, LogOut,
   Tag,
-  BellIcon,
   MessageSquare,
+  Package,
+  PenTool
 } from "lucide-react"
 import { useAuth } from "@/feature/auth/contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 /* ════════ TYPES ════════ */
 export type Page =
@@ -20,6 +21,8 @@ export type Page =
   | "settings"
   | "categories"
   | "reviews"
+  | "inventory"
+  | "blogs"
 
 interface NavItem {
   id: Page
@@ -37,316 +40,121 @@ interface NavGroup {
 /* ════════ NAV DATA ════════ */
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: "MAIN",
+    label: "Hệ thống",
     items: [
-      { id: "dashboard", icon: <LayoutDashboard size={16} />, label: "Dashboard" },
-      { id: "books", icon: <Book size={16} />, label: "Books", badgeColor: "var(--accent, #ff6b35)" },
-      { id: "categories", icon: <Tag size={16} />, label: "Categories", badgeColor: "var(--accent, #ff6b35)" },
-      { id: "orders", icon: <ListOrdered size={16} />, label: "Orders", badgeColor: "var(--accent, #ff6b35)" },
-      { id: "customers", icon: <UsersRound size={16} />, label: "Customers" },
-      { id: "reviews", icon: <MessageSquare size={16} />, label: "Reviews" }
+      { id: "dashboard", icon: <LayoutDashboard className="size-4" />, label: "Tổng quan" },
+      { id: "books", icon: <Book className="size-4" />, label: "Sách", badge: "New" },
+      { id: "categories", icon: <Tag className="size-4" />, label: "Danh mục" },
+      { id: "orders", icon: <ListOrdered className="size-4" />, label: "Đơn hàng", badge: "3" },
+      { id: "inventory", icon: <Package className="size-4" />, label: "Kho hàng" },
+      { id: "blogs", icon: <PenTool className="size-4" />, label: "Bài viết" },
+      { id: "customers", icon: <UsersRound className="size-4" />, label: "Khách hàng" },
+      { id: "reviews", icon: <MessageSquare className="size-4" />, label: "Đánh giá" }
     ],
   },
   {
-    label: "INSIGHTS",
+    label: "Báo cáo & Cài đặt",
     items: [
-      { id: "analytics", icon: <ChartLine size={16} />, label: "Analytics" },
-      { id: "settings", icon: <Settings2 size={16} />, label: "Settings" },
+      { id: "analytics", icon: <ChartLine className="size-4" />, label: "Phân tích" },
+      { id: "settings", icon: <Settings2 className="size-4" />, label: "Cài đặt" },
     ],
   },
 ]
 
-/* ════════ CSS ════════ */
-const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
-
-  .sb-wrap * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  .sb-wrap {
-    width: 230px;
-    background: var(--bg2, #111117);
-    border-right: 1px solid var(--border, rgba(255,255,255,0.07));
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    z-index: 30;
-    font-family: var(--font-body, 'DM Sans', sans-serif);
-  }
-
-  .sb-wrap::-webkit-scrollbar { width: 0; }
-
-  .sb-nav-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 9px 12px;
-    border-radius: 10px;
-    margin-bottom: 2px;
-    cursor: pointer;
-    transition: all .15s ease;
-    color: var(--muted, #6b6880);
-    border: 1px solid transparent;
-    position: relative;
-    overflow: hidden;
-  }
-  .sb-nav-item::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    background: linear-gradient(90deg, rgba(255,107,53,0.06) 0%, transparent 100%);
-    transition: opacity .15s ease;
-  }
-  .sb-nav-item:hover {
-    background: rgba(255,255,255,0.04);
-    color: var(--muted2, #9490a8);
-  }
-  .sb-nav-item.active {
-    background: rgba(255,107,53,0.1);
-    border-color: rgba(255,107,53,0.18);
-    color: var(--text, #e8e4f0);
-  }
-  .sb-nav-item.active::before { opacity: 1; }
-  .sb-nav-item.active .sb-icon { color: var(--accent, #ff6b35); }
-  .sb-nav-item.active .sb-label { font-weight: 600; }
-
-  .sb-icon {
-    transition: color .15s ease;
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-  }
-
-  .sb-user-card {
-    transition: background .15s ease;
-    cursor: pointer;
-    border-radius: 12px;
-  }
-  .sb-user-card:hover { background: rgba(255,255,255,0.05) !important; }
-
-  .sb-logout-btn {
-    transition: all .15s ease;
-    cursor: pointer;
-    border: none;
-  }
-  .sb-logout-btn:hover {
-    background: rgba(239,68,68,0.1) !important;
-    color: var(--red, #ef4444) !important;
-    border-color: rgba(239,68,68,0.2) !important;
-  }
-
-  .sb-notif-btn {
-    transition: background .15s ease;
-    cursor: pointer;
-    border: none;
-  }
-  .sb-notif-btn:hover { background: rgba(255,255,255,0.08) !important; }
-
-  @keyframes sbPulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-    50% { box-shadow: 0 0 0 4px rgba(34,197,94,0); }
-  }
-  .sb-online { animation: sbPulse 2.5s ease infinite; }
-
-  .sb-active-bar {
-    position: absolute;
-    left: 0; top: 20%; bottom: 20%;
-    width: 3px;
-    background: var(--accent, #ff6b35);
-    border-radius: 0 3px 3px 0;
-    opacity: 0;
-    transition: opacity .15s ease;
-  }
-  .sb-nav-item.active .sb-active-bar { opacity: 1; }
-`
-
-/* ════════ PROPS ════════ */
-interface SidebarProps {
-  active: Page
-  onNavigate: (page: Page) => void
-}
-
 /* ════════ COMPONENT ════════ */
-export const Sidebar = ({ active, onNavigate }: SidebarProps) => {
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
-  const mono: React.CSSProperties = { fontFamily: "var(--font-mono, 'DM Mono', monospace)" }
-  const {user,logout} = useAuth()
+export const Sidebar = ({ active, onNavigate }: { active: Page, onNavigate: (page: Page) => void }) => {
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
+
   const handleLogout = async () => {
     await logout()
     navigate("/login")
   }
+
   return (
-    <aside className="sb-wrap">
-      <style>{CSS}</style>
-
+    <aside className="w-[300px] min-w-[300px] flex-shrink-0 bg-white dark:bg-card border-r border-border/50 flex flex-col h-screen z-50 sticky top-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
       {/* ── Logo ── */}
-      <div style={{
-        padding: "22px 18px 18px",
-        borderBottom: "1px solid var(--border, rgba(255,255,255,0.07))",
-        flexShrink: 0,
-      }}>
-      
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Logo mark */}
-          <div style={{
-            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-            background: "linear-gradient(135deg, var(--accent, #ff6b35) 0%, #ff9a6c 100%)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 14px rgba(255,107,53,0.35)",
-          }}>
-            <Book size={18} color="#fff" strokeWidth={2.2} />
+      <div className="p-8 border-b border-border/50">
+        <div className="flex items-center gap-4">
+          <div className="size-10 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+            <Book className="size-6 text-primary-foreground" />
           </div>
-
           <div>
-            <div style={{
-              fontFamily: "var(--font-display, 'Fraunces', serif)",
-              fontSize: 17, fontWeight: 700,
-              color: "var(--text, #e8e4f0)",
-              letterSpacing: "-0.3px",
-            }}>
-              Libraria
-            </div>
-            <div style={{
-              ...mono, fontSize: 10,
-              color: "var(--muted, #6b6880)",
-              marginTop: 1, letterSpacing: 0.5,
-            }}>
-              bookstore · admin
-            </div>
+            <h1 className="text-xl font-black text-foreground tracking-tighter">Libraria</h1>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Admin Console</p>
           </div>
         </div>
       </div>
 
       {/* ── Navigation ── */}
-      <nav style={{ flex: 1, padding: "16px 10px", overflowY: "auto" }}>
+      <nav className="flex-1 overflow-y-auto p-6 space-y-10 scrollbar-hide">
         {NAV_GROUPS.map((group) => (
-          <div key={group.label} style={{ marginBottom: 24 }}>
-
-            {/* Group label */}
-            <div style={{
-              ...mono, fontSize: 9, fontWeight: 600,
-              color: "var(--muted, #6b6880)",
-              letterSpacing: 1.8,
-              marginBottom: 6, paddingLeft: 12,
-              textTransform: "uppercase",
-            }}>
+          <div key={group.label} className="space-y-4">
+            <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] pl-4">
               {group.label}
+            </h3>
+            <div className="space-y-1">
+              {group.items.map((item) => {
+                const isActive = active === item.id
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => onNavigate(item.id)}
+                    className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 group relative ${
+                      isActive 
+                        ? "bg-primary text-primary-foreground shadow-xl shadow-primary/25 scale-[1.02]" 
+                        : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div className={`transition-all duration-300 ${isActive ? "text-primary-foreground scale-110" : "group-hover:text-primary"}`}>
+                        {item.icon}
+                      </div>
+                      <span className={`text-[13px] tracking-tight transition-all ${isActive ? "font-black" : "font-bold"}`}>
+                        {item.label}
+                      </span>
+                    </div>
+                    {item.badge && (
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-tighter ${
+                        isActive ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
+                    {isActive && (
+                      <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-primary rounded-r-full shadow-[2px_0_10px_rgba(var(--primary),0.5)]" />
+                    )}
+                  </button>
+                )
+              })}
             </div>
-
-            {/* Items */}
-            {group.items.map((item) => {
-              const isActive = active === item.id
-              return (
-                <div
-                  key={item.id}
-                  className={`sb-nav-item${isActive ? " active" : ""}`}
-                  onClick={() => onNavigate(item.id)}
-                >
-                  {/* Active left bar */}
-                  <div className="sb-active-bar" />
-
-                  <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                    <span className="sb-icon">{item.icon}</span>
-                    <span className="sb-label" style={{ fontSize: 13, fontWeight: 500 }}>
-                      {item.label}
-                    </span>
-                  </div>
-
-                  {item.badge && (
-                    <span style={{
-                      ...mono, fontSize: 10, fontWeight: 700,
-                      padding: "1px 7px", borderRadius: 99,
-                      background: isActive
-                        ? (item.badgeColor ?? "var(--accent)") + "25"
-                        : "rgba(255,255,255,0.06)",
-                      color: isActive
-                        ? (item.badgeColor ?? "var(--accent)")
-                        : "var(--muted2, #9490a8)",
-                      border: `1px solid ${isActive ? (item.badgeColor ?? "var(--accent)") + "30" : "transparent"}`,
-                      transition: "all .15s ease",
-                    }}>
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-              )
-            })}
           </div>
         ))}
       </nav>
 
-      {/* ── Divider ── */}
-      <div style={{ height: 1, background: "var(--border, rgba(255,255,255,0.07))", margin: "0 16px" }} />
-
-      {/* ── Notification strip ── */}
-      <div style={{ padding: "10px 12px 0" }}>
-        <button className="sb-notif-btn" style={{
-          width: "100%", display: "flex", alignItems: "center", gap: 10,
-          padding: "9px 12px", borderRadius: 10,
-          background: "rgba(245,158,11,0.07)",
-          border: "1px solid rgba(245,158,11,0.15)",
-          color: "var(--amber, #f59e0b)", cursor: "pointer",
-        }}>
-          <Bell size={13} />
-          <span style={{ ...mono, fontSize: 11, flex: 1, textAlign: "left" }}>3 pending orders</span>
-          <span style={{
-            ...mono, fontSize: 9, fontWeight: 700,
-            background: "var(--amber, #f59e0b)", color: "#000",
-            padding: "1px 6px", borderRadius: 99,
-          }}>!</span>
-        </button>
-      </div>
-
       {/* ── User section ── */}
-      <div style={{ padding: "12px 12px 16px", flexShrink: 0 }}>
-        <div className="sb-user-card" style={{
-          display: "flex", alignItems: "center", gap: 10,
-          padding: "10px 12px",
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid var(--border, rgba(255,255,255,0.07))",
-        }}>
-          {/* Avatar */}
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <Avatar style={{ width: 34, height: 34 }}>
-              <AvatarFallback style={{
-                background: "rgba(255,107,53,0.15)",
-                color: "var(--accent, #ff6b35)",
-                fontFamily: "var(--font-mono)",
-                fontSize: 12, fontWeight: 700,
-              }}>
-                AD
+      <div className="p-6 border-t border-border/50">
+        <div className="glass p-4 rounded-[2rem] border-white/5 flex items-center gap-4">
+          <div className="relative">
+            <Avatar className="size-10 border-2 border-primary/20">
+              <AvatarFallback className="bg-primary/10 text-primary font-black text-xs">
+                {user?.name?.slice(0, 2).toUpperCase() || "AD"}
               </AvatarFallback>
             </Avatar>
-            {/* Online dot */}
-            <div className="sb-online" style={{
-              position: "absolute", bottom: 0, right: 0,
-              width: 9, height: 9, borderRadius: "50%",
-              background: "var(--green, #22c55e)",
-              border: "2px solid var(--bg2, #111117)",
-            }} />
+            <div className="absolute bottom-0 right-0 size-3 bg-green-500 border-2 border-card rounded-full" />
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-black text-foreground truncate">{user?.name}</p>
+            <p className="text-[10px] font-bold text-muted-foreground truncate uppercase tracking-tighter">Administrator</p>
           </div>
 
-          {/* Info */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text, #e8e4f0)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {user?.name}
-            </div>
-            <div style={{ ...mono, fontSize: 10, color: "var(--muted, #6b6880)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {user?.email}
-            </div>
-          </div>
-
-          {/* Logout */}
-          <button className="sb-logout-btn" title="Logout" style={{
-            width: 28, height: 28, borderRadius: 7, flexShrink: 0,
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid var(--border)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "var(--muted, #6b6880)",
-          }}>
-            <LogOut onClick={handleLogout} size={12} />
+          <button 
+            onClick={handleLogout}
+            className="size-8 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center hover:bg-destructive hover:text-white transition-all shadow-sm"
+            title="Đăng xuất"
+          >
+            <LogOut className="size-4" />
           </button>
         </div>
       </div>

@@ -1,9 +1,13 @@
 export type OrderStatus =
-  | "Delivered"
-  | "Processing"
-  | "Shipped"
-  | "Pending"
-  | "Cancelled";
+  | "PENDING"
+  | "PENDING_PAYMENT"
+  | "PAID"
+  | "CONFIRMED"
+  | "SHIPPING"
+  | "DELIVERED"
+  | "FAILED"
+  | "CANCELLED"
+  | "REFUNDED";
 
 export interface Order {
     id: string;
@@ -58,4 +62,26 @@ export interface PageResponse<T> {
     totalPages: number
     number: number
     size: number
+}
+
+export interface OrderItemResponse {
+    bookId: number
+    bookTitle: string
+    bookImage: string
+    quantity: number
+    price: number
+}
+
+export interface OrderDetailResponse {
+    id: number
+    orderCode: string
+    customerName: string
+    customerEmail: string
+    customerPhone: string
+    shippingAddress: string
+    totalAmount: number
+    status: OrderStatus
+    paymentMethod: PaymentMethod
+    orderDate: string
+    items: OrderItemResponse[]
 }

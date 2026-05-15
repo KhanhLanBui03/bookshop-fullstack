@@ -1,15 +1,10 @@
 package com.fit.monolithic.backend.service;
 
-import com.fit.monolithic.backend.dto.response.*;
-
 import java.util.List;
+import java.util.Map;
 
 public interface AnalyticsService {
-    AnalyticsKpiResponse getKpi();
-
-    List<RevenuePointResponse> getRevenue(String period);   // "weekly" | "monthly"
-
-    List<FunnelStepResponse> getFunnel();
-
-    List<CategoryPerformanceResponse> getCategoryPerformance();
+    List<Map<String, Object>> getRevenueStats();
+    List<Map<String, Object>> getCategoryStats();
+    Map<String, Object> getOverallStats();
 }

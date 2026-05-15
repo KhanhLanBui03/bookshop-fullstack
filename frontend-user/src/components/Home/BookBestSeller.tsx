@@ -1,4 +1,5 @@
-import { CircleArrowRight } from "lucide-react"
+import { CircleArrowRight, Trophy } from "lucide-react"
+import { EmptyState } from "../Common/EmptyState"
 import type { BookCard as BookCardType } from "@/types/Book"
 import BookCard from "../BookCard"
 import {
@@ -80,34 +81,51 @@ const BookBestSeller = () => {
       return <div>Loading...</div>
     }
     if (!books || books.length === 0) {
-      return <div>Không có sách</div>
+      return (
+        <EmptyState 
+          icon={Trophy} 
+          title="Chưa có sách bán chạy" 
+          description="Hiện tại hệ thống chưa cập nhật danh sách các tựa sách bán chạy nhất. Vui lòng quay lại sau." 
+        />
+      )
     }
   return (
-    <section className="py-8 bg-orange-50 rounded-lg">
-      <div className="max-w-7xl mx-auto px-4 md:px-16">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl lg:text-3xl font-bold dark:text-white">
-            <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-              Sách
-            </span>{" "}
-            bán chạy nhất 🔥
+    <section className="py-20 bg-[#050505] relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-0 left-1/4 size-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 size-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 md:px-16 relative z-10">
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
+            <CircleArrowRight className="size-4" />
+            <span>Được yêu thích nhất</span>
+          </div>
+          <h2 className="text-4xl lg:text-5xl font-black text-white mb-4">
+            <span className="text-primary">Sách</span> bán chạy nhất 🔥
           </h2>
+          <p className="text-white/40 max-w-2xl mx-auto font-medium">
+            Những tựa sách đang làm mưa làm gió trên thị trường, được tuyển chọn dựa trên lượt mua và đánh giá thực tế.
+          </p>
         </div>
 
-        <Carousel opts={{ align: "start" }} className="w-full">
-          <CarouselContent className="-ml-4">
+        <Carousel 
+          opts={{ align: "start" }} 
+          className="w-full"
+        >
+          <CarouselContent className="-ml-6">
             {books?.map((book) => (
               <CarouselItem
                 key={book.id}
-                className="pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/4"
+                className="pl-6 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
               >
                 <BookCard book={book} />
               </CarouselItem>
             ))}
           </CarouselContent>
 
-          <CarouselPrevious />
-          <CarouselNext />
+          <CarouselPrevious className="hidden md:flex" />
+          <CarouselNext className="hidden md:flex" />
         </Carousel>
       </div>
     </section>

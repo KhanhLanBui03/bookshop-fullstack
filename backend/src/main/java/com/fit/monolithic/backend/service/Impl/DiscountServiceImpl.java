@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +21,7 @@ import java.util.Optional;
 @Slf4j
 public class DiscountServiceImpl implements DiscountService {
     private final DiscountRepository discountRepository;
+
     public DiscountResponse mapToResponse(Discount discount) {
         return new DiscountResponse(
                 discount.getId(),
@@ -31,8 +34,7 @@ public class DiscountServiceImpl implements DiscountService {
                 discount.getDiscountStartDate(),
                 discount.getDiscountEndDate(),
                 discount.getDiscountQuantityLimit(),
-                discount.isDiscountActive()
-        );
+                discount.isDiscountActive());
     }
 
     @Override
@@ -47,7 +49,8 @@ public class DiscountServiceImpl implements DiscountService {
     @Override
     public DiscountResponse getDiscountById(Long id) {
 
-        Discount discount = discountRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Discount discount = discountRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         log.info("Getting discount by id {}", id);
         return mapToResponse(discount);
     }
@@ -57,14 +60,12 @@ public class DiscountServiceImpl implements DiscountService {
         if (discountRepository.existsByCode(request.getCode())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Discount code already exists"
-            );
+                    "Discount code already exists");
         }
         if (request.getDiscountEndDate().isBefore(request.getDiscountStartDate())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "End date must be after start date"
-            );
+                    "End date must be after start date");
         }
 
         Discount discount = new Discount();
@@ -78,19 +79,16 @@ public class DiscountServiceImpl implements DiscountService {
         discount.setDiscountEndDate(request.getDiscountEndDate());
         discount.setDiscountQuantityLimit(request.getDiscountQuantityLimit());
         discount.setDiscountActive(
-                request.getDiscountActive() != null && request.getDiscountActive()
-        );
+                request.getDiscountActive() != null && request.getDiscountActive());
         Discount saved = discountRepository.save(discount);
         log.info("Saved Discount {}", saved);
         return mapToResponse(saved);
     }
 
-
     @Override
     public DiscountResponse updateDiscountById(Long id, DiscountRequest discountRequest) {
         Discount discount = discountRepository.findById(id).orElseThrow(
-                ()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Discount id not found")
-        );
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Discount id not found"));
         discount.setName(discountRequest.getName());
         discount.setCode(discountRequest.getCode());
         discount.setDiscountTargetType(discountRequest.getDiscountTargetType());
@@ -109,9 +107,32 @@ public class DiscountServiceImpl implements DiscountService {
     @Override
     public void deleteDiscountById(Long id) {
         Discount discount = discountRepository.findById(id).orElseThrow(
-                ()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Discount id not found")
-        );
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Discount id not found"));
         discountRepository.delete(discount);
         log.info("Discount with id {} has been deleted", id);
+    }
+
+    @Override
+    public DiscountResponse validateDiscount(String code) {
+        Discount discount = discountRepository.findByCode(code)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Mã giảm giá không tồn tại"));
+
+        if (!discount.isDiscountActive()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã giảm giá đã bị vô hiệu hóa");
+        }
+
+        LocalDate today = LocalDate.now();
+        if (today.isBefore(discount.getDiscountStartDate())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã giảm giá chưa đến thời hạn sử dụng");
+        }
+        if (today.isAfter(discount.getDiscountEndDate())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã giảm giá đã hết hạn");
+        }
+
+        if (discount.getDiscountQuantityLimit() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã giảm giá đã hết lượt sử dụng");
+        }
+
+        return mapToResponse(discount);
     }
 }

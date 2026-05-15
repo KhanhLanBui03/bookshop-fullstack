@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react"
-import { Search, SlidersHorizontal, ChevronDown, X, LayoutGrid, LayoutList, ChevronLeft, ChevronRight, Badge } from "lucide-react"
+import { Search, SlidersHorizontal, ChevronDown, X, LayoutGrid, LayoutList, ChevronLeft, ChevronRight, Badge, Star } from "lucide-react"
+import { useSearchParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import BookCard from "@/components/BookCard"
@@ -64,12 +65,16 @@ function mapSort(sort: string) {
 
 // ── Component ──────────────────────────────────────────────────────
 export default function BookListPage() {
+    const [searchParams, setSearchParams] = useSearchParams()
+    const initialGenre = searchParams.get("genre") || "Tất cả"
+    
     const [data, setData] = useState<any>(null)
     const [loading, setLoading] = useState(false)
     const [searchInput, setSearchInput] = useState("")
     const [search, setSearch] = useState("")
-    const [genre, setGenre] = useState("Tất cả")
+    const [genre, setGenre] = useState(initialGenre)
     const [priceIdx, setPriceIdx] = useState(0)
+    const [minRating, setMinRating] = useState<number | null>(null)
     const [sort, setSort] = useState("popular")
     const [page, setPage] = useState(1)
     const [grid, setGrid] = useState<"grid" | "list">("grid")
@@ -91,6 +96,7 @@ export default function BookListPage() {
                     genre: genre !== "Tất cả" ? genre : undefined,
                     minPrice: price.min !== 0 ? price.min : undefined,
                     maxPrice: price.max !== Infinity ? price.max : undefined,
+                    minRating: minRating || undefined,
                     sort: mapSort(sort)
                 })
 
@@ -101,7 +107,16 @@ export default function BookListPage() {
         }
 
         fetchBooks()
-    }, [page, search, genre, priceIdx, sort])
+    }, [page, search, genre, priceIdx, sort, minRating])
+    useEffect(() => {
+        if (genre !== "Tất cả") {
+            setSearchParams({ genre })
+        } else {
+            searchParams.delete("genre")
+            setSearchParams(searchParams)
+        }
+    }, [genre])
+
     useEffect(() => {
         const timer = setTimeout(() => {
             setSearch(searchInput)
@@ -112,54 +127,72 @@ export default function BookListPage() {
     }, [searchInput])
     const books = data?.content ?? []
     const totalPages = data?.totalPages ?? 0
-    
+
     // Active filter tags
     const activeFilters = [
         genre !== "Tất cả" && { key: "genre", label: genre },
         priceIdx !== 0 && { key: "price", label: PRICE_RANGES[priceIdx].label },
+        minRating !== null && { key: "rating", label: `${minRating} sao trở lên` },
     ].filter(Boolean) as { key: string; label: string }[]
 
     const clearFilter = (key: string) => {
         if (key === "genre") setGenre("Tất cả")
         if (key === "price") setPriceIdx(0)
+        if (key === "rating") setMinRating(null)
         setPage(1)
     }
 
 
     const handleFilter = (setter: () => void) => { setter(); setPage(1) }
     if (loading) {
-        return <div>Loading...</div>
+        return (
+            <div className="w-full bg-background min-h-screen flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="size-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                    <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Đang tìm kiếm sách...</div>
+                </div>
+            </div>
+        );
     }
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-background pb-20">
 
             {/* ── PAGE HEADER ── */}
-            <div className="bg-white border-b">
-                <div className="max-w-7xl mx-auto px-4 py-6">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-1">Tất cả sách</h1>
-                    <p className="text-sm text-gray-400">{data?.totalElements ?? 0} kết quả</p>
+            <div className="glass border-b">
+                <div className="max-w-7xl mx-auto px-4 py-10">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div>
+                            <h1 className="text-4xl font-black text-foreground mb-2">Thư viện <span className="text-primary">sách</span></h1>
+                            <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.2em]">{data?.totalElements ?? 0} Tác phẩm tìm thấy</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                            <span>Trang chủ</span>
+                            <ChevronRight className="size-3" />
+                            <span className="text-primary">Thư viện</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6">
+            <div className="max-w-7xl mx-auto px-4 py-10 flex flex-col lg:flex-row gap-10">
 
                 {/* ══ SIDEBAR ══════════════════════════════════════ */}
                 <aside className={`
-                    w-56 flex-shrink-0 space-y-6
+                    w-full lg:w-64 flex-shrink-0 space-y-10
                     ${sidebarOpen ? "block" : "hidden"} lg:block
                 `}>
 
                     {/* Genre */}
-                    <div>
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Thể loại</p>
-                        <ul className="space-y-1">
+                    <div className="glass p-6 rounded-3xl">
+                        <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-6">Thể loại</p>
+                        <ul className="space-y-2">
                             {GENRES.map(g => (
                                 <li key={g}>
                                     <button
                                         onClick={() => handleFilter(() => setGenre(g))}
-                                        className={`w-full text-left text-sm px-3 py-2 rounded-lg transition-colors ${genre === g
-                                                ? "bg-blue-600 text-white font-semibold"
-                                                : "text-gray-600 hover:bg-gray-100"
+                                        className={`w-full text-left text-sm px-4 py-2.5 rounded-xl transition-all duration-300 font-bold ${genre === g
+                                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105"
+                                            : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
                                             }`}
                                     >
                                         {g}
@@ -170,16 +203,16 @@ export default function BookListPage() {
                     </div>
 
                     {/* Price range */}
-                    <div>
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Mức giá</p>
-                        <ul className="space-y-1">
+                    <div className="glass p-6 rounded-3xl">
+                        <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-6">Mức giá</p>
+                        <ul className="space-y-2">
                             {PRICE_RANGES.map((p, i) => (
                                 <li key={i}>
                                     <button
                                         onClick={() => handleFilter(() => setPriceIdx(i))}
-                                        className={`w-full text-left text-sm px-3 py-2 rounded-lg transition-colors ${priceIdx === i
-                                                ? "bg-blue-600 text-white font-semibold"
-                                                : "text-gray-600 hover:bg-gray-100"
+                                        className={`w-full text-left text-sm px-4 py-2.5 rounded-xl transition-all duration-300 font-bold ${priceIdx === i
+                                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105"
+                                            : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
                                             }`}
                                     >
                                         {p.label}
@@ -190,14 +223,24 @@ export default function BookListPage() {
                     </div>
 
                     {/* Rating filter */}
-                    <div>
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Đánh giá</p>
-                        <ul className="space-y-1">
+                    <div className="glass p-6 rounded-3xl">
+                        <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-6">Đánh giá</p>
+                        <ul className="space-y-2">
                             {[5, 4, 3].map(r => (
                                 <li key={r}>
-                                    <button className="w-full text-left text-sm px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 flex items-center gap-1.5 transition-colors">
-                                        {"★".repeat(r)}{"☆".repeat(5 - r)}
-                                        <span className="text-gray-400 text-xs">trở lên</span>
+                                    <button 
+                                        onClick={() => handleFilter(() => setMinRating(r))}
+                                        className={`w-full text-left text-sm px-4 py-2.5 rounded-xl transition-all duration-300 font-bold group flex items-center gap-2 ${minRating === r
+                                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105"
+                                            : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                                        }`}
+                                    >
+                                        <div className="flex gap-0.5">
+                                            {Array.from({ length: 5 }).map((_, i) => (
+                                                <Star key={i} className={`size-3 ${i < r ? (minRating === r ? "fill-white text-white" : "fill-primary text-primary") : "text-muted/30"}`} />
+                                            ))}
+                                        </div>
+                                        <span className={`text-[10px] uppercase tracking-tighter ${minRating === r ? "text-white/80" : "opacity-60 group-hover:opacity-100"}`}>trở lên</span>
                                     </button>
                                 </li>
                             ))}
@@ -206,47 +249,48 @@ export default function BookListPage() {
                 </aside>
 
                 {/* ══ MAIN ════════════════════════════════════════ */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 space-y-8">
 
                     {/* Toolbar */}
-                    <div className="flex flex-wrap items-center gap-3 mb-5">
+                    <div className="glass p-4 rounded-3xl flex flex-wrap items-center gap-4 relative z-[100]">
 
                         {/* Search */}
-                        <div className="relative flex-1 min-w-48">
-                            
+                        <div className="relative flex-1 min-w-[200px] group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                             <Input
-                                placeholder="Tìm sách, tác giả..."
+                                placeholder="Tìm kiếm tựa sách, tác giả..."
                                 value={searchInput}
                                 onChange={e => setSearchInput(e.target.value)}
+                                className="pl-11 h-12 bg-background/50 border-border/50 rounded-2xl focus-visible:ring-primary/20"
                             />
                         </div>
 
                         {/* Mobile filter toggle */}
                         <Button
-                            variant="outline" size="sm"
-                            className="lg:hidden gap-2"
+                            variant="outline" size="lg"
+                            className="lg:hidden gap-2 rounded-2xl font-bold h-12"
                             onClick={() => setSidebarOpen(o => !o)}
                         >
-                            <SlidersHorizontal className="w-4 h-4" /> Lọc
+                            <SlidersHorizontal className="size-4" /> Lọc
                         </Button>
 
                         {/* Sort dropdown */}
                         <div className="relative">
                             <Button
-                                variant="outline" size="sm"
-                                className="gap-2 min-w-40 justify-between"
+                                variant="outline" size="lg"
+                                className="gap-3 min-w-[180px] justify-between rounded-2xl font-bold h-12 bg-background/50 border-border/50 hover:border-primary/30"
                                 onClick={() => setSortOpen(o => !o)}
                             >
                                 <span className="text-sm">{SORT_OPTIONS.find(o => o.value === sort)?.label}</span>
-                                <ChevronDown className={`w-4 h-4 transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+                                <ChevronDown className={`size-4 transition-transform ${sortOpen ? "rotate-180" : ""}`} />
                             </Button>
 
                             {sortOpen && (
-                                <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-100 rounded-xl shadow-lg z-20 overflow-hidden">
+                                <div className="absolute right-0 top-full mt-3 w-56 glass rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-[110] overflow-hidden border border-border/50 py-2 animate-in fade-in zoom-in duration-200">
                                     {SORT_OPTIONS.map(o => (
                                         <button key={o.value}
                                             onClick={() => { setSort(o.value); setSortOpen(false); setPage(1) }}
-                                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 ${sort === o.value ? "font-semibold text-blue-600" : "text-gray-700"}`}
+                                            className={`w-full text-left px-5 py-3 text-sm transition-all hover:bg-primary/10 ${sort === o.value ? "font-black text-primary" : "text-muted-foreground font-bold"}`}
                                         >
                                             {o.label}
                                         </button>
@@ -256,15 +300,15 @@ export default function BookListPage() {
                         </div>
 
                         {/* Grid / List toggle */}
-                        <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="flex glass p-1 rounded-2xl overflow-hidden border-border/50">
                             {(["grid", "list"] as const).map(v => {
                                 const Icon = v === "grid" ? LayoutGrid : LayoutList
                                 return (
                                     <button key={v}
                                         onClick={() => setGrid(v)}
-                                        className={`p-2 transition-colors ${grid === v ? "bg-blue-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}
+                                        className={`p-2.5 rounded-xl transition-all duration-300 ${grid === v ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:bg-primary/10"}`}
                                     >
-                                        <Icon className="w-4 h-4" />
+                                        <Icon className="size-5" />
                                     </button>
                                 )
                             })}
@@ -273,89 +317,118 @@ export default function BookListPage() {
 
                     {/* Active filter tags */}
                     {activeFilters.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-2 mb-4">
-                            <span className="text-xs text-gray-400">Đang lọc:</span>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Đang lọc:</span>
                             {activeFilters.map(f => (
-                                <Badge key={f.key} variant="secondary" className="gap-1.5 pr-1.5 text-xs">
-                                    {f.label}
-                                    <Button onClick={() => clearFilter(f.key)} className="hover:text-red-500 transition-colors">
-                                        <X className="w-3 h-3" />
+                                <div key={f.key} className="glass pl-4 pr-1.5 py-1.5 rounded-xl flex items-center gap-2 border-primary/20">
+                                    <span className="text-xs font-black text-foreground">{f.label}</span>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => clearFilter(f.key)}
+                                        className="size-6 rounded-lg hover:bg-destructive/10 hover:text-destructive"
+                                    >
+                                        <X className="size-3" />
                                     </Button>
-                                </Badge>
+                                </div>
                             ))}
-                            <button
-                                onClick={() => { setGenre("Tất cả"); setPriceIdx(0); setPage(1) }}
-                                className="text-xs text-blue-600 hover:underline"
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => { setGenre("Tất cả"); setPriceIdx(0); setMinRating(null); setPage(1) }}
+                                className="text-xs font-black text-primary hover:bg-primary/10 rounded-xl"
                             >
                                 Xóa tất cả
-                            </button>
+                            </Button>
                         </div>
                     )}
 
                     {/* Book Grid / List */}
                     {books.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-                            <Search className="w-12 h-12 mb-3 opacity-30" />
-                            <p className="font-medium">Không tìm thấy sách nào</p>
-                            <p className="text-sm mt-1">Thử thay đổi từ khóa hoặc bộ lọc</p>
+                        <div className="glass p-20 rounded-[3rem] flex flex-col items-center justify-center text-center">
+                            <div className="size-20 bg-primary/5 rounded-full flex items-center justify-center mb-6">
+                                <Search className="size-10 text-primary opacity-30" />
+                            </div>
+                            <h3 className="text-xl font-black text-foreground">Không tìm thấy sách nào</h3>
+                            <p className="text-muted-foreground mt-2 font-medium">Thử thay đổi từ khóa hoặc bộ lọc để tìm kiếm lại.</p>
                         </div>
                     ) : grid === "grid" ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                             {books.map(book => <BookCard key={book.id} book={book} />)}
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-6">
                             {books.map(book => (
-                                <div key={book.id} className="bg-white border border-gray-100 rounded-xl p-4 flex gap-4 hover:shadow-md transition-shadow">
-                                    <BookCard book={book} />
+                                <div key={book.id} className="glass p-2 rounded-[2rem] hover:border-primary/30 transition-all group overflow-hidden">
+                                    <div className="flex flex-col md:flex-row gap-6">
+                                        <div className="w-full md:w-48 aspect-[3/4] rounded-2xl overflow-hidden flex-shrink-0">
+                                            <img src={book.image || "/placeholder.png"} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                        </div>
+                                        <div className="flex-1 p-4 flex flex-col justify-between">
+                                            <div className="space-y-4">
+                                                <h3 className="text-2xl font-black text-foreground group-hover:text-primary transition-colors">{book.title}</h3>
+                                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{book.authorName}</p>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Star className="size-4 fill-primary text-primary" />
+                                                    <span className="text-sm font-black text-foreground">{book.rating.toFixed(1)}</span>
+                                                    <span className="text-xs text-muted-foreground">({book.soldCount} lượt bán)</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center justify-between mt-6">
+                                                <div className="text-3xl font-black text-primary">{book.salePrice.toLocaleString()}₫</div>
+                                                <Button size="lg" className="rounded-2xl font-black px-8">Xem chi tiết</Button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     )}
 
                     {/* ── PAGINATION ── */}
-                    {totalPages >1 && (
-                        <div className="flex items-center justify-center gap-1 mt-10">
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-3 mt-16">
                             <Button
                                 variant="outline" size="icon"
                                 disabled={page === 1}
                                 onClick={() => setPage(p => Math.max(1, p - 1))}
-                                className="w-9 h-9"
+                                className="size-12 rounded-2xl glass hover:bg-primary hover:text-primary-foreground transition-all"
                             >
-                                <ChevronLeft className="w-4 h-4" />
+                                <ChevronLeft className="size-5" />
                             </Button>
 
-                            {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-                                .reduce<(number | "...")[]>((acc, p, idx, arr) => {
-                                    if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...")
-                                    acc.push(p)
-                                    return acc
-                                }, [])
-                                .map((p, i) =>
-                                    p === "..." ? (
-                                        <span key={`ellipsis-${i}`} className="w-9 h-9 flex items-center justify-center text-gray-400 text-sm">…</span>
-                                    ) : (
-                                        <Button
-                                            key={p}
-                                            variant={page === p ? "default" : "outline"}
-                                            size="icon"
-                                            onClick={() => setPage(p as number)}
-                                            className={`w-9 h-9 text-sm ${page === p ? "bg-blue-600 hover:bg-blue-700 border-blue-600" : ""}`}
-                                        >
-                                            {p}
-                                        </Button>
+                            <div className="flex items-center gap-2 glass p-1 rounded-[1.5rem]">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                    .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                                    .reduce<(number | "...")[]>((acc, p, idx, arr) => {
+                                        if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...")
+                                        acc.push(p)
+                                        return acc
+                                    }, [])
+                                    .map((p, i) =>
+                                        p === "..." ? (
+                                            <span key={`ellipsis-${i}`} className="w-10 h-10 flex items-center justify-center text-muted-foreground font-black">…</span>
+                                        ) : (
+                                            <Button
+                                                key={p}
+                                                variant={page === p ? "default" : "ghost"}
+                                                onClick={() => setPage(p as number)}
+                                                className={`w-12 h-12 rounded-2xl font-black text-sm transition-all ${page === p ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110" : "text-muted-foreground hover:bg-primary/10"}`}
+                                            >
+                                                {p}
+                                            </Button>
+                                        )
                                     )
-                                )
-                            }
+                                }
+                            </div>
 
                             <Button
                                 variant="outline" size="icon"
                                 disabled={page === totalPages}
                                 onClick={() => setPage(p => p + 1)}
-                                className="w-9 h-9"
+                                className="size-12 rounded-2xl glass hover:bg-primary hover:text-primary-foreground transition-all"
                             >
-                                <ChevronRight className="w-4 h-4" />
+                                <ChevronRight className="size-5" />
                             </Button>
                         </div>
                     )}

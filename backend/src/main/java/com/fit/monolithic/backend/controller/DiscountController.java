@@ -66,5 +66,12 @@ public class DiscountController {
                 discountService.updateDiscountById(id, discount)
         );
     }
-
+    @GetMapping("/validate")
+    public ApiResponse<DiscountResponse> validateDiscount(@RequestParam String code) {
+        return new ApiResponse<>(
+                200,
+                "Mã giảm giá hợp lệ",
+                discountService.validateDiscount(code)
+        );
+    }
 }

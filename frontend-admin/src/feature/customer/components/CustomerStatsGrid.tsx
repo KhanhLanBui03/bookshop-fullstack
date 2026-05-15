@@ -1,4 +1,3 @@
-import React from "react"
 import { glass, mono, fmt } from "../customer.config"
 import type { UserDashboardStats } from "../customer.type"
 

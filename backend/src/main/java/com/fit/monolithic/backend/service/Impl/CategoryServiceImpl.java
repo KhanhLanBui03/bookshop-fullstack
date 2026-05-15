@@ -64,18 +64,16 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public CategoryResponse update(Long id, CategoryRequest request) {
-        Category category = categoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
-        if (!category.getName().equals(request.getName())) {
-            category.setName(request.getName());
-        }
-        if (!category.getDescription().equals(request.getDescription())) {
-            category.setDescription(request.getDescription());
-        }
-        if (!category.getUrl().equals(request.getUrl())) {
-            category.setUrl(request.getUrl());
-        }
-        Category response = categoryRepository.save(category);
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
+        
+        category.setName(request.getName());
+        category.setDescription(request.getDescription());
+        category.setUrl(request.getUrl());
+        
+        categoryRepository.save(category);
         log.info("Category Updated Successfully");
         return new CategoryResponse(
                 category.getId(),
@@ -88,6 +86,13 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(readOnly = true)
     public CategoryStatsResponse getStats() {
-        return categoryRepository.getStats();
+        CategoryStatsResponse stats = categoryRepository.getStats();
+        
+        List<Object[]> sales = categoryRepository.getSalesByCategory(org.springframework.data.domain.PageRequest.of(0, 1));
+        if (!sales.isEmpty()) {
+            stats.setMostPopularCategory((String) sales.get(0)[0]);
+        }
+        
+        return stats;
     }
 }

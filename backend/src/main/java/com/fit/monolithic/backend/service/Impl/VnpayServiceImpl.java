@@ -11,15 +11,14 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class VnpayServiceImpl implements VnpayService {
     private final VnpayConfig config;
     private final VnpayUtil util;
+
     @Override
     public String createPaymentUrl(Order order, HttpServletRequest request) {
 
@@ -27,7 +26,7 @@ public class VnpayServiceImpl implements VnpayService {
 
         vnpParams.put("vnp_Version", "2.1.0");
         vnpParams.put("vnp_Command", "pay");
-        vnpParams.put("vnp_TmnCode", config.getTmnCode());
+        vnpParams.put("vnp_TmnCode", config.getTmnCode().trim());
 
         vnpParams.put("vnp_Amount",
                 order.getOrderTotalAmount()
@@ -39,30 +38,68 @@ public class VnpayServiceImpl implements VnpayService {
         vnpParams.put("vnp_OrderInfo", "Thanh toan don hang " + order.getOrderCode());
         vnpParams.put("vnp_OrderType", "other");
         vnpParams.put("vnp_Locale", "vn");
-        vnpParams.put("vnp_ReturnUrl", config.getReturnUrl());
-        vnpParams.put("vnp_IpAddr", request.getRemoteAddr());
-        vnpParams.put("vnp_ExpireDate", util.getExpireTime(15));
-        // thêm thời gian
+        vnpParams.put("vnp_ReturnUrl", config.getReturnUrl().trim());
+        
+        String ipAddr = request.getRemoteAddr();
+        if (ipAddr == null || ipAddr.isEmpty() || ipAddr.equals("0:0:0:0:0:0:0:1")) {
+            ipAddr = "127.0.0.1";
+        }
+        vnpParams.put("vnp_IpAddr", ipAddr);
         vnpParams.put("vnp_CreateDate", util.getCurrentTime());
+        vnpParams.put("vnp_ExpireDate", util.getExpireTime(15));
 
-        //  SORT KEY
-        Map<String, String> sortedParams = new TreeMap<>(vnpParams);
+        // Sort keys
+        List<String> fieldNames = new ArrayList<>(vnpParams.keySet());
+        Collections.sort(fieldNames);
 
-        String queryUrl = buildQueryUrl(sortedParams);
-        String secureHash = util.hashAllFields(sortedParams, config.getHashSecret());
+        StringBuilder query = new StringBuilder();
+        StringBuilder hashData = new StringBuilder();
+        
+        for (String fieldName : fieldNames) {
+            String fieldValue = vnpParams.get(fieldName);
+            if (fieldValue != null && !fieldValue.isEmpty()) {
+                // Encode value carefully to match VNPAY
+                String encodedValue = vnpayEncode(fieldValue);
+                
+                // Build hash data (encoded values)
+                hashData.append(fieldName).append("=").append(encodedValue).append("&");
+                // Build query
+                query.append(fieldName).append("=").append(encodedValue).append("&");
+            }
+        }
 
-        return config.getPayUrl() + "?" + queryUrl + "&vnp_SecureHash=" + secureHash;
+        if (query.length() > 0) {
+            query.deleteCharAt(query.length() - 1);
+            hashData.deleteCharAt(hashData.length() - 1);
+        }
+
+        String secureHash = util.hmacSHA512(config.getHashSecret().trim(), hashData.toString());
+        
+        System.out.println("--- VNPAY FINAL ATTEMPT ---");
+        System.out.println("TmnCode: " + config.getTmnCode());
+        System.out.println("HashData (SENT): " + hashData.toString());
+        System.out.println("SecureHash: " + secureHash);
+        System.out.println("---------------------------");
+
+        return config.getPayUrl() + "?" + query.toString() + "&vnp_SecureHash=" + secureHash;
     }
+
+    private String vnpayEncode(String value) {
+        try {
+            return URLEncoder.encode(value, StandardCharsets.UTF_8.toString())
+                    .replace("+", "%20")
+                    .replace("%21", "!")
+                    .replace("%27", "'")
+                    .replace("%28", "(")
+                    .replace("%29", ")")
+                    .replace("%7E", "~");
+        } catch (Exception e) {
+            return value;
+        }
+    }
+
     @Override
     public String buildQueryUrl(Map<String, String> params) {
-        StringBuilder query = new StringBuilder();
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            query.append(entry.getKey())
-                    .append("=")
-                    .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8))
-                    .append("&");
-        }
-        query.deleteCharAt(query.length() - 1);
-        return query.toString();
+        return ""; 
     }
 }

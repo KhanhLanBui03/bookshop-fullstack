@@ -17,4 +17,5 @@ export interface CategoryStats {
     totalBooks: number
     avgBooksPerCategory: number
     emptyCategories: number
+    mostPopularCategory: string
 }

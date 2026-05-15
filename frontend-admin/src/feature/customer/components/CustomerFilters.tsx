@@ -1,4 +1,3 @@
-import React from "react"
 import { glass, mono, PROVIDER_CFG, ROLE_CFG } from "../customer.config"
 import type { AuthProvider, RoleName } from "../customer.type"
 

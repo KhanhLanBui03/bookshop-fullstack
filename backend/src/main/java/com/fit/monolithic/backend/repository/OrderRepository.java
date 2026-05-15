@@ -44,10 +44,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("""
                 SELECT
-                    COALESCE(SUM(CASE WHEN o.orderStatus = 'DELIVERED' THEN o.orderTotalAmount ELSE 0 END), 0) AS totalRevenue,
-                    SUM(CASE WHEN o.orderStatus = 'PENDING' THEN 1 ELSE 0 END) AS pendingCount,
-                    SUM(CASE WHEN o.orderStatus = 'SHIPPING' THEN 1 ELSE 0 END) AS shippingCount,
-                    SUM(CASE WHEN o.orderStatus = 'DELIVERED' THEN 1 ELSE 0 END) AS deliveredCount
+                    COALESCE(SUM(CASE WHEN o.orderStatus = com.fit.monolithic.backend.enums.OrderStatus.DELIVERED THEN o.orderTotalAmount ELSE 0 END), 0) AS totalRevenue,
+                    SUM(CASE WHEN o.orderStatus = com.fit.monolithic.backend.enums.OrderStatus.PENDING THEN 1 ELSE 0 END) AS pendingCount,
+                    SUM(CASE WHEN o.orderStatus = com.fit.monolithic.backend.enums.OrderStatus.SHIPPING THEN 1 ELSE 0 END) AS shippingCount,
+                    SUM(CASE WHEN o.orderStatus = com.fit.monolithic.backend.enums.OrderStatus.DELIVERED THEN 1 ELSE 0 END) AS deliveredCount
                 FROM Order o
             """)
     List<Object[]> getOrderDashboardStat();
@@ -101,4 +101,25 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                     """
     )
     Page<OrderAdminResponse> getAllOrderAdmins(String keyword, OrderStatus orderStatus, PaymentMethod paymentMethod, Pageable pageable);
+
+    @Query(value = """
+        SELECT DATE(o.order_date) as date, SUM(o.order_total_amount) as amount 
+        FROM orders o 
+        WHERE o.order_status = 'DELIVERED' 
+        AND o.order_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        GROUP BY DATE(o.order_date)
+        ORDER BY date ASC
+    """, nativeQuery = true)
+    List<Object[]> getRevenueByDay();
+
+    @Query(value = """
+        SELECT c.name as category, SUM(oi.price * oi.quantity) as amount
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        JOIN books b ON oi.book_id = b.id
+        JOIN category c ON b.category_id = c.id
+        WHERE o.order_status = 'DELIVERED'
+        GROUP BY c.name
+    """, nativeQuery = true)
+    List<Object[]> getRevenueByCategory();
 }

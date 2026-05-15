@@ -10,6 +10,7 @@ export interface CreateOrderRequest {
     addressId: number
     paymentMethod: PaymentMethod
     cartItemIds: number[]
+    discountCode?: string
 }
 
 export interface OrderResponse {

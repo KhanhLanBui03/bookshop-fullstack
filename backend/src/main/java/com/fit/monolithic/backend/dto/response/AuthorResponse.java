@@ -18,4 +18,6 @@ public class AuthorResponse {
     private String bio;
     private String image;
     private AuthorStatus status;
+    private Long follower;
+    private Integer bookCount;
 }

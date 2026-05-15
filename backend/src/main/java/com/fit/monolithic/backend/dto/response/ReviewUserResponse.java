@@ -4,7 +4,10 @@ import lombok.*;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReviewUserResponse {
-    private Long   id;
+    private Long id;
     private String fullName;
+    private boolean isAdmin;
 }

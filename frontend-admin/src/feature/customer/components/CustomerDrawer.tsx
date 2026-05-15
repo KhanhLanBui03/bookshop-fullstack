@@ -1,5 +1,3 @@
-
-import React from "react"
 import { glass, mono, fmt, fmtDate, PROVIDER_CFG } from "../customer.config"
 import { Avatar, SectionTitle } from "./CustomerAtoms"
 import { RoleBadge } from "./CustomerAtoms"
@@ -77,7 +75,7 @@ export const CustomerDrawer = ({ user, onClose }: Props) => {
                         {[
                             { label: "Total Spent", value: fmt(user.totalSpent), color: "var(--accent,#ff6b35)" },
                             { label: "Orders", value: String(user.totalOrder), color: "var(--text)" },
-                            { label: "Member Since", value: fmtDate(user.dateJoin), color: "var(--muted2)" },
+                            { label: "Member Since", value: fmtDate(user.createAt), color: "var(--muted2)" },
                         ].map((s, i) => (
                             <div key={i} style={{
                                 background: "rgba(255,255,255,0.03)",
@@ -113,7 +111,7 @@ export const CustomerDrawer = ({ user, onClose }: Props) => {
                             { label: "Email", value: user.email },
                             { label: "Phone", value: user.phoneNumber || "—" },
                             { label: "Auth Provider", value: `${provider.icon} ${provider.label}` },
-                            { label: "Member Since", value: fmtDate(user.dateJoin) },
+                            { label: "Member Since", value: fmtDate(user.createAt) },
                         ].map((row, i, arr) => (
                             <div key={i} style={{
                                 display: "flex", justifyContent: "space-between", alignItems: "center",

@@ -1,8 +1,10 @@
 import AddressFormModal from "@/components/AddressFormModal"
 import { useFetch } from "@/hooks/useFetch"
 import { userService } from "@/services/user.service"
+import { orderService } from "@/services/order.service"
 import type { ProfileResponse } from "@/types/User"
 import { useState } from "react"
+import { toast } from "sonner"
 
 
 
@@ -10,8 +12,44 @@ import { useState } from "react"
 export default function ProfilePage() {
 
     
-    const {data: profile, loading} = useFetch<ProfileResponse>(()=>userService.getProfile())
+    const { data: profile, loading } = useFetch<ProfileResponse>(() => userService.getProfile())
     const [isAddAddressOpen, setIsAddAddressOpen] = useState(false)
+
+    const handleCancelOrder = async (id: number) => {
+        if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return
+        try {
+            await orderService.cancelOrder(id)
+            toast.success("Hủy đơn hàng thành công")
+            window.location.reload()
+        } catch (error) {
+            toast.error("Không thể hủy đơn hàng")
+            console.error(error)
+        }
+    }
+
+    const getStatusStyle = (status: string) => {
+        switch (status) {
+            case 'PENDING': return 'bg-amber-100 text-amber-700'
+            case 'PENDING_PAYMENT': return 'bg-orange-100 text-orange-700'
+            case 'CONFIRMED': return 'bg-blue-100 text-blue-700'
+            case 'SHIPPING': return 'bg-purple-100 text-purple-700'
+            case 'DELIVERED': return 'bg-emerald-100 text-emerald-700'
+            case 'CANCELLED': return 'bg-rose-100 text-rose-700'
+            default: return 'bg-gray-100 text-gray-700'
+        }
+    }
+
+    const getStatusLabel = (status: string) => {
+        switch (status) {
+            case 'PENDING': return 'Chờ duyệt'
+            case 'PENDING_PAYMENT': return 'Chờ thanh toán'
+            case 'CONFIRMED': return 'Đã xác nhận'
+            case 'SHIPPING': return 'Đang giao'
+            case 'DELIVERED': return 'Đã giao'
+            case 'CANCELLED': return 'Đã hủy'
+            default: return status
+        }
+    }
     if (loading) {
         return (
             <div className="max-w-4xl mx-auto p-6 space-y-8">
@@ -192,9 +230,9 @@ export default function ProfilePage() {
                                     <p className="font-medium text-gray-800">
                                         {order.totalAmount.toLocaleString()} đ
                                     </p>
-                                    {/* <p className="text-sm text-blue-600">
-                                        {order.}
-                                    </p> */}
+                                    <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase ${getStatusStyle(order.status)}`}>
+                                        {getStatusLabel(order.status)}
+                                    </span>
                                 </div>
                             </div>
 
@@ -203,11 +241,14 @@ export default function ProfilePage() {
                                     Xem chi tiết
                                 </button>
 
-                                {/* {order. === 'PENDING' && (
-                                    <button className="text-sm text-red-500 hover:underline">
+                                {(order.status === 'PENDING' || order.status === 'PENDING_PAYMENT') && (
+                                    <button
+                                        onClick={() => handleCancelOrder(order.id)}
+                                        className="text-sm text-red-500 hover:underline"
+                                    >
                                         Hủy đơn
                                     </button>
-                                )} */}
+                                )}
                             </div>
                         </div>
                     ))}

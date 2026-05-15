@@ -11,7 +11,8 @@ public class Endpoints {
             "/api/v1/dashboards/**",
 //            "/api/v1/orders/**",
             "/api/v1/users/**",
-            "/api/v1/analytics/**"
+            "/api/v1/analytics/**",
+            "/api/v1/blogs/**"
     };
     public static final String[] PUBLISH_POST_ENDPOINTS = {
             "/api/v1/publishers/**",
@@ -20,7 +21,8 @@ public class Endpoints {
             "/api/v1/books/**",
             "/api/v1/categories/**",
             "/api/v1/carts/**",
-            "/api/v1/reviews/**"
+            "/api/v1/reviews/**",
+            "/api/v1/ai/**"
 
     };
 
@@ -28,7 +30,7 @@ public class Endpoints {
             "/api/v1/publishers/**",
             "/api/v1/authors/**",
             "/api/v1/discounts/**",
-            "api/v1/books/**"
+            "/api/v1/books/**"
     };
     public static final String[] PUBLISH_DELETE_ENDPOINTS = {
             "/api/v1/publishers/**",

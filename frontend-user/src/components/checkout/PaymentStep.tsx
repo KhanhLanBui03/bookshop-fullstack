@@ -1,6 +1,6 @@
 import type { PaymentMethod } from "@/types/Order"
 import { PAYMENT_METHOD } from "@/types/Order"
-import { BanknoteIcon, TruckIcon, CreditCardIcon } from "lucide-react"
+import { BanknoteIcon, TruckIcon, CreditCardIcon, ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react"
 
 interface Props {
     method: PaymentMethod | null
@@ -11,86 +11,138 @@ interface Props {
 }
 
 export default function PaymentStep({ method, setMethod, onBack, onNext, total }: Props) {
-    return (
-        <div className="animate-fadeIn">
-            <h2 className="text-xl font-bold mb-6 text-gray-800">💳 Phương thức thanh toán</h2>
+    const methods = [
+        {
+            id: PAYMENT_METHOD.COD,
+            label: "Thanh toán khi nhận hàng",
+            short: "COD",
+            desc: "Trả tiền mặt khi nhận được hàng tận nơi",
+            icon: <TruckIcon className="size-6" />,
+            color: "text-orange-500",
+            bg: "bg-orange-500/10",
+        },
+        {
+            id: PAYMENT_METHOD.VNPAY,
+            label: "Thanh toán VNPay",
+            short: "VNPAY",
+            desc: "Thẻ ATM, Visa, Mastercard hoặc QR Code",
+            icon: <CreditCardIcon className="size-6" />,
+            color: "text-blue-500",
+            bg: "bg-blue-500/10",
+        },
+        {
+            id: PAYMENT_METHOD.BANK,
+            label: "Chuyển khoản ngân hàng",
+            short: "BANK",
+            desc: "Chuyển khoản trực tiếp qua ứng dụng ngân hàng",
+            icon: <BanknoteIcon className="size-6" />,
+            color: "text-green-500",
+            bg: "bg-green-500/10",
+        },
+    ]
 
-            <div className="space-y-3 mb-6">
-                {[
-                    {
-                        id: PAYMENT_METHOD.COD,
-                        label: "Thanh toán khi nhận hàng (COD)",
-                        desc: "Trả tiền mặt khi nhận được hàng",
-                        icon: <TruckIcon />,
-                        color: "text-orange-500",
-                    },
-                    {
-                        id: PAYMENT_METHOD.VNPAY,
-                        label: "Thanh toán VNPay",
-                        desc: "Thanh toán qua cổng VNPay (thẻ ATM, Visa, QR)",
-                        icon: <CreditCardIcon />,
-                        color: "text-blue-500",
-                    },
-                    {
-                        id: PAYMENT_METHOD.BANK,
-                        label: "Chuyển khoản ngân hàng",
-                        desc: "Chuyển khoản theo thông tin bên dưới",
-                        icon: <BanknoteIcon />,
-                        color: "text-green-500",
-                    },
-                ].map(opt => (
-                    <button
-                        key={opt.id}
-                        onClick={() => setMethod(opt.id)}
-                        className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all duration-200 ${method === opt.id
-                                ? "border-blue-500 bg-blue-50"
-                                : "border-gray-200 bg-gray-50 hover:border-gray-300"
-                            }`}
-                    >
-                        <span className={opt.color}>{opt.icon}</span>
-                        <div className="flex-1">
-                            <p className="font-semibold text-gray-800 text-sm">{opt.label}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
-                        </div>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${method === opt.id ? "border-blue-500 bg-blue-500" : "border-gray-300"
-                            }`}>
-                            {method === opt.id && <div className="w-2 h-2 rounded-full bg-white" />}
-                        </div>
-                    </button>
-                ))}
+    return (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto">
+            <div className="flex items-center gap-3 mb-8">
+                <div className="size-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                    <CreditCardIcon className="size-6 text-primary" />
+                </div>
+                <div>
+                    <h2 className="text-2xl font-black text-foreground tracking-tight">Phương thức thanh toán</h2>
+                    <p className="text-sm text-muted-foreground font-bold italic">Chọn cách thức thanh toán tiện lợi nhất cho bạn</p>
+                </div>
             </div>
 
-            {/* VNPAY badge */}
+            <div className="grid grid-cols-1 gap-4 mb-8">
+                {methods.map(opt => {
+                    const isSelected = method === opt.id
+                    return (
+                        <button
+                            key={opt.id}
+                            onClick={() => setMethod(opt.id)}
+                            className={`
+                                relative flex items-center gap-6 p-6 rounded-[2.5rem] border-2 text-left transition-all duration-500 group
+                                ${isSelected 
+                                    ? "bg-primary/5 border-primary shadow-xl shadow-primary/10" 
+                                    : "bg-background border-border hover:border-primary/40"
+                                }
+                            `}
+                        >
+                            <div className={`
+                                size-16 rounded-2xl flex items-center justify-center transition-all duration-500
+                                ${isSelected ? "bg-primary text-white" : `${opt.bg} ${opt.color}`}
+                            `}>
+                                {opt.icon}
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{opt.short}</span>
+                                    <h3 className="font-black text-foreground">{opt.label}</h3>
+                                </div>
+                                <p className="text-xs font-bold text-muted-foreground">{opt.desc}</p>
+                            </div>
+
+                            <div className={`
+                                size-6 rounded-full border-2 flex items-center justify-center transition-all duration-500
+                                ${isSelected ? "border-primary bg-primary" : "border-muted"}
+                            `}>
+                                {isSelected && <div className="size-2 rounded-full bg-white animate-in zoom-in duration-300" />}
+                            </div>
+                        </button>
+                    )
+                })}
+            </div>
+
+            {/* VNPAY Detail */}
             {method === PAYMENT_METHOD.VNPAY && (
-                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6 flex items-center gap-3">
-                    <CreditCardIcon className="text-blue-600 shrink-0" />
-                    <p className="text-sm text-blue-700">
-                        Bạn sẽ được chuyển đến cổng thanh toán VNPay để hoàn tất giao dịch.
-                        Đơn hàng sẽ được xác nhận sau khi thanh toán thành công.
-                    </p>
+                <div className="glass border-blue-500/20 rounded-[2rem] p-6 mb-8 flex items-start gap-4 animate-in slide-in-from-top-2 duration-500 bg-blue-500/5">
+                    <div className="p-3 bg-blue-500/10 rounded-2xl">
+                        <ShieldCheck className="size-6 text-blue-500" />
+                    </div>
+                    <div className="space-y-1">
+                        <p className="font-black text-blue-700 text-sm uppercase tracking-wider">Thanh toán an toàn</p>
+                        <p className="text-xs font-bold text-blue-600/80 leading-relaxed">
+                            Bạn sẽ được chuyển đến cổng thanh toán VNPay chính thức để thực hiện giao dịch một cách an toàn và bảo mật nhất.
+                        </p>
+                    </div>
                 </div>
             )}
 
-            {/* BANK info */}
+            {/* BANK Detail */}
             {method === PAYMENT_METHOD.BANK && (
-                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 mb-6">
-                    <p className="font-semibold text-blue-700 mb-5 text-base">🏦 Thông tin chuyển khoản</p>
-                    <div className="grid md:grid-cols-2 gap-6 items-start">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border text-center">
-                            <img src="/QR_Code.png" alt="QR Code" className="w-64 mx-auto" />
-                            <p className="text-sm text-gray-500 mt-3">Quét mã để thanh toán</p>
+                <div className="glass border-green-500/20 rounded-[3rem] p-8 mb-8 animate-in slide-in-from-top-2 duration-500 bg-green-500/5">
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="size-10 bg-green-500/10 rounded-xl flex items-center justify-center">
+                            <BanknoteIcon className="size-5 text-green-500" />
                         </div>
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                        <h3 className="text-sm font-black text-green-700 uppercase tracking-widest">Thông tin chuyển khoản</h3>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-8 items-center">
+                        <div className="relative group">
+                            <div className="absolute inset-0 bg-green-500/10 blur-3xl rounded-full scale-75 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="relative bg-white p-6 rounded-[2.5rem] shadow-2xl border border-green-500/10 text-center">
+                                <img src="/QR_Code.png" alt="QR Code" className="w-56 mx-auto mb-4" />
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quét mã để thanh toán nhanh</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
                             {[
-                                ["Ngân hàng", "MB Bank"],
-                                ["Chủ tài khoản", "BUI KHANH LAN"],
-                                ["Số tài khoản", "0357804429"],
-                                ["Số tiền", `${total.toLocaleString()} ₫`],
-                                ["Nội dung", "DH" + Math.floor(Math.random() * 900000 + 100000)],
-                            ].map(([label, value]) => (
-                                <div key={label} className="flex justify-between border-b pb-2">
-                                    <span className="text-gray-500">{label}</span>
-                                    <span className="font-semibold text-gray-800">{value}</span>
+                                { label: "Ngân hàng", value: "MB Bank" },
+                                { label: "Chủ tài khoản", value: "BUI KHANH LAN" },
+                                { label: "Số tài khoản", value: "0357804429" },
+                                { label: "Số tiền", value: `${total.toLocaleString()} ₫` },
+                                { label: "Nội dung", value: "DH" + Math.floor(Math.random() * 900000 + 100000) },
+                            ].map((item) => (
+                                <div key={item.label} className="group">
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">{item.label}</p>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-lg font-black text-foreground">{item.value}</p>
+                                        <button className="text-[10px] font-black text-primary opacity-0 group-hover:opacity-100 transition-opacity uppercase">Sao chép</button>
+                                    </div>
+                                    <div className="h-[1px] w-full bg-border mt-2 group-last:hidden" />
                                 </div>
                             ))}
                         </div>
@@ -98,16 +150,21 @@ export default function PaymentStep({ method, setMethod, onBack, onNext, total }
                 </div>
             )}
 
-            <div className="flex gap-3">
-                <button onClick={onBack} className="flex-1 py-3.5 rounded-xl font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
-                    ← Quay lại
+            <div className="flex gap-4">
+                <button 
+                    onClick={onBack} 
+                    className="flex-1 h-14 rounded-2xl font-black border-2 border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-widest text-xs"
+                >
+                    <ArrowLeft className="size-4" />
+                    Quay lại
                 </button>
                 <button
                     disabled={!method}
                     onClick={onNext}
-                    className="flex-1 py-3.5 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition"
+                    className="flex-[2] h-14 rounded-2xl font-black text-white bg-primary hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground/40 transition-all duration-500 shadow-xl shadow-primary/20 flex items-center justify-center gap-2 uppercase tracking-widest text-xs"
                 >
-                    Xác nhận →
+                    Tiếp tục xác nhận
+                    <ArrowRight className="size-4" />
                 </button>
             </div>
         </div>

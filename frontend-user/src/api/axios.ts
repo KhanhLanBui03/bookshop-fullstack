@@ -29,6 +29,11 @@ axiosClient.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
+        // Tránh vòng lặp vô hạn nếu API refresh token trả về 401
+        if (originalRequest.url?.includes('/auth/refresh')) {
+            return Promise.reject(error);
+        }
+
         // Nếu token hết hạn (401) và chưa retry
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;

@@ -2,10 +2,13 @@ package com.fit.monolithic.backend.controller;
 
 import com.fit.monolithic.backend.config.VnpayConfig;
 import com.fit.monolithic.backend.dto.response.based.ApiResponse;
+import com.fit.monolithic.backend.entity.Book;
 import com.fit.monolithic.backend.entity.Order;
+import com.fit.monolithic.backend.entity.OrderItem;
 import com.fit.monolithic.backend.enums.OrderStatus;
 import com.fit.monolithic.backend.repository.OrderRepository;
 import com.fit.monolithic.backend.service.VnpayService;
+import com.fit.monolithic.backend.service.InventoryService;
 import com.fit.monolithic.backend.utils.VnpayUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,7 @@ public class PaymentController {
     private final VnpayConfig config;
     private final VnpayUtil vnpayUtil;
     private final VnpayService vnpayService;
+    private final InventoryService inventoryService;
 
     @GetMapping("/create-vnpay")
     public ApiResponse<String> createPayment(
@@ -64,7 +68,13 @@ public class PaymentController {
             order.setOrderStatus(OrderStatus.PAID);
         } else {
             order.setOrderStatus(OrderStatus.FAILED);
-            // ✅ hoàn kho khi thanh toán thất bại nếu cần
+            // ✅ Hoàn kho khi thanh toán thất bại bằng InventoryService để có log
+            for (OrderItem item : order.getOrderItems()) {
+                Book book = item.getBook();
+                if (book != null) {
+                    inventoryService.updateStock(book.getId(), item.getQuantity(), "CANCELLED_PAYMENT");
+                }
+            }
         }
 
         orderRepository.save(order);

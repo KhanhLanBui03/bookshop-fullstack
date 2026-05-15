@@ -198,12 +198,14 @@ public class BookServiceImpl implements BookService {
         Long totalActive =  (Long) stats[1];
         Long totalLowStock = (Long) stats[2];
         Long totalOutOfStock = (Long) stats[3];
+        Long totalSold = (Long) stats[4];
 
         return BookDashboardStats.builder()
                 .totalBooks(totalBooks)
                 .countActive(totalActive)
                 .countLowStock(totalLowStock)
                 .countOutOfStock(totalOutOfStock)
+                .totalSold(totalSold)
                 .build();
     }
 

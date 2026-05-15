@@ -1,4 +1,4 @@
-import type { OrderAdminParams, OrderAdminResponse, OrderDashboardStats, PageResponse } from "@/feature/order/order.types"
+import type { OrderAdminParams, OrderAdminResponse, OrderDashboardStats, OrderDetailResponse, PageResponse } from "@/feature/order/order.types"
 import axiosClient from "./axios"
 
 export const orderApi = {
@@ -9,6 +9,11 @@ export const orderApi = {
 
     getAllOrderAdmins: async (params: OrderAdminParams): Promise<PageResponse<OrderAdminResponse>> => {
         const res = await axiosClient.get("/orders/admin/order-admin", { params })
+        return res.data.data
+    },
+    
+    getOrderDetail: async (id: number): Promise<OrderDetailResponse> => {
+        const res = await axiosClient.get(`/orders/admin/${id}`)
         return res.data.data
     },
 

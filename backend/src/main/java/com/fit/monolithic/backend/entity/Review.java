@@ -71,5 +71,8 @@ public class Review {
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReviewHelpful> helpfuls = new ArrayList<>();
 
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReviewImage> images = new ArrayList<>();
+
 
 }

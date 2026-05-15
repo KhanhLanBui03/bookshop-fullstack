@@ -9,6 +9,8 @@ import { DashboardPage } from "@/feature/dashboard/pages/DashboardPage"
 import { OrderManagementPage} from "@/feature/order/pages/OrderPage"
 import AdminReviewManager from "@/feature/review/AdminReviewManager"
 import { SettingsPage } from "@/feature/setting/pages/SettingsPage"
+import InventoryPage from "@/feature/inventory/pages/InventoryPage"
+import BlogManagementPage from "@/feature/blog/pages/BlogManagementPage"
 
 import AdminLayout from "@/layout/AdminLayout"
 import AuthLayout from "@/layout/AuthLayout"
@@ -27,7 +29,9 @@ const router = createBrowserRouter([
             {path:"/books", element:<BookManagementPage/>},
             {path:"/customers",element:<CustomerPage/>},
             {path:"/categories", element: <CategoryPage/>},
-            {path:"/reviews", element:<AdminReviewManager/>}
+            {path:"/reviews", element:<AdminReviewManager/>},
+            {path:"/inventory", element: <InventoryPage />},
+            {path:"/blogs", element: <BlogManagementPage />}
         ],
     },
     {

@@ -6,6 +6,9 @@ export const orderService = {
     async createOrder(data: CreateOrderRequest): Promise<OrderResponse | string> {
         const res = await orderApi.createOrder(data)
         return res.data.data
+    },
+    async cancelOrder(id: number): Promise<void> {
+        await orderApi.cancelOrder(id)
     }
        
 }

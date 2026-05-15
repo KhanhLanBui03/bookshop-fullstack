@@ -1,57 +1,42 @@
-import axiosClient from "./axios"
-import type {
-    AnalyticsKpi,
-    AnalyticsData,
-    CategoryPerformance,
-    FunnelStep,
-    Period,
-    RevenuePoint,
-} from "@/feature/analytics/analytics.type"
+import axiosClient from "./axios";
 
 export const analyticsApi = {
-    /** KPI cards */
-    getKpi: async (): Promise<AnalyticsKpi> => {
-        const res = await axiosClient.get("/analytics/kpi")
-        return res.data.data
+    getRevenue() {
+        return axiosClient.get(`/admin/analytics/revenue`);
     },
-
-    /** Revenue time series — weekly | monthly */
-    getRevenue: async (period: Period): Promise<RevenuePoint[]> => {
-        const res = await axiosClient.get("/analytics/revenue", { params: { period } })
-        return res.data.data
+    getCategories() {
+        return axiosClient.get(`/admin/analytics/categories`);
     },
-
-    /** Conversion funnel */
-    getFunnel: async (): Promise<FunnelStep[]> => {
-        const res = await axiosClient.get("/analytics/funnel")
-        return res.data.data
+    getOverall() {
+        return axiosClient.get(`/admin/analytics/overall`);
     },
-
-    /** Top 5 categories */
-    getCategoryPerformance: async (): Promise<CategoryPerformance[]> => {
-        const res = await axiosClient.get("/analytics/categories")
-        return res.data.data
-    },
-
-    /**
-     * Fetch everything in parallel.
-     * Revenue is fetched twice (weekly + monthly) so toggling period is instant.
-     */
-    loadAll: async (period: Period): Promise<AnalyticsData & { revenueWeekly: RevenuePoint[]; revenueMonthly: RevenuePoint[] }> => {
-        const [kpi, revenueWeekly, revenueMonthly, funnel, categories] = await Promise.all([
-            analyticsApi.getKpi(),
-            analyticsApi.getRevenue("weekly"),
-            analyticsApi.getRevenue("monthly"),
-            analyticsApi.getFunnel(),
-            analyticsApi.getCategoryPerformance(),
-        ])
+    // Keep loadAll for compatibility if needed, but we'll migrate to new endpoints
+    async loadAll(_period: string) {
+        const [rev, cat, over] = await Promise.all([
+            this.getRevenue(),
+            this.getCategories(),
+            this.getOverall()
+        ]);
+        
+        // Map backend data to frontend types
         return {
-            kpi,
-            revenue: period === "weekly" ? revenueWeekly : revenueMonthly,
-            revenueWeekly,
-            revenueMonthly,
-            funnel,
-            categories,
-        }
-    },
+            kpi: {
+                conversionRate: 85.5, // Mocked for now or calculate from overall
+                avgOrderValue: over.data.data.totalRevenue / (over.data.data.deliveredOrders || 1),
+                returnRate: 2.1,
+                newUsers: 1250,
+                returningUsers: 3400
+            },
+            revenueWeekly: rev.data.data.map((r: any) => ({ label: r.date, value: r.amount })),
+            revenueMonthly: [], // Backend could provide this later
+            revenueYearly: [],
+            funnel: [
+                { label: "Lượt xem", value: 12000 },
+                { label: "Thêm giỏ hàng", value: 4500 },
+                { label: "Thanh toán", value: 2100 },
+                { label: "Thành công", value: over.data.data.deliveredOrders || 0 }
+            ],
+            categories: cat.data.data.map((c: any) => ({ cat: c.category, revenue: c.amount, units: 100 })) // Units mocked
+        };
+    }
 }

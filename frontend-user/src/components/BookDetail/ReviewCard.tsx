@@ -4,9 +4,9 @@ import type { ReviewResponse } from "@/types/Review"
 
 /* ── Status badge config ── */
 const STATUS_CFG: Record<string, { label: string; cls: string }> = {
-    PENDING: { label: "Chờ duyệt", cls: "bg-amber-50 text-amber-700" },
-    APPROVED: { label: "Đã duyệt", cls: "bg-green-50 text-green-700" },
-    REJECTED: { label: "Từ chối", cls: "bg-red-50 text-red-700" },
+    PENDING: { label: "CHỜ DUYỆT", cls: "bg-amber-500/10 text-amber-500 border border-amber-500/20" },
+    APPROVED: { label: "ĐÃ DUYỆT", cls: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" },
+    REJECTED: { label: "TỪ CHỐI", cls: "bg-rose-500/10 text-rose-500 border border-rose-500/20" },
 }
 
 /* ── Sub-components ── */
@@ -42,17 +42,44 @@ function Avatar({ name, size = 36 }: { name: string; size?: number }) {
 
 function ReplyCard({ reply }: { reply: ReviewResponse }) {
     const badge = STATUS_CFG[reply.status]
+    const isAdmin = reply.user?.isAdmin
+
     return (
-        <div className="flex gap-2.5">
-            <Avatar name={reply.user?.fullName ?? "?"} size={28} />
-            <div>
-                <p className="text-xs font-medium text-gray-700">
-                    {reply.user?.fullName}
-                    <span className="font-normal text-gray-400 ml-2">{reply.createdAt}</span>
-                </p>
-                <p className="text-sm text-gray-600 mt-0.5 leading-relaxed">{reply.content}</p>
+        <div className={`group relative flex gap-4 p-5 rounded-2xl transition-all duration-300 ${
+            isAdmin 
+            ? "bg-blue-500/10 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]" 
+            : "hover:bg-white/5 border border-transparent"
+        }`}>
+            <div className="relative shrink-0">
+                <Avatar name={reply.user?.fullName ?? "?"} size={36} />
+                {isAdmin && (
+                    <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-0.5 border-2 border-[#0f172a]">
+                        <Star className="w-2.5 h-2.5 fill-white text-white" />
+                    </div>
+                )}
+            </div>
+
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2.5 mb-1.5">
+                    <p className={`text-[14px] font-bold truncate ${isAdmin ? "text-blue-400" : "text-gray-200"}`}>
+                        {reply.user?.fullName}
+                    </p>
+                    {isAdmin && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-500 text-[10px] font-black text-white uppercase tracking-widest shadow-lg shadow-blue-500/20">
+                            OFFICIAL
+                        </span>
+                    )}
+                    <span className="text-[11px] text-gray-500 font-medium ml-auto shrink-0">
+                        {reply.createdAt}
+                    </span>
+                </div>
+
+                <div className={`text-[14px] leading-relaxed ${isAdmin ? "text-blue-100/90 font-medium" : "text-gray-400"}`}>
+                    {reply.content}
+                </div>
+
                 {reply.status !== "APPROVED" && (
-                    <span className={`text-xs px-1.5 py-0.5 rounded mt-1 inline-block ${badge?.cls}`}>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold mt-2.5 inline-block uppercase tracking-wider ${badge?.cls}`}>
                         {badge?.label}
                     </span>
                 )}
@@ -131,7 +158,23 @@ export default function ReviewCard({
             )}
 
             {/* ── Content ── */}
-            <p className="text-sm text-gray-700 leading-relaxed mb-3">{review.content}</p>
+            <p className="text-sm text-gray-700 leading-relaxed mb-4">{review.content}</p>
+
+            {/* ── Images ── */}
+            {review.imageUrls && review.imageUrls.length > 0 && (
+                <div className="flex flex-wrap gap-2.5 mb-5">
+                    {review.imageUrls.map((img, idx) => (
+                        <div 
+                            key={idx} 
+                            className="group/review-img relative size-20 rounded-xl overflow-hidden border border-black/5 shadow-sm hover:shadow-md transition-all cursor-zoom-in"
+                            onClick={() => window.open(img, '_blank')}
+                        >
+                            <img src={img} alt="review" className="w-full h-full object-cover transition-transform duration-500 group-hover/review-img:scale-110" />
+                            <div className="absolute inset-0 bg-black/10 group-hover/review-img:bg-black/0 transition-colors" />
+                        </div>
+                    ))}
+                </div>
+            )}
 
             {/* ── Actions ── */}
             <div className="flex items-center gap-1">
@@ -202,7 +245,7 @@ export default function ReviewCard({
 
             {/* ── Replies ── */}
             {(review.replies?.length ?? 0) > 0 && (
-                <div className="mt-3 pl-4 border-l-2 border-gray-100 flex flex-col gap-3">
+                <div className="mt-4 pl-4 border-l-2 border-gray-100/60 flex flex-col gap-4">
                     {review.replies.map(rep => (
                         <ReplyCard key={rep.id} reply={rep} />
                     ))}

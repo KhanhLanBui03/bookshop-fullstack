@@ -7,6 +7,8 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReviewResponse {
     private Long id;
     private String content;
@@ -18,4 +20,6 @@ public class ReviewResponse {
     private List<ReviewResponse> replies;
     private int helpfulCount;
     private boolean helpful;     // đã helpful chưa (current user)
+    private List<String> imageUrls;
+    private Long bookId;
 }

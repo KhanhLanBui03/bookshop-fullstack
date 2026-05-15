@@ -62,6 +62,17 @@ public class GlobalExceptionHandler {
 
     /* ================= AUTH / BUSINESS ================= */
 
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<?> handleApiException(
+            ApiException ex
+    ) {
+        return buildResponse(
+                HttpStatus.valueOf(ex.getStatus()),
+                ex.getMessage(),
+                null
+        );
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<?> handleResponseStatus(
             ResponseStatusException ex

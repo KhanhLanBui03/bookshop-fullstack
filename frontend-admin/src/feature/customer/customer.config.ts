@@ -1,4 +1,4 @@
-import type { AuthProvider, RoleName } from "../customer.type"
+import type { AuthProvider, RoleName } from "./customer.type"
 
 export const AVATAR_COLORS = [
     "#ff6b35", "#22c55e", "#60a5fa", "#f59e0b", "#a78bfa", "#34d399", "#fb7185", "#38bdf8",
@@ -9,6 +9,8 @@ export const avatarColor = (id: number) => AVATAR_COLORS[id % AVATAR_COLORS.leng
 export const PROVIDER_CFG: Record<AuthProvider, { icon: string; label: string; color: string }> = {
     LOCAL: { icon: "🔑", label: "Local", color: "var(--muted2,#9490a8)" },
     GOOGLE: { icon: "G", label: "Google", color: "#ea4335" },
+    FACEBOOK: { icon: "F", label: "Facebook", color: "#1877f2" },
+    GITHUB: { icon: "GH", label: "Github", color: "#24292e" },
 }
 
 export const ROLE_CFG: Record<RoleName, { label: string; bg: string; color: string }> = {

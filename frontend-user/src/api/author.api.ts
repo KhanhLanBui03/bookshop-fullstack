@@ -1,12 +1,13 @@
 import axiosClient from "./axios"
 
-
 export const authorApi = {
-    getAllAuthor(){
+    getAllAuthor() {
         return axiosClient.get("/authors")
     },
-    getAuthorOfBook(id:number){
-        return axiosClient.get(`/author/detail-author/${id}`)
+    getAuthorOfBook(id: number) {
+        return axiosClient.get(`/authors/detail-author/${id}`)
+    },
+    getFeatured() {
+        return axiosClient.get("/authors/featured")
     }
-
 }

@@ -1,227 +1,48 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useState, useRef, useEffect } from "react"
-import { Bell, Search, ChevronDown, Sun, Moon, Settings } from "lucide-react"
+import { Bell, Search, ChevronDown, Settings, LogOut, Sun, CheckCircle2, AlertTriangle, Package, Info } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { notificationApi } from "@/api/notification.api"
+import type { NotificationResponse } from "@/types/notification.type"
+import { formatDistanceToNow } from "date-fns"
+import { vi } from "date-fns/locale"
+import { useAuth } from "@/feature/auth/contexts/AuthContext"
 
-/* ════════ CSS ════════ */
-const CSS = `
-  .tb * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  .tb {
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 28px;
-    border-bottom: 1px solid var(--border, rgba(255,255,255,0.07));
-    background: var(--bg2, #111117);
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    font-family: var(--font-body, 'DM Sans', sans-serif);
-    backdrop-filter: blur(12px);
-  }
-
-  /* Search */
-  .tb-search {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--bg3, #18181f);
-    border: 1px solid var(--border, rgba(255,255,255,0.07));
-    border-radius: 10px;
-    padding: 8px 12px;
-    transition: border-color .15s ease, box-shadow .15s ease;
-    cursor: text;
-  }
-  .tb-search:focus-within {
-    border-color: var(--accent, #ff6b35);
-    box-shadow: 0 0 0 3px rgba(255,107,53,0.12);
-  }
-  .tb-search:focus-within .tb-search-icon { color: var(--accent, #ff6b35); }
-  .tb-search-icon { transition: color .15s ease; }
-
-  .tb-input {
-    background: none;
-    border: none;
-    outline: none;
-    color: var(--text, #e8e4f0);
-    font-size: 13px;
-    width: 176px;
-    font-family: var(--font-body, 'DM Sans', sans-serif);
-  }
-  .tb-input::placeholder { color: var(--muted, #6b6880); }
-
-  /* Icon buttons */
-  .tb-icon-btn {
-    position: relative;
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    border: 1px solid var(--border, rgba(255,255,255,0.07));
-    background: var(--bg3, #18181f);
-    cursor: pointer;
-    color: var(--muted2, #9490a8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all .15s ease;
-    flex-shrink: 0;
-  }
-  .tb-icon-btn:hover {
-    background: rgba(255,255,255,0.07) !important;
-    border-color: rgba(255,255,255,0.14) !important;
-    color: var(--text, #e8e4f0) !important;
-  }
-  .tb-icon-btn.notif-active {
-    border-color: rgba(255,107,53,0.3);
-    background: rgba(255,107,53,0.08);
-    color: var(--accent, #ff6b35);
-  }
-
-  /* Notif dot */
-  @keyframes tbPop {
-    from { transform: scale(0); }
-    to   { transform: scale(1); }
-  }
-  .tb-notif-dot {
-    position: absolute;
-    top: 7px; right: 7px;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--accent, #ff6b35);
-    border: 2px solid var(--bg2, #111117);
-    animation: tbPop .2s cubic-bezier(.22,1,.36,1);
-  }
-  .tb-notif-count {
-    position: absolute;
-    top: -4px; right: -4px;
-    min-width: 16px; height: 16px;
-    border-radius: 99px;
-    background: var(--accent, #ff6b35);
-    color: #fff;
-    font-family: var(--font-mono, 'DM Mono', monospace);
-    font-size: 9px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    padding: 0 4px;
-    border: 2px solid var(--bg2, #111117);
-    animation: tbPop .2s cubic-bezier(.22,1,.36,1);
-  }
-
-  /* Notif dropdown */
-  @keyframes tbDown {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .tb-notif-panel {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    width: 300px;
-    background: var(--bg3, #18181f);
-    border: 1px solid var(--border2, rgba(255,255,255,0.12));
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
-    animation: tbDown .2s cubic-bezier(.22,1,.36,1);
-    z-index: 50;
-  }
-  .tb-notif-item { transition: background .1s ease; cursor: pointer; }
-  .tb-notif-item:hover { background: rgba(255,255,255,0.04) !important; }
-
-  /* User menu */
-  .tb-user-trigger {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 10px 5px 5px;
-    border-radius: 10px;
-    border: 1px solid var(--border, rgba(255,255,255,0.07));
-    background: var(--bg3, #18181f);
-    cursor: pointer;
-    transition: all .15s ease;
-  }
-  .tb-user-trigger:hover {
-    border-color: rgba(255,255,255,0.14);
-    background: rgba(255,255,255,0.05);
-  }
-
-  .tb-user-panel {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    width: 200px;
-    background: var(--bg3, #18181f);
-    border: 1px solid var(--border2, rgba(255,255,255,0.12));
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
-    animation: tbDown .2s cubic-bezier(.22,1,.36,1);
-    z-index: 50;
-  }
-  .tb-menu-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 14px;
-    cursor: pointer;
-    transition: background .1s ease;
-    font-size: 13px;
-    color: var(--muted2, #9490a8);
-    border: none; background: none; width: 100%; text-align: left;
-    font-family: var(--font-body, 'DM Sans', sans-serif);
-  }
-  .tb-menu-item:hover { background: rgba(255,255,255,0.04); color: var(--text, #e8e4f0); }
-  .tb-menu-item.danger:hover { background: rgba(239,68,68,0.08); color: var(--red, #ef4444); }
-
-  /* kbd */
-  .tb-kbd {
-    font-family: var(--font-mono, 'DM Mono', monospace);
-    font-size: 10px;
-    color: var(--muted, #6b6880);
-    background: var(--bg, #0c0c10);
-    padding: 2px 6px;
-    border-radius: 5px;
-    border: 1px solid var(--border, rgba(255,255,255,0.07));
-    flex-shrink: 0;
-  }
-
-  /* divider */
-  .tb-divider { height: 1px; background: var(--border, rgba(255,255,255,0.07)); margin: 4px 0; }
-
-  .tb-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--green, #22c55e);
-    border: 2px solid var(--bg3, #18181f);
-    flex-shrink: 0;
-  }
-`
-
-/* ════════ MOCK NOTIFICATIONS ════════ */
-const NOTIFS = [
-  { id: 1, icon: "🛒", text: "New order from Nguyen Van A", time: "2m ago", unread: true },
-  { id: 2, icon: "⚠️", text: "Clean Code stock low — 5 left", time: "15m ago", unread: true },
-  { id: 3, icon: "📦", text: "ORD-2024-0105 shipped", time: "1h ago", unread: true },
-  { id: 4, icon: "⭐", text: "Atomic Habits got a 5-star review", time: "3h ago", unread: false },
-]
-
-/* ════════ PROPS ════════ */
 interface TopbarProps {
   title: string
   subtitle?: string
 }
 
-/* ════════ COMPONENT ════════ */
 export const Topbar = ({ title, subtitle }: TopbarProps) => {
-  const [search, setSearch] = useState("")
+  const { user, logout } = useAuth()
   const [showNotif, setShowNotif] = useState(false)
   const [showUser, setShowUser] = useState(false)
-  const [notifs, setNotifs] = useState(NOTIFS)
+  const [notifs, setNotifs] = useState<NotificationResponse[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
   const notifRef = useRef<HTMLDivElement>(null)
   const userRef = useRef<HTMLDivElement>(null)
 
-  const unreadCount = notifs.filter(n => n.unread).length
+  const fetchNotifications = async () => {
+    try {
+      const [list, count] = await Promise.all([
+        notificationApi.getMyNotifications(),
+        notificationApi.getUnreadCount()
+      ])
+      setNotifs(list)
+      setUnreadCount(count)
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error)
+    }
+  }
 
-  const mono: React.CSSProperties = { fontFamily: "var(--font-mono, 'DM Mono', monospace)" }
+  useEffect(() => {
+    fetchNotifications()
+    // Poll every 3 seconds for near real-time updates
+    const interval = setInterval(fetchNotifications, 3000)
+    return () => clearInterval(interval)
+  }, [])
 
-  /* Close on outside click */
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotif(false)
@@ -231,201 +52,175 @@ export const Topbar = ({ title, subtitle }: TopbarProps) => {
     return () => document.removeEventListener("mousedown", handler)
   }, [])
 
-  const markAllRead = () => setNotifs(ns => ns.map(n => ({ ...n, unread: false })))
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      await notificationApi.markAsRead(id)
+      setNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+      setUnreadCount(prev => Math.max(0, prev - 1))
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error)
+    }
+  }
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationApi.markAllAsRead()
+      setNotifs(prev => prev.map(n => ({ ...n, read: true })))
+      setUnreadCount(0)
+    } catch (error) {
+      console.error("Failed to mark all as read:", error)
+    }
+  }
+
+  const getIcon = (title: string) => {
+    const t = title.toLowerCase()
+    if (t.includes("đơn hàng") || t.includes("order")) return <Package className="size-5 text-blue-500" />
+    if (t.includes("hết hàng") || t.includes("stock") || t.includes("cảnh báo")) return <AlertTriangle className="size-5 text-amber-500" />
+    if (t.includes("thành công") || t.includes("success")) return <CheckCircle2 className="size-5 text-emerald-500" />
+    return <Info className="size-5 text-slate-500" />
+  }
 
   return (
-    <header className="tb">
-      <style>{CSS}</style>
-
+    <header className="h-20 bg-white/80 dark:bg-card/80 backdrop-blur-xl sticky top-0 z-40 border-b border-border/50 px-8 flex items-center justify-between shadow-sm">
       {/* ── LEFT: Title ── */}
-      <div>
-        <h1 style={{
-          fontFamily: "var(--font-display, 'Fraunces', serif)",
-          fontSize: 19, fontWeight: 700, lineHeight: 1,
-          color: "var(--text, #e8e4f0)", letterSpacing: "-0.3px",
-        }}>
-          {title}
-        </h1>
-        {subtitle && (
-          <p style={{ ...mono, fontSize: 11, color: "var(--muted, #6b6880)", marginTop: 4 }}>
-            {subtitle}
-          </p>
-        )}
+      <div className="flex items-center gap-4">
+        <div className="h-10 w-1 bg-primary rounded-full hidden lg:block" />
+        <div className="space-y-0.5">
+          <h1 className="text-xl font-black text-foreground tracking-tight">{title}</h1>
+          {subtitle && (
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{subtitle}</p>
+          )}
+        </div>
       </div>
 
       {/* ── RIGHT ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-
+      <div className="flex items-center gap-6">
         {/* Search */}
-        <div className="tb-search">
-          <Search size={13} className="tb-search-icon" style={{ color: "var(--muted)", flexShrink: 0 }} />
-          <input
-            className="tb-input"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search..."
-          />
-          <kbd className="tb-kbd">⌘K</kbd>
-        </div>
-
-        {/* Notification bell */}
-        <div ref={notifRef} style={{ position: "relative" }}>
-          <button
-            className={`tb-icon-btn${unreadCount > 0 ? " notif-active" : ""}`}
-            onClick={() => { setShowNotif(v => !v); setShowUser(false) }}
-            title="Notifications"
-          >
-            <Bell size={15} />
-            {unreadCount > 0 && (
-              <span className="tb-notif-count">{unreadCount}</span>
-            )}
-          </button>
-
-          {/* Notification dropdown */}
-          {showNotif && (
-            <div className="tb-notif-panel">
-              {/* Header */}
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "14px 16px 10px",
-                borderBottom: "1px solid var(--border)",
-              }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Notifications</span>
-                {unreadCount > 0 && (
-                  <button onClick={markAllRead} style={{
-                    ...mono, fontSize: 10, color: "var(--accent)", background: "none", border: "none",
-                    cursor: "pointer", padding: 0,
-                  }}>
-                    Mark all read
-                  </button>
-                )}
-              </div>
-
-              {/* Items */}
-              {notifs.map((n, i) => (
-                <div key={n.id} className="tb-notif-item"
-                  style={{
-                    display: "flex", alignItems: "flex-start", gap: 10,
-                    padding: "11px 16px",
-                    background: n.unread ? "rgba(255,107,53,0.04)" : "transparent",
-                    borderBottom: i < notifs.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
-                  }}
-                  onClick={() => setNotifs(ns => ns.map(x => x.id === n.id ? { ...x, unread: false } : x))}
-                >
-                  <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{n.icon}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 12, color: n.unread ? "var(--text)" : "var(--muted2)", lineHeight: 1.4 }}>
-                      {n.text}
-                    </p>
-                    <p style={{ ...mono, fontSize: 10, color: "var(--muted)", marginTop: 3 }}>{n.time}</p>
-                  </div>
-                  {n.unread && (
-                    <div style={{
-                      width: 7, height: 7, borderRadius: "50%",
-                      background: "var(--accent)", flexShrink: 0, marginTop: 4,
-                    }} />
-                  )}
-                </div>
-              ))}
-
-              {/* Footer */}
-              <div style={{ padding: "10px 16px", borderTop: "1px solid var(--border)" }}>
-                <button style={{
-                  ...mono, fontSize: 11, color: "var(--accent)", background: "none",
-                  border: "none", cursor: "pointer", width: "100%", textAlign: "center",
-                }}>
-                  View all →
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* User menu */}
-        <div ref={userRef} style={{ position: "relative" }}>
-          <div className="tb-user-trigger" onClick={() => { setShowUser(v => !v); setShowNotif(false) }}>
-            {/* Avatar with online dot */}
-            <div style={{ position: "relative" }}>
-              <Avatar style={{ width: 28, height: 28 }}>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback style={{
-                  background: "rgba(255,107,53,0.15)",
-                  color: "var(--accent, #ff6b35)",
-                  fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700,
-                }}>
-                  AD
-                </AvatarFallback>
-              </Avatar>
-              <div className="tb-dot" style={{ position: "absolute", bottom: -1, right: -1 }} />
-            </div>
-
-            {/* Name */}
-            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", whiteSpace: "nowrap" }}>
-              Admin
-            </span>
-
-            <ChevronDown
-              size={13}
-              style={{
-                color: "var(--muted)",
-                transform: showUser ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform .15s ease",
-              }}
+        <div className="relative group hidden md:block">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Input 
+                placeholder="Tìm kiếm nhanh..." 
+                className="w-64 pl-11 bg-muted/50 border-border/50 rounded-2xl h-11 focus-visible:ring-primary/20 transition-all focus-visible:w-80"
             />
-          </div>
-
-          {/* User dropdown */}
-          {showUser && (
-            <div className="tb-user-panel">
-              {/* User info */}
-              <div style={{ padding: "14px 14px 10px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                  <Avatar style={{ width: 36, height: 36 }}>
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback style={{
-                      background: "rgba(255,107,53,0.15)",
-                      color: "var(--accent)", fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 700,
-                    }}>AD</AvatarFallback>
-                  </Avatar>
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Admin</p>
-                    <p style={{ ...mono, fontSize: 10, color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      admin@libraria.vn
-                    </p>
-                  </div>
-                </div>
-                {/* Role badge */}
-                <span style={{
-                  ...mono, fontSize: 9, fontWeight: 700,
-                  padding: "2px 8px", borderRadius: 99,
-                  background: "rgba(255,107,53,0.12)",
-                  color: "var(--accent)",
-                  border: "1px solid rgba(255,107,53,0.2)",
-                }}>
-                  ADMIN
-                </span>
-              </div>
-
-              <div className="tb-divider" />
-
-              {/* Menu items */}
-              <div style={{ padding: "4px 0" }}>
-                <button className="tb-menu-item">
-                  <Settings size={14} />
-                  Settings
-                </button>
-              </div>
-
-              <div className="tb-divider" />
-
-              <div style={{ padding: "4px 0 8px" }}>
-                <button className="tb-menu-item danger" style={{ color: "var(--red, #ef4444)" }}>
-                  <span style={{ fontSize: 14 }}>→</span>
-                  Sign out
-                </button>
-              </div>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-1">
+                <kbd className="px-1.5 py-0.5 rounded-md bg-background border border-border/50 text-[10px] font-black text-muted-foreground shadow-sm">⌘</kbd>
+                <kbd className="px-1.5 py-0.5 rounded-md bg-background border border-border/50 text-[10px] font-black text-muted-foreground shadow-sm">K</kbd>
             </div>
-          )}
+        </div>
+
+        <div className="flex items-center gap-3 border-l border-border/50 pl-6">
+            {/* Notification bell */}
+            <div ref={notifRef} className="relative">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => { setShowNotif(!showNotif); setShowUser(false) }}
+                    className={`size-11 rounded-2xl relative transition-all ${unreadCount > 0 ? "bg-primary/5 text-primary" : "text-muted-foreground"}`}
+                >
+                    <Bell className={`size-5 ${unreadCount > 0 ? "animate-pulse" : ""}`} />
+                    {unreadCount > 0 && (
+                        <span className="absolute top-2.5 right-2.5 size-4 bg-primary text-primary-foreground text-[10px] font-black rounded-full border-2 border-background flex items-center justify-center animate-bounce">
+                            {unreadCount}
+                        </span>
+                    )}
+                </Button>
+
+                {showNotif && (
+                    <div className="absolute right-0 top-full mt-4 w-96 glass rounded-[2rem] shadow-2xl overflow-hidden border border-border/50 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="p-5 border-b border-border/50 flex items-center justify-between bg-muted/10">
+                            <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Thông báo</h3>
+                            <button 
+                              onClick={handleMarkAllAsRead}
+                              className="text-[10px] font-black text-primary uppercase hover:underline disabled:opacity-50"
+                              disabled={unreadCount === 0}
+                            >
+                              Đánh dấu tất cả là đã đọc
+                            </button>
+                        </div>
+                        <div className="max-h-[32rem] overflow-y-auto scrollbar-hide py-2">
+                            {notifs.length === 0 ? (
+                              <div className="py-12 flex flex-col items-center justify-center text-muted-foreground gap-3">
+                                <Bell className="size-8 opacity-20" />
+                                <p className="text-xs font-bold uppercase tracking-tighter">Không có thông báo nào</p>
+                              </div>
+                            ) : (
+                              notifs.map((n) => (
+                                <div 
+                                  key={n.id} 
+                                  onClick={() => handleMarkAsRead(n.id)}
+                                  className={`px-5 py-4 hover:bg-primary/5 transition-colors cursor-pointer flex gap-4 group ${!n.read ? "bg-primary/[0.02]" : ""}`}
+                                >
+                                    <div className="size-10 rounded-xl bg-muted flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                      {getIcon(n.title)}
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                        <p className={`text-xs leading-relaxed ${!n.read ? "font-black text-foreground" : "font-medium text-muted-foreground"}`}>
+                                          {n.content}
+                                        </p>
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase">
+                                          {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: vi })}
+                                        </p>
+                                    </div>
+                                    {!n.read && <div className="size-2 bg-primary rounded-full mt-2" />}
+                                </div>
+                              ))
+                            )}
+                        </div>
+                        <div className="p-4 border-t border-border/50 bg-muted/20">
+                            <Button variant="ghost" className="w-full text-xs font-black text-primary uppercase">Xem tất cả thông báo</Button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* User Dropdown */}
+            <div ref={userRef} className="relative">
+                <button 
+                    onClick={() => { setShowUser(!showUser); setShowNotif(false) }}
+                    className="flex items-center gap-3 p-1.5 pr-4 rounded-2xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/50 group"
+                >
+                    <Avatar className="size-9 border-2 border-primary/10 group-hover:border-primary/30 transition-colors">
+                        <AvatarImage src={`https://ui-avatars.com/api/?name=${user?.fullName || 'Admin'}&background=random`} />
+                        <AvatarFallback className="font-black text-xs text-primary">
+                          {(user?.fullName || 'AD').substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div className="text-left hidden sm:block">
+                        <p className="text-xs font-black text-foreground leading-none">{user?.fullName || 'Admin'}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mt-1">
+                          {user?.roles.includes('ROLE_ADMIN') ? 'Quản trị viên' : 'Người dùng'}
+                        </p>
+                    </div>
+                    <ChevronDown className={`size-4 text-muted-foreground transition-transform duration-300 ${showUser ? "rotate-180" : ""}`} />
+                </button>
+
+                {showUser && (
+                    <div className="absolute right-0 top-full mt-4 w-64 glass rounded-[2rem] shadow-2xl border border-border/50 p-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="p-4 border-b border-border/50 mb-2">
+                             <p className="text-xs font-black text-foreground">{user?.email}</p>
+                             <div className="mt-2 inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
+                                Role: {user?.roles.join(', ')}
+                             </div>
+                        </div>
+                        <button className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-2xl transition-all">
+                            <Settings className="size-4" />
+                            Cài đặt tài khoản
+                        </button>
+                        <button className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-2xl transition-all">
+                            <Sun className="size-4" />
+                            Giao diện: Sáng
+                        </button>
+                        <div className="h-px bg-border/50 my-2 mx-4" />
+                        <button 
+                          onClick={logout}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-destructive hover:bg-destructive/5 rounded-2xl transition-all"
+                        >
+                            <LogOut className="size-4" />
+                            Đăng xuất hệ thống
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
       </div>
     </header>

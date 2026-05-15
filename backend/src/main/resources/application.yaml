@@ -1,13 +1,34 @@
 spring:
   application:
     name: backend
-
+  profiles:
+    include: oauth
   datasource:
     url: jdbc:mysql://localhost:3314/bookshop_online?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
-
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - profile
+              - email
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:your-email@gmail.com}
+    password: ${MAIL_PASSWORD:your-app-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   jpa:
     hibernate:
       ddl-auto: update
@@ -18,12 +39,21 @@ spring:
         format_sql: true
 jwt:
   secret: MY_SUPER_SECRET_KEY_123456789012345678901234567890
-  access-expiration: 900000 # 15 phút
-  refresh-expiration: 2592000000 # 30 ngày
+  access-expiration: 900000
+  refresh-expiration: 2592000000
+gemini:
+  api:
+    key: ${GEMINI_API_KEY:AIzaSyCMxI_oQR0IxzOQ8F85dgVaiiWZ07beFL4}
+    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-exp:generateContent
 server:
   port: 8686
+  tomcat:
+    threads:
+      max: 100
+      min-spare: 10
+    connection-timeout: 20000
 vnpay:
-  tmnCode: 2NV6M2KC
-  hashSecret: AJT5PV30N4JGBQP8BUF0UHQKWC5LVL60
+  tmnCode: BGQCL04I
+  hashSecret: XR4HT2WWHI9PPKVHWI5QJKXZKK7MH052
   payUrl: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
   returnUrl: http://localhost:5173/payment/vnpay-return

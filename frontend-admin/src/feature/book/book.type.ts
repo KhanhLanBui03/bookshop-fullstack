@@ -4,6 +4,7 @@ export interface BookDashboardStats {
     countActive: number;
     countLowStock: number;
     countOutOfStock: number;
+    totalSold: number;
 }
 
 export interface BookAdminResponse{
@@ -19,11 +20,7 @@ export interface BookAdminResponse{
     rating: number;
     status: BookStatus;
 }
-export enum BookStatus {
-    ACTIVE = "ACTIVE",
-    INACTIVE = "INACTIVE",
-    OUT_OF_STOCK = "OUT_OF_STOCK"
-}
+export type BookStatus = "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK";
 export interface GetAdminBooksParams {
     keyword?: string;
     status?: BookStatus | "ALL";
@@ -90,4 +87,6 @@ export interface BookForm {
     images: ImagePreview[]
 }
 
-    
+export interface UpdateBookPayload extends Partial<BookRequestPayload> {
+    status?: BookStatus
+}

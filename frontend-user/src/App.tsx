@@ -18,6 +18,8 @@ function App() {
   )
 }
 
+import { AIChatWidget } from './components/AI/AIChatWidget'
+
 function AppContent() {
   const { fetchCart, clearCart } = useCartStore()
   const { user } = useAuth()
@@ -34,6 +36,7 @@ function AppContent() {
     <>
       <RouterProvider router={router} />
       <Toaster />
+      <AIChatWidget />
     </>
   )
 }

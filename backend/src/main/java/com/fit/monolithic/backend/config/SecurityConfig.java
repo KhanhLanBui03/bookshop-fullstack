@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                           .requestMatchers(HttpMethod.POST,"/api/v1/reviews/**").hasAnyAuthority("ROLE_USER")
+                           .requestMatchers(HttpMethod.POST,"/api/v1/reviews/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                         .requestMatchers(HttpMethod.GET,Endpoints.PUBLISH_GET_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST,Endpoints.PUBLISH_POST_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.PUT,Endpoints.PUBLISH_PUT_ENDPOINTS).permitAll()
@@ -50,7 +50,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/register",
-                                "/api/v1/auth/refresh-token"
+                                "/api/v1/auth/refresh-token",
+                                "/api/v1/auth/forgot-password",
+                                "/api/v1/auth/reset-password"
                         ).permitAll()
                         .requestMatchers("/api/v1/auth/me").authenticated()
                         .requestMatchers("/api/v1/carts/**").authenticated()
@@ -72,7 +74,7 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "http://localhost:5174"
         )); // React Vite
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 

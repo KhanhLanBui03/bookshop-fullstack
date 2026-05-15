@@ -21,6 +21,17 @@ public class ReviewController {
     private final ReviewService reviewService;
     private final ReviewRepository reviewRepo;
 
+    /** GET /api/v1/reviews/admin?page=0&size=10&status=PENDING */
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PageResponse<ReviewResponse>> getAllReviewsForAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) com.fit.monolithic.backend.enums.CommentStatus status
+    ) {
+        return ResponseEntity.ok(reviewService.getAllReviewsForAdmin(page, size, status));
+    }
+
     /** GET /api/v1/reviews/book/{bookId}?page=0&size=10 */
     @GetMapping("/book/{bookId}")
     public ResponseEntity<PageResponse<ReviewResponse>> getBookReviews(

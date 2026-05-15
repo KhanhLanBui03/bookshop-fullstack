@@ -27,80 +27,111 @@ export const BookPagination = ({
     }
 
     const btnBase: React.CSSProperties = {
-        ...mono, fontSize: 12,
-        background: "var(--bg3,#18181f)",
-        borderRadius: 8, color: "var(--muted2,#9490a8)",
-        width: 34, height: 34,
+        ...mono, fontSize: 11, fontWeight: 900,
+        background: "rgba(255,255,255,0.4)",
+        border: "1px solid rgba(255,255,255,0.3)",
+        borderRadius: "0.85rem", color: "#6b6b7b",
+        width: 38, height: 38,
         display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+        cursor: "pointer",
+        backdropFilter: "blur(8px)"
+    }
+
+    const activeBtn: React.CSSProperties = {
+        ...btnBase,
+        background: "var(--primary)",
+        color: "#fff",
+        borderColor: "transparent",
+        boxShadow: "0 8px 16px -4px rgba(var(--primary-rgb), 0.3)",
+        transform: "scale(1.05)"
+    }
+
+    const disabledBtn: React.CSSProperties = {
+        ...btnBase,
+        opacity: 0.3,
+        cursor: "not-allowed",
+        background: "rgba(0,0,0,0.05)"
     }
 
     return (
         <div style={{
             display: "flex", alignItems: "center",
             justifyContent: "space-between",
-            padding: "16px 4px", flexWrap: "wrap", gap: 12,
+            padding: "24px 0", flexWrap: "wrap", gap: 16,
+            marginTop: 10,
         }}>
             {/* Info */}
-            <p style={{ ...mono, fontSize: 11, color: "var(--muted)" }}>
-                Showing{" "}
-                <span style={{ color: "var(--text)", fontWeight: 600 }}>
-                    {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalElements)}
-                </span>
-                {" "}of{" "}
-                <span style={{ color: "var(--text)", fontWeight: 600 }}>{totalElements}</span>
-                {" "}books
-            </p>
+            <div className="glass px-6 py-2.5 rounded-2xl border-white/20">
+                <p style={{ ...mono, fontSize: 10, color: "#6b6b7b", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>
+                    Showing{" "}
+                    <span style={{ color: "var(--primary)", fontWeight: 900 }}>
+                        {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalElements)}
+                    </span>
+                    {" "}of{" "}
+                    <span style={{ color: "var(--primary)", fontWeight: 900 }}>{totalElements}</span>
+                    {" "}books
+                </p>
+            </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 {/* Per-page */}
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginRight: 10 }}>
-                    <span style={{ ...mono, fontSize: 10, color: "var(--muted)" }}>Per page</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginRight: 8 }}>
+                    <span style={{ ...mono, fontSize: 10, fontWeight: 900, color: "#6b6b7b", textTransform: "uppercase" }}>Size</span>
                     <select
-                        className="bm-input"
+                        className="glass"
                         value={pageSize}
                         onChange={e => onPageSizeChange(Number(e.target.value))}
                         style={{
-                            ...mono, fontSize: 11,
-                            background: "var(--bg3)", border: "1px solid var(--border)",
-                            borderRadius: 7, padding: "5px 8px",
-                            color: "var(--muted2)", cursor: "pointer",
+                            ...mono, fontSize: 11, fontWeight: 900,
+                            background: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.3)",
+                            borderRadius: "0.75rem", padding: "6px 12px",
+                            color: "#4a4a5a", cursor: "pointer", outline: "none"
                         }}
                     >
                         {[5, 10, 20, 50].map(n => <option key={n} value={n}>{n}</option>)}
                     </select>
                 </div>
 
-                {/* Prev */}
-                <button
-                    className="bm-page-btn"
-                    disabled={page === 1}
-                    onClick={() => onPageChange(Math.max(1, page - 1))}
-                    style={btnBase}
-                >←</button>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    {/* Prev */}
+                    <button
+                        className="hover:bg-white/60 active:scale-95 transition-all"
+                        disabled={page === 1}
+                        onClick={() => onPageChange(Math.max(1, page - 1))}
+                        style={page === 1 ? disabledBtn : btnBase}
+                    >
+                        <span style={{fontSize: 18}}>←</span>
+                    </button>
 
-                {/* Page numbers */}
-                {pageNums().map((p, idx) =>
-                    p === "…" ? (
-                        <span key={`e${idx}`} style={{ ...mono, fontSize: 11, color: "var(--muted)", width: 20, textAlign: "center" }}>…</span>
-                    ) : (
-                        <button
-                            key={p}
-                            className={`bm-page-btn${page === p ? " pg-active" : ""}`}
-                            onClick={() => onPageChange(p as number)}
-                            style={{ ...btnBase, fontWeight: page === p ? 700 : 400 }}
-                        >
-                            {p}
-                        </button>
-                    )
-                )}
+                    {/* Page numbers */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        {pageNums().map((p, idx) =>
+                            p === "…" ? (
+                                <span key={`e${idx}`} style={{ ...mono, fontSize: 11, color: "#6b6b7b", width: 20, textAlign: "center", fontWeight: 900 }}>…</span>
+                            ) : (
+                                <button
+                                    key={p}
+                                    className="active:scale-95 transition-all"
+                                    onClick={() => onPageChange(p as number)}
+                                    style={page === p ? activeBtn : btnBase}
+                                >
+                                    {p}
+                                </button>
+                            )
+                        )}
+                    </div>
 
-                {/* Next */}
-                <button
-                    className="bm-page-btn"
-                    disabled={page === totalPages}
-                    onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-                    style={btnBase}
-                >→</button>
+                    {/* Next */}
+                    <button
+                        className="hover:bg-white/60 active:scale-95 transition-all"
+                        disabled={page === totalPages}
+                        onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+                        style={page === totalPages ? disabledBtn : btnBase}
+                    >
+                        <span style={{fontSize: 18}}>→</span>
+                    </button>
+                </div>
             </div>
         </div>
     )

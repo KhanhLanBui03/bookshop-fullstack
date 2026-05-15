@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface AuthorRepository extends JpaRepository<Author, Long> {
@@ -27,12 +27,9 @@ public interface AuthorRepository extends JpaRepository<Author, Long> {
 """)
     List<BookCardResponse> findByAuthorId(@Param("id") Long id);
 
-//    @Query("""
-//    SELECT a FROM Author a
-//    ORDER BY a.followers DESC
-//    """)
-//    List<Author> findTopAuthors(Pageable pageable);
-
-
-
+    @Query("""
+    SELECT a FROM Author a
+    ORDER BY a.follower DESC
+    """)
+    List<Author> findTopAuthors(Pageable pageable);
 }

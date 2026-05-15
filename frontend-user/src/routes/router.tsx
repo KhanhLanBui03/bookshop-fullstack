@@ -15,6 +15,11 @@ import BookListPage from "@/pages/BookListPage"
 import CheckoutPage from "@/pages/CheckoutPage"
 import ProfilePage from "@/pages/ProfilePage"
 import VnpayReturnPage from "@/pages/VnpayReturnPage"
+import WishlistPage from "@/pages/WishlistPage"
+import BlogsPage from "@/pages/BlogsPage"
+import BlogDetailPage from "@/pages/BlogDetailPage"
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage"
+import ResetPasswordPage from "@/pages/ResetPasswordPage"
 
 const router = createBrowserRouter([
     {
@@ -27,12 +32,18 @@ const router = createBrowserRouter([
                 path: "/cart", 
                 element: <ProtectedRoute><CartPage /></ProtectedRoute> 
             },
+            { 
+                path: "/wishlist", 
+                element: <ProtectedRoute><WishlistPage /></ProtectedRoute> 
+            },
             { path: "/books/:id", element: <BookDetail /> },
-            { path: "/author-detail", element: <AuthorBooksPage /> },
+            { path: "/authors/:id", element: <AuthorBooksPage /> },
             {path: "/list-books", element: <BookListPage/>},
             {path: "/checkout", element: <ProtectedRoute><CheckoutPage /></ProtectedRoute>},
             {path: "/profile", element: <ProfilePage />},
-            {path: "/payment/vnpay-return", element: <VnpayReturnPage /> }
+            {path: "/payment/vnpay-return", element: <VnpayReturnPage /> },
+            {path: "/blogs", element: <BlogsPage />},
+            {path: "/blog/:slug", element: <BlogDetailPage />}
         ]
     },
     {
@@ -44,6 +55,8 @@ const router = createBrowserRouter([
         children: [
             { path: "/login", element: <LoginPage/> },
             { path: "/register", element: <RegisterPage/> },
+            { path: "/forgot-password", element: <ForgotPasswordPage/> },
+            { path: "/reset-password", element: <ResetPasswordPage/> },
         ]
     }
 ])

@@ -1,4 +1,5 @@
 import type { CheckoutResponse } from "@/types/Checkout"
+import { User, Mail, Phone, MapPin, ShoppingBag, ArrowRight } from "lucide-react"
 
 interface Props {
     data: CheckoutResponse;
@@ -13,133 +14,146 @@ export default function ShippingStep({
     onSelectAddr,
     onNext
 }: Props) {
-    console.log("checkout data:", data)
     const selectedAddress =
         data.customerAddresses.find(a => a.id === selectedAddrId) ||
         data.customerAddresses[0];
 
     return (
-        <div className="animate-fadeIn">
-            <h2 className="text-xl font-bold mb-6 text-gray-800">
-                📦 Thông tin giao hàng
-            </h2>
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto">
+            <div className="flex items-center gap-3 mb-8">
+                <div className="size-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                    <MapPin className="size-6 text-primary" />
+                </div>
+                <div>
+                    <h2 className="text-2xl font-black text-foreground tracking-tight">Thông tin giao hàng</h2>
+                    <p className="text-sm text-muted-foreground font-bold italic">Vui lòng kiểm tra kỹ thông tin nhận hàng</p>
+                </div>
+            </div>
 
             {/* Thông tin khách hàng */}
-            <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 mb-8 transition-all hover:shadow-md">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Thông tin khách hàng</h3>
+            <div className="glass border-white/20 rounded-[2.5rem] p-8 mb-8 shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <User className="size-32" />
+                </div>
+                
+                <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-8">Người nhận</h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Họ tên */}
-                    <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-blue-50 rounded-lg">
-                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                            <User className="size-3.5" />
+                            <span className="text-[10px] font-black uppercase">Họ và tên</span>
                         </div>
-                        <div>
-                            <p className="text-xs text-gray-500 font-medium">Họ tên</p>
-                            <p className="text-gray-800 font-semibold text-lg">{data.customerName}</p>
-                        </div>
+                        <p className="text-lg font-black text-foreground">{data.customerName}</p>
                     </div>
 
-                    {/* Email */}
-                    <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-purple-50 rounded-lg">
-                            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                            <Mail className="size-3.5" />
+                            <span className="text-[10px] font-black uppercase">Email</span>
                         </div>
-                        <div>
-                            <p className="text-xs text-gray-500 font-medium">Email liên hệ</p>
-                            <p className="text-gray-800 font-medium">{data.customerEmail}</p>
-                        </div>
+                        <p className="text-lg font-bold text-foreground/80">{data.customerEmail}</p>
                     </div>
 
-                    {/* Số điện thoại */}
-                    <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-green-50 rounded-lg">
-                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                            <Phone className="size-3.5" />
+                            <span className="text-[10px] font-black uppercase">Điện thoại</span>
                         </div>
-                        <div>
-                            <p className="text-xs text-gray-500 font-medium">Số điện thoại</p>
-                            <p className={`font-medium ${data.customerPhone ? 'text-gray-800' : 'text-gray-400 italic'}`}>
-                                {data.customerPhone ?? "Chưa cập nhật"}
-                            </p>
-                        </div>
+                        <p className={`text-lg font-black ${data.customerPhone ? 'text-foreground' : 'text-muted-foreground/40 italic'}`}>
+                            {data.customerPhone ?? "Chưa cập nhật"}
+                        </p>
                     </div>
                 </div>
             </div>
 
             {/* Danh sách địa chỉ */}
-            <div className="space-y-3 mb-6">
-                <h3 className="font-semibold">Chọn địa chỉ giao hàng</h3>
+            <div className="space-y-6 mb-12">
+                <div className="flex items-center justify-between px-4">
+                    <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Chọn địa chỉ nhận hàng</h3>
+                    <button className="text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:text-primary transition-colors">
+                        + Thêm địa chỉ mới
+                    </button>
+                </div>
 
-                {data.customerAddresses.map(addr => (
-                    <div
-                        key={addr.id}
-                        onClick={() => onSelectAddr(addr.id)}
-                        className={`p-4 border rounded-xl cursor-pointer transition 
-                        ${selectedAddress?.id === addr.id
-                                ? "border-blue-500 bg-blue-50"
-                                : "border-gray-200 bg-white"
-                            }`}
-                    >
-                        <p className="font-medium">{addr.street}</p>
-                        <p className="text-sm text-gray-600">
-                            {addr.city}, {addr.state}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                            {addr.zipCode}, {addr.country}
-                        </p>
-                    </div>
-                ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {data.customerAddresses.map(addr => {
+                        const isSelected = selectedAddrId === addr.id
+                        return (
+                            <div
+                                key={addr.id}
+                                onClick={() => onSelectAddr(addr.id)}
+                                className={`
+                                    relative p-6 rounded-[2rem] cursor-pointer transition-all duration-500 border-2 overflow-hidden
+                                    ${isSelected 
+                                        ? "bg-primary/5 border-primary shadow-lg shadow-primary/10" 
+                                        : "bg-background/50 border-border hover:border-primary/40 hover:bg-background/80"
+                                    }
+                                `}
+                            >
+                                {isSelected && (
+                                    <div className="absolute top-0 right-0 bg-primary text-white p-2 rounded-bl-2xl">
+                                        <ArrowRight className="size-4" />
+                                    </div>
+                                )}
+                                <div className="flex items-start gap-4">
+                                    <div className={`p-3 rounded-2xl ${isSelected ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}>
+                                        <MapPin className="size-5" />
+                                    </div>
+                                    <div>
+                                        <p className="font-black text-foreground mb-1">{addr.street}</p>
+                                        <p className="text-xs font-bold text-muted-foreground leading-relaxed">
+                                            {addr.city}, {addr.state}<br />
+                                            {addr.zipCode}, {addr.country}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
             </div>
+
             {/* Danh sách sản phẩm */}
-            <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 mb-8">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                        <span className="p-2 bg-orange-50 rounded-lg">🛒</span>
-                        Sản phẩm đặt mua
-                    </h3>
-                    <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                        {data.items.length} sản phẩm
+            <div className="glass border-white/20 rounded-[2.5rem] p-8 mb-12 shadow-xl">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-3">
+                        <ShoppingBag className="size-5 text-primary" />
+                        <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Tóm tắt sản phẩm</h3>
+                    </div>
+                    <span className="text-[10px] font-black text-muted-foreground bg-muted/50 px-3 py-1 rounded-full uppercase tracking-widest">
+                        {data.items.length} món
                     </span>
                 </div>
 
-                <div className="divide-y divide-gray-100">
+                <div className="space-y-6">
                     {data.items.map((item) => (
                         <div
                             key={item.bookId}
-                            className="flex items-center gap-4 py-5 first:pt-0 last:pb-0 group"
+                            className="flex items-center gap-6 p-4 rounded-3xl hover:bg-primary/5 transition-colors group"
                         >
-                            {/* Ảnh sản phẩm với hiệu ứng zoom nhẹ */}
-                            <div className="relative overflow-hidden rounded-xl border border-gray-100 flex-shrink-0">
+                            <div className="relative size-20 rounded-2xl overflow-hidden shadow-lg flex-shrink-0">
                                 <img
                                     src={item.image}
                                     alt={item.bookName}
-                                    className="w-20 h-28 object-cover transition-transform duration-300 group-hover:scale-105"
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                 />
-                            </div>
-
-                            {/* Thông tin sản phẩm */}
-                            <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-gray-900 truncate mb-1 text-lg">
-                                    {item.bookName}
-                                </h4>
-                                <div className="flex flex-col gap-1">
-                                    <p className="text-sm text-gray-500 flex items-center">
-                                        <span className="w-20">Đơn giá:</span>
-                                        <span className="font-medium text-gray-700">{item.price.toLocaleString()}đ</span>
-                                    </p>
-                                    <p className="text-sm text-gray-500 flex items-center">
-                                        <span className="w-20">Số lượng:</span>
-                                        <span className="inline-flex items-center justify-center px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md font-bold text-xs">
-                                            x{item.quantity}
-                                        </span>
-                                    </p>
+                                <div className="absolute top-1 right-1 bg-black/60 backdrop-blur-md text-white text-[10px] font-black px-1.5 py-0.5 rounded-lg">
+                                    x{item.quantity}
                                 </div>
                             </div>
 
-                            {/* Thành tiền */}
-                            <div className="text-right ml-4">
-                                <p className="text-xs text-gray-400 uppercase tracking-tighter">Thành tiền</p>
-                                <p className="font-bold text-blue-600 text-lg">
+                            <div className="flex-1 min-w-0">
+                                <h4 className="font-black text-foreground truncate mb-1">
+                                    {item.bookName}
+                                </h4>
+                                <p className="text-xs font-bold text-muted-foreground">
+                                    {item.price.toLocaleString()}đ
+                                </p>
+                            </div>
+
+                            <div className="text-right">
+                                <p className="text-lg font-black text-primary">
                                     {item.subtotal.toLocaleString()}đ
                                 </p>
                             </div>
@@ -151,11 +165,13 @@ export default function ShippingStep({
             <button
                 onClick={onNext}
                 disabled={!selectedAddress}
-                className="w-full py-3.5 rounded-xl font-semibold text-white 
-                bg-blue-600 hover:bg-blue-700 
-                disabled:bg-gray-300 disabled:cursor-not-allowed transition-all"
+                className="w-full h-16 rounded-[2rem] font-black text-white 
+                bg-primary hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground/40
+                transition-all duration-500 shadow-2xl shadow-primary/30 active:scale-[0.98]
+                flex items-center justify-center gap-3 text-lg uppercase tracking-widest"
             >
-                Xác nhận →
+                Tiếp tục thanh toán
+                <ArrowRight className="size-5" />
             </button>
         </div>
     )

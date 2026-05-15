@@ -78,7 +78,8 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
                     COUNT(b),
                     SUM(CASE WHEN b.status = com.fit.monolithic.backend.enums.BookStatus.ACTIVE THEN 1 ELSE 0 END),
                     SUM(CASE WHEN b.stock > 0 AND b.stock <= 5 THEN 1 ELSE 0 END),
-                    SUM(CASE WHEN b.stock = 0 THEN 1 ELSE 0 END)
+                    SUM(CASE WHEN b.stock = 0 THEN 1 ELSE 0 END),
+                    SUM(b.soldCount)
                 FROM Book b
             """)
     List<Object[]> getBookDashboardStats();

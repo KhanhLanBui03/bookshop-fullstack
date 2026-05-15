@@ -1,197 +1,186 @@
 import { useState, useEffect } from "react"
-import { BookOpen, Sparkles, TrendingUp, Users } from "lucide-react"
+import { Sparkles, ShoppingBag, ArrowRight, Play, Star } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { Button } from "../ui/button"
+import { bookApi } from "@/api/book.api"
+
+const DEFAULT_BOOKS = [
+  { id: -1, title: "The Lost Kingdom", authorName: "Fantasy Adventure", image: "https://images.unsplash.com/photo-1543005120-a1bb3ea05f31?q=80&w=1000&auto=format&fit=crop", salePrice: 150000 },
+  { id: -2, title: "Mastering AI", authorName: "Tech & Future", image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=1000&auto=format&fit=crop", salePrice: 220000 },
+  { id: -3, title: "Leadership", authorName: "Business Strategy", image: "https://images.unsplash.com/photo-1589998059171-988d887df646?q=80&w=1000&auto=format&fit=crop", salePrice: 185000 },
+]
 
 const HeroBanner = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [isHovered, setIsHovered] = useState(false)
+  const [topBooks, setTopBooks] = useState<any[]>(DEFAULT_BOOKS)
+  const [activeIndex, setActiveIndex] = useState(0)
   const navigate = useNavigate()
-  const handleMouseMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / rect.width - 0.5
-    const y = (e.clientY - rect.top) / rect.height - 0.5
-    setMousePosition({ x: x * 20, y: y * 20 })
-  }
 
-  const handleMouseLeave = () => {
-    setMousePosition({ x: 0, y: 0 })
-    setIsHovered(false)
-  }
+  useEffect(() => {
+    const fetchTopBooks = async () => {
+      try {
+        const res = await bookApi.getTopBooksBestSeller()
+        const content = res.data?.data?.content || res.data?.content || res.data?.data || []
+        if (Array.isArray(content) && content.length > 0) {
+          setTopBooks(content.slice(0, 3))
+        }
+      } catch (error) {
+        console.error("Fetch top books error:", error)
+      }
+    }
+    fetchTopBooks()
+  }, [])
 
-  const stats = [
-    { icon: BookOpen, label: "Sách", value: "1000+" },
-    { icon: Users, label: "Độc giả", value: "50K+" },
-    { icon: TrendingUp, label: "Đánh giá", value: "4.8/5" },
-  ]
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % topBooks.length)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [topBooks.length])
+
+  const currentBook = topBooks[activeIndex] || DEFAULT_BOOKS[0]
 
   return (
-    <div className="flex w-full justify-center px-4 md:px-10 lg:px-20 py-8">
-      <div
-        className="relative w-full max-w-7xl h-[400px] md:h-[500px] rounded-3xl overflow-hidden cursor-pointer"
-        onMouseMove={handleMouseMove}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={handleMouseLeave}
-      >
-        {/* Background with 3D effect */}
-        <div className="absolute inset-0 bg-blue-600 dark:bg-blue-700">
-          {/* Animated circles */}
-          <div
-            className="absolute top-10 left-10 w-64 h-64 bg-blue-400 dark:bg-blue-500 rounded-full blur-3xl opacity-50 transition-transform duration-300"
-            style={{
-              transform: `translate(${mousePosition.x * 2}px, ${mousePosition.y * 2}px) scale(${isHovered ? 1.2 : 1})`,
-            }}
-          />
-          <div
-            className="absolute bottom-10 right-10 w-96 h-96 bg-purple-400 dark:bg-purple-500 rounded-full blur-3xl opacity-40 transition-transform duration-300"
-            style={{
-              transform: `translate(${-mousePosition.x * 2}px, ${-mousePosition.y * 2}px) scale(${isHovered ? 1.2 : 1})`,
-            }}
-          />
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cyan-300 dark:bg-cyan-400 rounded-full blur-3xl opacity-30 transition-transform duration-300"
-            style={{
-              transform: `translate(calc(-50% + ${mousePosition.x}px), calc(-50% + ${mousePosition.y}px)) scale(${isHovered ? 1.3 : 1})`,
-            }}
-          />
+    <div className="relative w-full min-h-[750px] flex items-center justify-center overflow-hidden bg-background">
+      {/* Dynamic Background Gradients */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse delay-1000" />
+      
+      {/* Decorative Grid Pattern */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] pointer-events-none" />
 
-          {/* Grid pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="h-full w-full" style={{
-              backgroundImage: `linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)`,
-              backgroundSize: '50px 50px'
-            }} />
-          </div>
-        </div>
-
-        {/* Floating books */}
-        <div className="absolute inset-0">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute bg-white dark:bg-zinc-800 rounded-lg shadow-2xl transition-all duration-500"
-              style={{
-                width: `${60 + i * 10}px`,
-                height: `${80 + i * 15}px`,
-                top: `${15 + i * 15}%`,
-                left: `${10 + i * 15}%`,
-                transform: `
-                  translate(${mousePosition.x * (i + 1) * 0.5}px, ${mousePosition.y * (i + 1) * 0.5}px)
-                  rotateX(${mousePosition.y * 0.5}deg)
-                  rotateY(${mousePosition.x * 0.5}deg)
-                  scale(${isHovered ? 1.1 : 1})
-                `,
-                opacity: 0.15 + i * 0.05,
-              }}
-            >
-              <div className="w-full h-full border-l-4 border-blue-500 dark:border-blue-400 rounded-lg" />
+      <div className="relative w-full max-w-7xl mx-auto px-4 md:px-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center z-10">
+        
+        {/* Left: Content Area (Span 7) */}
+        <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
+          <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-full animate-in fade-in slide-in-from-bottom duration-1000">
+            <div className="flex -space-x-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="size-6 rounded-full border-2 border-background bg-muted overflow-hidden">
+                  <img src={`https://i.pravatar.cc/150?u=${i}`} alt="user" />
+                </div>
+              ))}
             </div>
-          ))}
+            <span className="text-[10px] font-bold text-foreground/60 uppercase tracking-widest">
+              Gia nhập cộng đồng <span className="text-primary">10,000+</span> độc giả
+            </span>
+          </div>
+
+          <div className="space-y-6">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-foreground tracking-tight leading-[0.95]">
+              Hành Trình <br />
+              <span className="relative inline-block">
+                <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-primary via-cyan-400 to-primary animate-gradient-x">Tri Thức</span>
+                <span className="absolute bottom-4 left-0 w-full h-4 bg-primary/20 -rotate-2 z-0" />
+              </span> <br />
+              Bắt Đầu Từ Đây.
+            </h1>
+            <p className="text-lg text-muted-foreground font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              Khám phá kho tàng tri thức vô tận với hàng ngàn đầu sách chọn lọc. 
+              Trải nghiệm mua sắm thông minh, giao hàng hỏa tốc và dịch vụ tận tâm.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+            <Button 
+                size="lg" 
+                onClick={() => navigate("/list-books")}
+                className="h-14 px-8 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all gap-2"
+            >
+              Khám phá ngay <ShoppingBag className="size-5" />
+            </Button>
+            <Button 
+                variant="outline" 
+                size="lg" 
+                className="h-14 px-8 rounded-2xl font-bold text-lg border-white/10 hover:bg-white/5 transition-all gap-2"
+            >
+              Xem video <Play className="size-5 fill-current" />
+            </Button>
+          </div>
+
+          {/* Trust Badges */}
+          <div className="pt-8 flex flex-wrap justify-center lg:justify-start items-center gap-8 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg" alt="partner" className="h-6" />
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_2015_logo.svg" alt="partner" className="h-6" />
+            <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="partner" className="h-6 dark:invert" />
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="relative h-full flex flex-col items-center justify-center text-center px-6 z-10">
-          {/* Badge */}
-          <div
-            className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-medium mb-6 transition-all duration-300"
-            style={{
-              transform: `translateY(${mousePosition.y * 0.5}px)`,
-            }}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Nền tảng sách điện tử hàng đầu</span>
-          </div>
+        {/* Right: Modern Product Showcase (Span 5) */}
+        <div className="lg:col-span-5 relative flex items-center justify-center">
+          <div className="relative w-[320px] md:w-[400px] h-[450px] md:h-[550px]">
+            {/* Background Decorative Shapes */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-cyan-500/20 rounded-[3rem] blur-3xl" />
+            
+            {/* Book Display Area */}
+            <div className="relative w-full h-full glass rounded-[3rem] border border-white/10 p-4 shadow-2xl flex items-center justify-center overflow-hidden">
+              <div key={activeIndex} className="relative w-full h-full flex flex-col items-center justify-center animate-in fade-in zoom-in duration-700">
+                <div className="relative z-10 w-[70%] h-[75%] shadow-[20px_40px_60px_rgba(0,0,0,0.5)] rounded-2xl overflow-hidden transition-transform hover:scale-105 duration-500">
+                  <img 
+                    src={currentBook.image || "/placeholder-book.jpg"} 
+                    alt={currentBook.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = DEFAULT_BOOKS[0].image;
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                </div>
 
-          {/* Main heading */}
-          <h1
-            className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 transition-all duration-300"
-            style={{
-              transform: `perspective(1000px) rotateX(${mousePosition.y * 0.3}deg) rotateY(${mousePosition.x * 0.3}deg) translateZ(50px)`,
-            }}
-          >
-            Khám phá thế giới
-            <br />
-            <span className="inline-block mt-2">tri thức</span>
-          </h1>
+                {/* Floating Info Card */}
+                <div className="absolute bottom-10 right-[-30px] z-20 glass-dark border border-white/20 p-5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-w-[240px] animate-in slide-in-from-right duration-700 delay-300">
+                  <div className="flex items-center gap-1 mb-2">
+                    {[1,2,3,4,5].map(s => <Star key={s} className="size-3 fill-amber-400 text-amber-400" />)}
+                  </div>
+                  <h3 className="text-white font-bold text-sm line-clamp-1">{currentBook.title}</h3>
+                  <p className="text-white/60 text-[10px] font-medium uppercase tracking-wider mb-2">{currentBook.authorName}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-primary font-black text-xl">{(currentBook.salePrice || 150000).toLocaleString()}đ</span>
+                    <div className="size-10 rounded-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30 hover:scale-110 transition-transform cursor-pointer">
+                      <ShoppingBag className="size-5" />
+                    </div>
+                  </div>
+                </div>
 
-          {/* Subtitle */}
-          <p
-            className="text-lg md:text-xl text-white/90 max-w-2xl mb-8 transition-all duration-300"
-            style={{
-              transform: `translateY(${-mousePosition.y * 0.3}px)`,
-            }}
-          >
-            Hàng nghìn đầu sách chất lượng cao, đánh giá từ cộng đồng độc giả đam mê
-          </p>
-
-          {/* CTA Buttons */}
-          <div
-            className="flex flex-col sm:flex-row gap-4 mb-12 transition-all duration-300"
-            style={{
-              transform: `scale(${isHovered ? 1.05 : 1})`,
-            }}
-          >
-            <button className="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105">
-              Khám phá ngay
-            </button>
-            <button onClick={() => navigate("./CategoriesSection.tsx")} className="bg-white/20 backdrop-blur-md text-white px-8 py-4 rounded-xl font-bold hover:bg-white/30 transition-all duration-300 border-2 border-white/50 hover:scale-105">
-              Xem danh mục
-            </button>
-          </div>
-
-          {/* Stats */}
-          <div
-            className="flex flex-wrap justify-center gap-8 transition-all duration-300"
-            style={{
-              transform: `translateY(${mousePosition.y * 0.2}px)`,
-            }}
-          >
-            {stats.map((stat, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-6 py-3 rounded-xl border border-white/20 transition-all duration-300 hover:bg-white/20 hover:scale-110"
-                style={{
-                  animationDelay: `${index * 100}ms`,
-                }}
-              >
-                <stat.icon className="w-6 h-6 text-white" />
-                <div className="text-left">
-                  <div className="text-2xl font-bold text-white">{stat.value}</div>
-                  <div className="text-sm text-white/80">{stat.label}</div>
+                {/* Left Floating Badge */}
+                <div className="absolute top-10 left-[-30px] bg-white text-black px-4 py-2 rounded-2xl shadow-2xl font-black text-xs uppercase tracking-widest -rotate-6 animate-bounce">
+                  Best Seller 🔥
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Slider Dots */}
+            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex gap-3">
+              {topBooks.map((_, i) => (
+                <button 
+                  key={i}
+                  onClick={() => setActiveIndex(i)}
+                  className={`size-2.5 rounded-full transition-all duration-300 ${activeIndex === i ? "w-8 bg-primary" : "bg-primary/20 hover:bg-primary/40"}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Particles effect */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white rounded-full animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${3 + Math.random() * 4}s`,
-                opacity: Math.random() * 0.5 + 0.3,
-              }}
-            />
-          ))}
-        </div>
       </div>
 
       <style>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0) translateX(0);
-          }
-          50% {
-            transform: translateY(-20px) translateX(10px);
-          }
+        .glass {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
         }
-        .animate-float {
-          animation: float linear infinite;
+        .glass-dark {
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+        }
+        @keyframes gradient-x {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .animate-gradient-x {
+          background-size: 200% 200%;
+          animation: gradient-x 5s ease infinite;
         }
       `}</style>
     </div>

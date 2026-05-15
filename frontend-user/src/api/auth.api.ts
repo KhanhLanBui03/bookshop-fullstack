@@ -23,4 +23,14 @@ export const authApi = {
         const response = await axiosClient.post<any>('/auth/refresh-token', { refreshToken });
         return response.data.data;
     },
+    googleLogin: async (token: string): Promise<LoginResponse> => {
+        const response = await axiosClient.post<any>('/auth/google-login', { token });
+        return response.data.data;
+    },
+    forgotPassword: async (email: String): Promise<void> => {
+        await axiosClient.post('/auth/forgot-password', { email });
+    },
+    resetPassword: async (token: string, newPassword: string): Promise<void> => {
+        await axiosClient.post('/auth/reset-password', { token, newPassword });
+    }
 }

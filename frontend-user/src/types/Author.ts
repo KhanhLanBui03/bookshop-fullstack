@@ -6,6 +6,8 @@ export interface AuthorResponse {
   email: string
   bio: string
   image: string
+  follower: number
+  bookCount: number
 }
 
 export interface AuthorDetailResponse {

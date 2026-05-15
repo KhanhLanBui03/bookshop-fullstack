@@ -1,121 +1,26 @@
 import { useState, useEffect, useCallback } from "react"
 import {
-    CheckCircle, XCircle, Trash2, CornerDownRight,
-    ChevronDown, ChevronUp, Star, RefreshCw, Send, X
+    CheckCircle,
+    XCircle,
+    Trash2,
+    CornerDownRight,
+    ChevronDown,
+    ChevronUp,
+    Star,
+    RefreshCw,
+    Send,
+    MessageSquare,
+    ThumbsUp,
+    Clock,
+    Search,
+    Zap
 } from "lucide-react"
 import axiosClient from "@/api/axios"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import type { CommentStatus, ReviewResponse } from "@/types/Review"
 
-// ── CSS ──────────────────────────────────────────────────────────────────────
-const CSS = `
-  .rv * { box-sizing: border-box; margin: 0; padding: 0; }
-  .rv {
-    font-family: var(--font-body,'DM Sans',sans-serif);
-    background: var(--bg,#0c0c10);
-    min-height: 100vh;
-    color: var(--text,#e8e4f0);
-    padding: 32px;
-  }
-  @keyframes rvUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes rvSpin { to{transform:rotate(360deg)} }
-
-  .rv-card {
-    background: var(--bg3,#18181f);
-    border: 1px solid var(--border,rgba(255,255,255,.07));
-    border-radius: 14px;
-    transition: border-color .15s ease;
-    animation: rvUp .28s cubic-bezier(.22,1,.36,1) both;
-  }
-  .rv-card.pending { border-color: rgba(255,107,53,0.25); }
-  .rv-card.rejected { border-color: rgba(251,113,133,0.2); }
-
-  .rv-tab { transition: all .15s ease; cursor: pointer; border: none; }
-  .rv-tab.active {
-    background: var(--accent,#ff6b35) !important;
-    color: #fff !important;
-  }
-  .rv-tab:not(.active):hover { background: rgba(255,255,255,0.07) !important; }
-
-  .rv-icon-btn {
-    transition: background .12s ease, color .12s ease;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-  }
-  .rv-icon-btn:hover { background: rgba(255,255,255,0.08) !important; }
-  .rv-icon-btn:disabled { opacity: .3; cursor: not-allowed; }
-  .rv-icon-btn.approve:hover { background: rgba(52,211,153,0.12) !important; color: #34d399 !important; }
-  .rv-icon-btn.reject:hover  { background: rgba(251,113,133,0.12) !important; color: #fb7185 !important; }
-  .rv-icon-btn.reply:hover   { background: rgba(96,165,250,0.12) !important; color: #60a5fa !important; }
-  .rv-icon-btn.delete:hover  { background: rgba(251,113,133,0.12) !important; color: #fb7185 !important; }
-
-  .rv-textarea {
-    background: var(--bg,#0c0c10);
-    border: 1px solid var(--border,rgba(255,255,255,.1));
-    border-radius: 10px;
-    color: var(--text,#e8e4f0);
-    font-family: inherit;
-    font-size: 13px;
-    resize: none;
-    outline: none;
-    transition: border-color .15s ease;
-    padding: 10px 12px;
-    width: 100%;
-  }
-  .rv-textarea:focus { border-color: var(--accent,#ff6b35); box-shadow: 0 0 0 3px rgba(255,107,53,0.1); }
-
-  .rv-btn-primary {
-    background: var(--accent,#ff6b35);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 12px;
-    font-family: inherit;
-    cursor: pointer;
-    transition: filter .15s ease;
-    display: flex; align-items: center; gap: 5px;
-    padding: 7px 14px;
-  }
-  .rv-btn-primary:hover { filter: brightness(1.1); }
-  .rv-btn-primary:disabled { opacity: .4; cursor: not-allowed; }
-
-  .rv-btn-ghost {
-    background: rgba(255,255,255,0.05);
-    color: var(--muted2,#9490a8);
-    border: 1px solid var(--border,rgba(255,255,255,.07));
-    border-radius: 8px;
-    font-size: 12px;
-    font-family: inherit;
-    cursor: pointer;
-    transition: background .15s ease;
-    display: flex; align-items: center; gap: 5px;
-    padding: 7px 14px;
-  }
-  .rv-btn-ghost:hover { background: rgba(255,255,255,0.09); }
-
-  .rv-page-btn {
-    background: transparent;
-    border: 1px solid var(--border,rgba(255,255,255,.07));
-    border-radius: 8px;
-    color: var(--muted2,#9490a8);
-    font-size: 13px;
-    font-family: inherit;
-    cursor: pointer;
-    padding: 6px 14px;
-    transition: all .15s ease;
-  }
-  .rv-page-btn:hover:not(:disabled) { border-color: var(--accent,#ff6b35); color: var(--accent,#ff6b35); }
-  .rv-page-btn:disabled { opacity: .28; cursor: not-allowed; }
-
-  .rv-spinner {
-    width: 16px; height: 16px; border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.1);
-    border-top-color: var(--accent,#ff6b35);
-    animation: rvSpin .7s linear infinite;
-  }
-`
-
-// ── API ───────────────────────────────────────────────────────────────────────
+/* ════════ API ─────────────────────────────────────────────────────────────────────── */
 const unwrap = (r: any) => r.data?.data ?? r.data
 
 const adminReviewApi = {
@@ -129,46 +34,29 @@ const adminReviewApi = {
         axiosClient.post("/reviews", { bookId, parentId, content }).then(unwrap),
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const STATUS_CFG: Record<CommentStatus, { label: string; color: string; bg: string }> = {
-    PENDING: { label: "Chờ duyệt", color: "#ff6b35", bg: "rgba(255,107,53,0.12)" },
-    APPROVED: { label: "Đã duyệt", color: "#34d399", bg: "rgba(52,211,153,0.12)" },
-    REJECTED: { label: "Từ chối", color: "#fb7185", bg: "rgba(251,113,133,0.12)" },
+/* ════════ HELPERS ─────────────────────────────────────────────────────────────────── */
+const STATUS_CFG: Record<CommentStatus, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
+    PENDING: { label: "Chờ duyệt", color: "text-amber-500", bg: "bg-amber-500/10", icon: <Clock className="size-3" /> },
+    APPROVED: { label: "Đã duyệt", color: "text-emerald-500", bg: "bg-emerald-500/10", icon: <CheckCircle className="size-3" /> },
+    REJECTED: { label: "Từ chối", color: "text-rose-500", bg: "bg-rose-500/10", icon: <XCircle className="size-3" /> },
 }
 
-const avatarColors = ["#ff6b35", "#22c55e", "#60a5fa", "#f59e0b", "#a78bfa", "#34d399", "#fb7185"]
+const avatarColors = ["bg-primary", "bg-emerald-500", "bg-sky-500", "bg-amber-500", "bg-indigo-500", "bg-rose-500"]
 const avatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length]
-const initials = (name: string) =>
-    (name ?? "?").split(" ").filter(Boolean).slice(-2).map(w => w[0]).join("").toUpperCase()
+const initials = (name: string) => (name ?? "?").split(" ").filter(Boolean).slice(-2).map(w => w[0]).join("").toUpperCase()
 
 function Stars({ rating }: { rating: number }) {
     return (
-        <div style={{ display: "flex", gap: 2 }}>
+        <div className="flex gap-0.5">
             {[1, 2, 3, 4, 5].map(i => (
-                <Star key={i} style={{
-                    width: 12, height: 12,
-                    fill: i <= rating ? "#f59e0b" : "transparent",
-                    color: i <= rating ? "#f59e0b" : "rgba(255,255,255,0.15)"
-                }} />
+                <Star key={i} className={`size-3 ${i <= rating ? "fill-amber-500 text-amber-500" : "text-muted-foreground/20"}`} />
             ))}
         </div>
     )
 }
 
-function Badge({ status }: { status: CommentStatus }) {
-    const cfg = STATUS_CFG[status]
-    return (
-        <span style={{
-            fontSize: 11, padding: "2px 8px", borderRadius: 20,
-            background: cfg.bg, color: cfg.color, fontWeight: 600,
-        }}>
-            {cfg.label}
-        </span>
-    )
-}
-
-// ── Review Row ────────────────────────────────────────────────────────────────
-interface RowProps {
+/* ════════ REVIEW CARD ──────────────────────────────────────────────────────────────── */
+interface CardProps {
     review: ReviewResponse
     index: number
     onStatusChange: (id: number, status: CommentStatus) => Promise<void>
@@ -176,7 +64,7 @@ interface RowProps {
     onReply: (bookId: number, parentId: number, content: string) => Promise<void>
 }
 
-function ReviewRow({ review, index, onStatusChange, onDelete, onReply }: RowProps) {
+function ReviewCard({ review, index, onStatusChange, onDelete, onReply }: CardProps) {
     const [expanded, setExpanded] = useState(false)
     const [showReply, setShowReply] = useState(false)
     const [replyText, setReplyText] = useState("")
@@ -184,151 +72,172 @@ function ReviewRow({ review, index, onStatusChange, onDelete, onReply }: RowProp
 
     const act = async (fn: () => Promise<void>) => {
         setLoading(true)
-        try { await fn() } finally { setLoading(false) }
+        try { await fn() } catch (e) { console.error(e) } finally { setLoading(false) }
     }
 
-    const handleReply = () =>
-        act(async () => {
-            if (!replyText.trim()) return
-            await onReply(review.id, review.id, replyText)
-            setReplyText(""); setShowReply(false)
-        })
+    const handleReply = () => act(async () => {
+        if (!replyText.trim()) return
+        if (!review.bookId) return console.error("Missing bookId for reply")
+        await onReply(review.bookId, review.id, replyText)
+        setReplyText(""); setShowReply(false); setExpanded(true)
+    })
 
-    const cardClass = `rv-card ${review.status === "PENDING" ? "pending" : review.status === "REJECTED" ? "rejected" : ""}`
+    const status = STATUS_CFG[review.status]
 
     return (
-        <div className={cardClass} style={{ animationDelay: `${index * 40}ms` }}>
-            <div style={{ padding: "18px 20px" }}>
-                <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                    {/* Avatar */}
-                    <div style={{
-                        width: 38, height: 38, borderRadius: "50%", shrink: 0,
-                        background: avatarColor(review.user?.fullName ?? "?"),
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 14, fontWeight: 700, color: "#fff", flexShrink: 0,
-                    }}>
-                        {initials(review.user?.fullName ?? "?")}
-                    </div>
-
-                    {/* Body */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                            <span style={{ fontSize: 14, fontWeight: 600 }}>{review.user?.fullName}</span>
-                            <span style={{ fontSize: 12, color: "var(--muted2,#9490a8)" }}>{review.createdAt}</span>
-                            <Badge status={review.status} />
-                            {review.rating != null && <Stars rating={review.rating} />}
-                            <span style={{ fontSize: 12, color: "var(--muted2,#9490a8)", marginLeft: "auto" }}>
-                                👍 {review.helpfulCount}
-                            </span>
+        <div className={`glass rounded-[2rem] border-white/20 overflow-hidden transition-all duration-500 animate-in fade-in slide-in-from-bottom-4 ${review.status === "PENDING" ? "ring-2 ring-primary/30" : ""}`} style={{ animationDelay: `${index * 50}ms` }}>
+            <div className="p-8">
+                <div className="flex flex-col lg:flex-row gap-8 items-start">
+                    {/* Left: User Info & Avatar */}
+                    <div className="flex lg:flex-col items-center lg:items-start gap-4 lg:gap-6 shrink-0 w-full lg:w-48">
+                        <div className={`size-20 rounded-[2rem] flex items-center justify-center text-white font-black text-2xl shadow-2xl ${avatarColor(review.user?.fullName ?? "?")} flex-shrink-0 hover:scale-110 transition-transform duration-500`}>
+                            {initials(review.user?.fullName ?? "?")}
                         </div>
-                        <p style={{ fontSize: 13, color: "var(--muted,#c4bfd4)", lineHeight: 1.6 }}>{review.content}</p>
-
-                        {(review.replies?.length ?? 0) > 0 && (
-                            <button
-                                onClick={() => setExpanded(v => !v)}
-                                className="rv-icon-btn rv-btn-ghost"
-                                style={{ marginTop: 10, padding: "4px 10px", fontSize: 12, borderRadius: 6 }}
-                            >
-                                {expanded ? <ChevronUp style={{ width: 12, height: 12 }} /> : <ChevronDown style={{ width: 12, height: 12 }} />}
-                                {review.replies.length} phản hồi
-                            </button>
-                        )}
+                        <div className="flex-1 lg:flex-none">
+                            <h4 className="text-xl font-black text-foreground tracking-tight leading-tight mb-2">{review.user?.fullName}</h4>
+                            <div className="flex flex-col gap-2">
+                                <div className="inline-flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-xl w-fit">
+                                    <Clock className="size-3" /> {review.createdAt}
+                                </div>
+                                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl ${status.bg} ${status.color} text-[10px] font-black uppercase tracking-widest w-fit`}>
+                                    {status.icon} {status.label}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Action buttons */}
-                    <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                    {/* Middle: Content & Images */}
+                    <div className="flex-1 min-w-0 space-y-6 w-full">
+                        <div className="flex flex-wrap items-center gap-3">
+                            {review.rating != null && <Stars rating={review.rating} />}
+                            <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase bg-white/5 px-3 py-1.5 rounded-xl">
+                                <ThumbsUp className="size-3 text-primary" /> {review.helpfulCount} Hữu ích
+                            </div>
+                            <div className="ml-auto text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">ID: #{review.id}</div>
+                        </div>
+
+                        <div className="relative group">
+                            <p className="text-base font-medium text-foreground/90 leading-relaxed bg-white/5 p-6 rounded-3xl border border-white/5 shadow-inner">
+                                {review.content}
+                            </p>
+                        </div>
+
+                        {/* Image Grid */}
+                        {review.imageUrls && review.imageUrls.length > 0 && (
+                            <div className="flex flex-wrap gap-3 p-2 bg-white/5 rounded-3xl border border-white/5">
+                                {review.imageUrls.map((img, idx) => (
+                                    <div 
+                                        key={idx} 
+                                        className="relative size-24 rounded-2xl overflow-hidden border border-white/10 group/img cursor-zoom-in hover:scale-105 transition-transform"
+                                        onClick={() => window.open(img, '_blank')}
+                                    >
+                                        <img src={img} alt="review" className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/20 group-hover/img:bg-transparent transition-colors" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="flex items-center gap-3">
+                            {(review.replies?.length ?? 0) > 0 && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setExpanded(!expanded)}
+                                    className="rounded-xl font-black uppercase text-[10px] tracking-widest h-10 px-5 gap-2 bg-primary/10 text-primary hover:bg-primary/20"
+                                >
+                                    {expanded ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
+                                    {review.replies.length} phản hồi
+                                </Button>
+                            )}
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowReply(!showReply)}
+                                className="rounded-xl font-black uppercase text-[10px] tracking-widest h-10 px-5 gap-2 hover:bg-white/5"
+                            >
+                                <CornerDownRight className="size-3" /> Phản hồi
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Right: Actions */}
+                    <div className="flex flex-row lg:flex-col gap-3 shrink-0 w-full lg:w-auto justify-end lg:justify-start">
                         {loading ? (
-                            <div className="rv-spinner" />
+                            <div className="size-14 rounded-2xl border-4 border-primary/10 border-t-primary animate-spin" />
                         ) : (
                             <>
                                 {review.status !== "APPROVED" && (
-                                    <button className="rv-icon-btn approve" title="Duyệt"
-                                        onClick={() => act(() => onStatusChange(review.id, "APPROVED"))}
-                                        style={{ padding: 7, borderRadius: 8, color: "#34d399" }}>
-                                        <CheckCircle style={{ width: 16, height: 16 }} />
-                                    </button>
+                                    <Button size="icon" variant="ghost" title="Duyệt" className="size-14 rounded-2xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white shadow-lg hover:shadow-emerald-500/20 transition-all" onClick={() => act(() => onStatusChange(review.id, "APPROVED"))}>
+                                        <CheckCircle className="size-7" />
+                                    </Button>
                                 )}
                                 {review.status !== "REJECTED" && (
-                                    <button className="rv-icon-btn reject" title="Từ chối"
-                                        onClick={() => act(() => onStatusChange(review.id, "REJECTED"))}
-                                        style={{ padding: 7, borderRadius: 8, color: "#fb7185" }}>
-                                        <XCircle style={{ width: 16, height: 16 }} />
-                                    </button>
+                                    <Button size="icon" variant="ghost" title="Từ chối" className="size-14 rounded-2xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white shadow-lg hover:shadow-rose-500/20 transition-all" onClick={() => act(() => onStatusChange(review.id, "REJECTED"))}>
+                                        <XCircle className="size-7" />
+                                    </Button>
                                 )}
-                                <button className="rv-icon-btn reply" title="Phản hồi"
-                                    onClick={() => setShowReply(v => !v)}
-                                    style={{ padding: 7, borderRadius: 8, color: "#60a5fa" }}>
-                                    <CornerDownRight style={{ width: 16, height: 16 }} />
-                                </button>
-                                <button className="rv-icon-btn delete" title="Xoá"
-                                    onClick={() => { if (confirm("Xoá đánh giá này?")) act(() => onDelete(review.id)) }}
-                                    style={{ padding: 7, borderRadius: 8, color: "var(--muted2,#9490a8)" }}>
-                                    <Trash2 style={{ width: 16, height: 16 }} />
-                                </button>
+                                <Button size="icon" variant="ghost" title="Xoá" className="size-14 rounded-2xl bg-white/5 text-muted-foreground hover:bg-rose-500 hover:text-white shadow-lg transition-all" onClick={() => { if (confirm("Xoá đánh giá này vĩnh viễn?")) act(() => onDelete(review.id)) }}>
+                                    <Trash2 className="size-7" />
+                                </Button>
                             </>
                         )}
                     </div>
                 </div>
 
-                {/* Reply form */}
+                {/* Reply Form */}
                 {showReply && (
-                    <div style={{ marginTop: 14, paddingLeft: 52 }}>
-                        <textarea
-                            className="rv-textarea"
-                            rows={2}
-                            placeholder="Nhập phản hồi admin..."
-                            value={replyText}
-                            onChange={e => setReplyText(e.target.value)}
-                        />
-                        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                            <button className="rv-btn-primary" onClick={handleReply}
-                                disabled={!replyText.trim() || loading}>
-                                <Send style={{ width: 12, height: 12 }} /> Gửi
-                            </button>
-                            <button className="rv-btn-ghost"
-                                onClick={() => { setShowReply(false); setReplyText("") }}>
-                                <X style={{ width: 12, height: 12 }} /> Huỷ
-                            </button>
+                    <div className="mt-8 ml-0 lg:ml-56 animate-in fade-in slide-in-from-top-4 duration-500">
+                        <div className="glass border-white/10 rounded-3xl p-6 bg-white/5">
+                            <textarea
+                                className="w-full bg-foreground/5 border border-white/10 rounded-2xl p-6 text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none min-h-[150px] transition-all resize-none"
+                                placeholder="Nhập nội dung phản hồi chính thức từ quản trị viên..."
+                                value={replyText}
+                                onChange={e => setReplyText(e.target.value)}
+                            />
+                            <div className="flex gap-3 mt-6">
+                                <Button className="rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] h-12 px-8 gap-3 shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95" onClick={handleReply} disabled={!replyText.trim() || loading}>
+                                    <Send className="size-4" /> Gửi phản hồi
+                                </Button>
+                                <Button variant="ghost" className="rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] h-12 px-8 hover:bg-white/5" onClick={() => { setShowReply(false); setReplyText("") }}>
+                                    Huỷ bỏ
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 )}
             </div>
 
-            {/* Replies */}
+            {/* Nested Replies */}
             {expanded && (review.replies?.length ?? 0) > 0 && (
-                <div style={{
-                    borderTop: "1px solid var(--border,rgba(255,255,255,.07))",
-                    padding: "14px 20px 14px 72px",
-                    display: "flex", flexDirection: "column", gap: 12,
-                    background: "rgba(255,255,255,0.02)",
-                }}>
-                    {review.replies.map(rep => (
-                        <div key={rep.id} style={{ display: "flex", gap: 10 }}>
-                            <div style={{
-                                width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-                                background: avatarColor(rep.user?.fullName ?? "?"),
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                fontSize: 11, fontWeight: 700, color: "#fff",
-                            }}>
-                                {initials(rep.user?.fullName ?? "?")}
-                            </div>
-                            <div>
-                                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                                    <span style={{ fontSize: 12, fontWeight: 600 }}>{rep.user?.fullName}</span>
-                                    <span style={{ fontSize: 11, color: "var(--muted2,#9490a8)" }}>{rep.createdAt}</span>
-                                    <Badge status={rep.status} />
+                <div className="bg-white/5 border-t border-white/5 p-8 lg:pl-56 space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="space-y-6">
+                        {review.replies.map(rep => (
+                            <div key={rep.id} className="flex gap-6 group relative">
+                                <div className="absolute left-[-2rem] top-0 bottom-0 w-px bg-white/10 hidden lg:block" />
+                                <div className={`size-12 rounded-2xl flex items-center justify-center text-white font-black text-xs shadow-xl ${avatarColor(rep.user?.fullName ?? "?")} flex-shrink-0 group-hover:scale-110 transition-transform duration-500`}>
+                                    {initials(rep.user?.fullName ?? "?")}
                                 </div>
-                                <p style={{ fontSize: 13, color: "var(--muted,#c4bfd4)", lineHeight: 1.5 }}>{rep.content}</p>
+                                <div className="flex-1 space-y-3">
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <span className="text-sm font-black text-foreground">{rep.user?.fullName}</span>
+                                        <span className="text-[9px] font-black text-muted-foreground uppercase bg-white/5 px-2.5 py-1 rounded-lg tracking-widest">{rep.createdAt}</span>
+                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${STATUS_CFG[rep.status].bg} ${STATUS_CFG[rep.status].color} text-[8px] font-black uppercase tracking-widest`}>
+                                            {STATUS_CFG[rep.status].icon} {STATUS_CFG[rep.status].label}
+                                        </div>
+                                    </div>
+                                    <p className="text-sm font-medium text-foreground/70 leading-relaxed bg-white/5 p-4 rounded-2xl border border-white/5 inline-block">{rep.content}</p>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
     )
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+/* ════════ MAIN PAGE ─────────────────────────────────────────────────────────────── */
 const TABS: { label: string; value: CommentStatus | "ALL" }[] = [
     { label: "Tất cả", value: "ALL" },
     { label: "Chờ duyệt", value: "PENDING" },
@@ -383,93 +292,105 @@ export default function AdminReviewManager() {
     }
 
     return (
-        <>
-            <style>{CSS}</style>
-            <div className="rv">
-                {/* Header */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
-                    <div>
-                        <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.5 }}>Quản lý đánh giá</h1>
-                        <p style={{ fontSize: 13, color: "var(--muted2,#9490a8)", marginTop: 4 }}>
-                            {totalElements} đánh giá
-                            {pendingCount > 0 && (
-                                <span style={{
-                                    marginLeft: 10, fontSize: 12, padding: "2px 8px", borderRadius: 20,
-                                    background: "rgba(255,107,53,0.15)", color: "#ff6b35", fontWeight: 600
-                                }}>
-                                    {pendingCount} chờ duyệt
-                                </span>
-                            )}
-                        </p>
+        <div className="space-y-10 animate-in fade-in duration-700 pb-20">
+
+            {/* Header */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+                <div className="space-y-3">
+                    <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-sm border border-primary/20">
+                        <MessageSquare className="size-3 fill-current" /> Trung tâm điều phối dư luận
                     </div>
-                    <button className="rv-btn-ghost" onClick={() => fetchReviews(page)}
-                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10 }}>
-                        <RefreshCw style={{ width: 14, height: 14 }} /> Làm mới
-                    </button>
+                    <h1 className="text-4xl font-black text-foreground tracking-tight uppercase leading-none">Quản lý <span className="text-primary italic">Đánh giá</span></h1>
+                    <div className="flex items-center gap-3">
+                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.2em]">
+                            {totalElements.toLocaleString()} phản hồi từ cộng đồng
+                        </p>
+                        {pendingCount > 0 && (
+                            <div className="flex items-center gap-1.5 bg-amber-500/10 text-amber-600 px-3 py-1 rounded-xl text-[10px] font-black uppercase animate-pulse border border-amber-500/20">
+                                <Zap className="size-3 fill-current" /> {pendingCount} Đang chờ duyệt
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Tabs */}
-                <div style={{
-                    display: "flex", gap: 4, marginBottom: 20,
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid var(--border,rgba(255,255,255,.07))",
-                    borderRadius: 12, padding: 4, width: "fit-content"
-                }}>
+                <Button variant="outline" className="rounded-2xl font-black h-14 px-8 border-white/10 hover:bg-primary hover:text-white transition-all shadow-lg group" onClick={() => fetchReviews(page)}>
+                    <RefreshCw className="size-5 mr-3 group-hover:rotate-180 transition-transform duration-700" /> Làm mới dữ liệu
+                </Button>
+            </div>
+
+            {/* Filter Tabs & Search */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 glass p-2 rounded-[2rem] border-white/20">
+                <div className="flex gap-1 p-1 bg-white/5 rounded-[1.5rem]">
                     {TABS.map(t => (
                         <button
                             key={t.value}
-                            className={`rv-tab ${tab === t.value ? "active" : ""}`}
                             onClick={() => setTab(t.value)}
-                            style={{ padding: "7px 18px", borderRadius: 9, fontSize: 13, fontFamily: "inherit", background: "transparent", color: "var(--muted2,#9490a8)" }}
+                            className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all relative ${tab === t.value ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "hover:bg-white/5 text-muted-foreground"}`}
                         >
                             {t.label}
                             {t.value === "PENDING" && pendingCount > 0 && (
-                                <span style={{
-                                    marginLeft: 6, background: tab === "PENDING" ? "rgba(255,255,255,0.25)" : "#ff6b35",
-                                    color: "#fff", fontSize: 11, padding: "1px 6px", borderRadius: 10, fontWeight: 700
-                                }}>
+                                <span className={`ml-2 px-2 py-0.5 rounded-lg text-[9px] font-black ${tab === "PENDING" ? "bg-white/20 text-white" : "bg-primary text-white"}`}>
                                     {pendingCount}
                                 </span>
                             )}
                         </button>
                     ))}
                 </div>
-
-                {/* List */}
-                {loading ? (
-                    <div style={{ textAlign: "center", padding: "60px 0", color: "var(--muted2,#9490a8)", fontSize: 14 }}>
-                        <div className="rv-spinner" style={{ margin: "0 auto 12px" }} />
-                        Đang tải...
-                    </div>
-                ) : reviews.length === 0 ? (
-                    <div style={{ textAlign: "center", padding: "60px 0", color: "var(--muted2,#9490a8)", fontSize: 14 }}>
-                        Không có đánh giá nào.
-                    </div>
-                ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                        {reviews.map((r, i) => (
-                            <ReviewRow key={r.id} review={r} index={i}
-                                onStatusChange={handleStatusChange}
-                                onDelete={handleDelete}
-                                onReply={handleReply}
-                            />
-                        ))}
-                    </div>
-                )}
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 28 }}>
-                        <button className="rv-page-btn" disabled={page === 0}
-                            onClick={() => fetchReviews(page - 1)}>‹ Trước</button>
-                        <span style={{ fontSize: 13, color: "var(--muted2,#9490a8)", alignSelf: "center" }}>
-                            {page + 1} / {totalPages}
-                        </span>
-                        <button className="rv-page-btn" disabled={page >= totalPages - 1}
-                            onClick={() => fetchReviews(page + 1)}>Sau ›</button>
-                    </div>
-                )}
+                <div className="relative flex-1 max-w-md group pr-2">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <Input placeholder="Tìm kiếm nội dung đánh giá..." className="pl-11 h-12 bg-background/50 border-border/50 rounded-2xl focus-visible:ring-primary/20" />
+                </div>
             </div>
-        </>
+
+            {/* Reviews List */}
+            {loading ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                    <div className="size-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Đang trích xuất dữ liệu...</p>
+                </div>
+            ) : reviews.length === 0 ? (
+                <div className="glass p-20 rounded-[3rem] text-center border-white/20">
+                    <div className="size-20 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <MessageSquare className="size-10 text-muted-foreground/30" />
+                    </div>
+                    <p className="text-base font-black text-muted-foreground uppercase tracking-[0.2em]">Danh sách đánh giá hiện đang trống</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 gap-8">
+                    {reviews.map((r, i) => (
+                        <ReviewCard key={r.id} review={r} index={i}
+                            onStatusChange={handleStatusChange}
+                            onDelete={handleDelete}
+                            onReply={handleReply}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-6 pt-10">
+                    <Button
+                        variant="outline"
+                        disabled={page === 0}
+                        onClick={() => fetchReviews(page - 1)}
+                        className="rounded-2xl font-black uppercase text-[10px] tracking-widest h-12 px-8 border-white/10"
+                    >
+                        Trang trước
+                    </Button>
+                    <div className="glass px-6 py-3 rounded-2xl border-white/10 text-[11px] font-black text-foreground">
+                        {page + 1} <span className="text-muted-foreground mx-2">/</span> {totalPages}
+                    </div>
+                    <Button
+                        variant="outline"
+                        disabled={page >= totalPages - 1}
+                        onClick={() => fetchReviews(page + 1)}
+                        className="rounded-2xl font-black uppercase text-[10px] tracking-widest h-12 px-8 border-white/10"
+                    >
+                        Trang sau
+                    </Button>
+                </div>
+            )}
+        </div>
     )
 }

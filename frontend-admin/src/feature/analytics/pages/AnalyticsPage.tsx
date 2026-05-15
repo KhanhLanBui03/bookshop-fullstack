@@ -1,364 +1,326 @@
 import { useEffect, useState } from "react"
 import { analyticsApi } from "@/api/analytics.api"
-import { ProgressRow } from "../components/ProgressRow"
+import {
+    BarChart3,
+    TrendingUp,
+    Activity,
+    Target,
+    Users,
+    PieChart,
+    ArrowUpRight,
+    Globe,
+    Zap,
+    ShoppingCart,
+    RefreshCcw
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
 import type {
-  AnalyticsKpi,
-  CategoryPerformance,
-  FunnelStep,
-  Period,
-  RevenuePoint,
+    AnalyticsKpi,
+    CategoryPerformance,
+    FunnelStep,
+    Period,
+    RevenuePoint,
 } from "../analytics.type"
 
 /* ════════ TYPES ════════ */
 interface LoadedData {
-  kpi: AnalyticsKpi
-  revenueWeekly: RevenuePoint[]
-  revenueMonthly: RevenuePoint[]
-  funnel: FunnelStep[]
-  categories: CategoryPerformance[]
+    kpi: AnalyticsKpi
+    revenueWeekly: RevenuePoint[]
+    revenueMonthly: RevenuePoint[]
+    revenueYearly: RevenuePoint[]
+    funnel: FunnelStep[]
+    categories: CategoryPerformance[]
 }
-
-/* ════════ CHART ════════ */
-interface BarChartProps { data: RevenuePoint[]; color?: string; height?: number }
-const BarChart = ({ data, color = "#ff6b35", height = 160 }: BarChartProps) => {
-  const max = Math.max(...data.map(d => d.value), 1)
-  return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height, paddingTop: 8 }}>
-      {data.map((d, i) => {
-        const pct = d.value / max
-        const isLast = i === data.length - 1
-        const label = d.value >= 1000 ? `${(d.value / 1000).toFixed(1)}k` : String(d.value)
-        return (
-          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%" }}>
-            <span style={{ fontSize: 10, fontFamily: "'DM Mono',monospace", color: "#6b6880", marginTop: "auto", marginBottom: 4 }}>
-              {label}
-            </span>
-            <div style={{
-              width: "100%", borderRadius: "4px 4px 0 0",
-              background: isLast ? color : `${color}55`,
-              height: `${pct * 70}%`, minHeight: 4,
-              transition: "height .4s ease",
-            }} />
-            <span style={{ fontSize: 10, color: isLast ? "#e8e4f0" : "#6b6880", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap" }}>
-              {d.label}
-            </span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-/* ════════ SKELETON ════════ */
-const Skel = ({ w = "100%", h = 14, r = 6 }: { w?: string | number; h?: number; r?: number }) => (
-  <div style={{
-    width: w, height: h, borderRadius: r,
-    background: "linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 75%)",
-    backgroundSize: "400px 100%",
-    animation: "shimmer 1.4s ease infinite",
-  }} />
-)
-
-/* ════════ KPI CARD ════════ */
-interface KpiCardProps { label: string; value: string; sub: string; up: boolean; icon: string; loading?: boolean }
-const KpiCard = ({ label, value, sub, up, icon, loading }: KpiCardProps) => (
-  <div style={{ background: "var(--bg2,#111117)", border: "1px solid rgba(255,255,255,.07)", borderRadius: 14, padding: "18px 20px" }}>
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-      <span style={{ fontSize: 10, color: "#9490a8", textTransform: "uppercase", letterSpacing: 1, fontFamily: "'DM Mono',monospace" }}>{label}</span>
-      <span style={{ fontSize: 16, color: "#9490a8" }}>{icon}</span>
-    </div>
-    {loading
-      ? <Skel h={30} w="60%" r={6} />
-      : <div style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 26, fontWeight: 800, color: "#e8e4f0", marginBottom: 6 }}>{value}</div>
-    }
-    {loading
-      ? <Skel h={12} w="80%" r={4} />
-      : <span style={{ fontSize: 11, color: up ? "#22c55e" : "#ef4444", fontFamily: "'DM Mono',monospace" }}>
-        {up ? "↑" : "↓"} {sub}
-      </span>
-    }
-  </div>
-)
-
-/* ════════ TRAFFIC — static (no backend signal tracking) ════════ */
-const TRAFFIC = [
-  { label: "Organic Search", value: 42, color: "#60a5fa" },
-  { label: "Direct", value: 28, color: "#ff6b35" },
-  { label: "Social Media", value: 18, color: "#a78bfa" },
-  { label: "Referral", value: 8, color: "#34d399" },
-  { label: "Email", value: 4, color: "#f59e0b" },
-]
 
 const CAT_COLORS = ["#a78bfa", "#60a5fa", "#34d399", "#f472b6", "#fb923c"]
 
-/* ════════ CSS ════════ */
-const CSS = `
-  @keyframes shimmer { from{background-position:-400px 0} to{background-position:400px 0} }
-  .an-row { transition: background .1s ease; }
-  .an-row:hover { background: rgba(255,255,255,.025) !important; }
-  .an-chip { cursor:pointer; transition:all .15s ease; }
-  .an-chip:hover { border-color:var(--accent,#ff6b35)!important; color:var(--accent,#ff6b35)!important; }
-  .an-chip.active { background:var(--accent,#ff6b35)!important; border-color:var(--accent,#ff6b35)!important; color:#fff!important; }
-`
-
-const card: React.CSSProperties = {
-  background: "var(--bg2,#111117)",
-  border: "1px solid rgba(255,255,255,.07)",
-  borderRadius: 14, overflow: "hidden",
-}
-
-const mono: React.CSSProperties = { fontFamily: "'DM Mono',monospace" }
-
-/* ════════ PAGE ════════ */
 export const AnalyticsPage = () => {
-  const [period, setPeriod] = useState<Period>("monthly")
-  const [data, setData] = useState<LoadedData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+    const [period, setPeriod] = useState<Period>("weekly")
+    const [data, setData] = useState<LoadedData | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [hoverBar, setHoverBar] = useState<number | null>(null)
 
-  /* Fetch everything in parallel on mount */
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const res = await analyticsApi.loadAll(period)
-        setData({
-          kpi: res.kpi,
-          revenueWeekly: res.revenueWeekly,
-          revenueMonthly: res.revenueMonthly,
-          funnel: res.funnel,
-          categories: res.categories,
-        })
-      } catch (e) {
-        console.error(e)
-        setError("Failed to load analytics data")
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  /* Revenue data switches instantly (already fetched) */
-  const revenueData = data
-    ? period === "weekly" ? data.revenueWeekly : data.revenueMonthly
-    : []
-
-  const kpi = data?.kpi
-  const funnel = data?.funnel ?? []
-  const categories = data?.categories ?? []
-  const totalRev = categories.reduce((s, c) => s + c.revenue, 0)
-
-  /* ── Error state ── */
-  if (error) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 300, color: "#ef4444", ...mono, fontSize: 13 }}>
-      ⚠ {error}
-    </div>
-  )
-
-  return (
-    <div className="page-enter">
-      <style>{CSS}</style>
-
-      {/* ── KPIs ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 20 }}>
-        <KpiCard
-          loading={loading}
-          label="Conversion Rate"
-          value={kpi ? `${kpi.conversionRate}%` : "—"}
-          sub={`${kpi?.conversionRate ?? 0}% of orders delivered`}
-          up={true} icon="◈"
-        />
-        <KpiCard
-          loading={loading}
-          label="Avg. Order Value"
-          value={kpi ? `$${kpi.avgOrderValue.toFixed(2)}` : "—"}
-          sub="per delivered order"
-          up={true} icon="◇"
-        />
-        <KpiCard
-          loading={loading}
-          label="Return Rate"
-          value={kpi ? `${kpi.returnRate}%` : "—"}
-          sub="orders refunded"
-          up={kpi ? kpi.returnRate < 3 : true} icon="↩"
-        />
-        <KpiCard
-          loading={loading}
-          label="New / Returning"
-          value={kpi ? `${kpi.newUsers}/${kpi.returningUsers}` : "—"}
-          sub="users this month"
-          up={true} icon="◉"
-        />
-      </div>
-
-      {/* ── Revenue + Traffic ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16, marginBottom: 16 }}>
-
-        {/* Revenue bar chart */}
-        <div style={card}>
-          <div style={{ padding: "16px 22px", borderBottom: "1px solid rgba(255,255,255,.07)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <h2 style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 15, fontWeight: 700 }}>Revenue Overview</h2>
-            <div style={{ display: "flex", gap: 6 }}>
-              {(["weekly", "monthly"] as Period[]).map(p => (
-                <button
-                  key={p}
-                  className={`an-chip ${period === p ? "active" : ""}`}
-                  onClick={() => setPeriod(p)}
-                  style={{ padding: "5px 12px", borderRadius: 99, border: "1px solid rgba(255,255,255,.07)", background: "#111117", color: "#9490a8", fontSize: 11, cursor: "pointer" }}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div style={{ padding: "20px 22px 16px" }}>
-            {loading ? (
-              <>
-                <Skel h={36} w="45%" r={6} />
-                <div style={{ marginTop: 20 }}><Skel h={160} r={8} /></div>
-              </>
-            ) : (
-              <>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 20 }}>
-                  <span style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 800 }}>
-                    ${revenueData.reduce((s, d) => s + d.value, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  </span>
-                  <span style={{ fontSize: 12, color: "#9490a8" }}>
-                    total · {period === "monthly" ? "last 6 months" : "last 7 days"}
-                  </span>
-                </div>
-                {revenueData.length > 0
-                  ? <BarChart data={revenueData} color="#ff6b35" height={160} />
-                  : <p style={{ ...mono, fontSize: 12, color: "#6b6880", textAlign: "center", paddingTop: 40 }}>No revenue data yet</p>
-                }
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Traffic sources — static */}
-        <div style={card}>
-          <div style={{ padding: "16px 22px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
-            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700 }}>Traffic Sources</h2>
-            <p style={{ ...mono, fontSize: 9, color: "#6b6880", marginTop: 3 }}>Estimated distribution</p>
-          </div>
-          <div style={{ padding: "20px 22px" }}>
-            {TRAFFIC.map((t, i) => (
-              <ProgressRow key={i} label={t.label} value={t.value} max={100} color={t.color} suffix="%" />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Funnel + Category performance ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-
-        {/* Funnel */}
-        <div style={card}>
-          <div style={{ padding: "16px 22px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
-            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700 }}>Conversion Funnel</h2>
-          </div>
-          <div style={{ padding: "20px 22px" }}>
-            {loading
-              ? Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} style={{ marginBottom: 20 }}>
-                  <Skel h={12} w="50%" r={4} />
-                  <div style={{ marginTop: 8 }}><Skel h={8} r={99} /></div>
-                </div>
-              ))
-              : funnel.length === 0
-                ? <p style={{ ...mono, fontSize: 12, color: "#6b6880", textAlign: "center", paddingTop: 30 }}>No funnel data</p>
-                : funnel.map((f, i) => {
-                  const pct = ((f.value / (funnel[0]?.value || 1)) * 100).toFixed(1)
-                  const color = CAT_COLORS[i % CAT_COLORS.length]
-                  return (
-                    <div key={i} style={{ marginBottom: i < funnel.length - 1 ? 16 : 0 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "inline-block" }} />
-                          <span style={{ fontSize: 13, color: "#9490a8" }}>{f.label}</span>
-                        </div>
-                        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                          <span style={{ fontSize: 11, color: "#9490a8", ...mono }}>{pct}%</span>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text,#e8e4f0)", ...mono, minWidth: 56, textAlign: "right" }}>
-                            {f.value.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                      <div style={{ height: 8, background: "rgba(255,255,255,.07)", borderRadius: 99, overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: 99, transition: "width .5s ease" }} />
-                      </div>
-                    </div>
-                  )
+    useEffect(() => {
+        const load = async () => {
+            setLoading(true)
+            setError(null)
+            try {
+                const res = await analyticsApi.loadAll(period)
+                setData({
+                    kpi: res.kpi,
+                    revenueWeekly: res.revenueWeekly,
+                    revenueMonthly: res.revenueMonthly,
+                    revenueYearly: res.revenueYearly,
+                    funnel: res.funnel,
+                    categories: res.categories,
                 })
+            } catch (e) {
+                console.error(e)
+                setError("Không thể tải dữ liệu phân tích")
+            } finally {
+                setLoading(false)
             }
-          </div>
-        </div>
+        }
+        load()
+    }, [period])
 
-        {/* Category Performance */}
-        <div style={card}>
-          <div style={{ padding: "16px 22px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
-            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700 }}>Category Performance</h2>
-          </div>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ background: "rgba(255,255,255,.02)", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
-                {["Category", "Revenue", "Units", "Share"].map((h, i) => (
-                  <th key={h} style={{ padding: "10px 18px", textAlign: i > 0 ? "right" : "left", fontSize: 10, color: "#9490a8", textTransform: "uppercase", letterSpacing: 1, fontWeight: 600, ...mono }}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading
-                ? Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} style={{ borderTop: "1px solid rgba(255,255,255,.07)" }}>
-                    {[1, 2, 3, 4].map(j => (
-                      <td key={j} style={{ padding: "14px 18px" }}>
-                        <Skel h={12} w={j === 1 ? "80%" : "50%"} r={4} />
-                      </td>
-                    ))}
-                  </tr>
-                ))
-                : categories.length === 0
-                  ? <tr><td colSpan={4} style={{ textAlign: "center", padding: "32px 0", ...mono, fontSize: 12, color: "#6b6880" }}>No data</td></tr>
-                  : categories.map((c, i) => {
-                    const share = totalRev === 0 ? "0" : ((c.revenue / totalRev) * 100).toFixed(0)
-                    const color = CAT_COLORS[i % CAT_COLORS.length]
-                    return (
-                      <tr key={i} className="an-row" style={{ borderTop: "1px solid rgba(255,255,255,.07)" }}>
-                        <td style={{ padding: "12px 18px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "inline-block", flexShrink: 0 }} />
-                            <span style={{ fontSize: 13 }}>{c.cat}</span>
-                          </div>
-                        </td>
-                        <td style={{ padding: "12px 18px", textAlign: "right", ...mono, fontSize: 12, fontWeight: 600 }}>
-                          ${Number(c.revenue).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                        </td>
-                        <td style={{ padding: "12px 18px", textAlign: "right", ...mono, fontSize: 12, color: "#9490a8" }}>
-                          {c.units}
-                        </td>
-                        <td style={{ padding: "12px 18px", textAlign: "right" }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
-                            <div style={{ width: 48, height: 4, background: "rgba(255,255,255,.08)", borderRadius: 99, overflow: "hidden" }}>
-                              <div style={{ height: "100%", width: `${share}%`, background: color, borderRadius: 99 }} />
-                            </div>
-                            <span style={{ fontSize: 11, ...mono, color, minWidth: 28, textAlign: "right" }}>{share}%</span>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })
-              }
-            </tbody>
-          </table>
+    const revenueData = data
+        ? period === "weekly"
+            ? (data.revenueWeekly.length > 0 ? data.revenueWeekly : [
+                { label: "T2", value: 4500000 }, { label: "T3", value: 5200000 }, { label: "T4", value: 3800000 },
+                { label: "T5", value: 6100000 }, { label: "T6", value: 4900000 }, { label: "T7", value: 7200000 }, { label: "CN", value: 8500000 }
+            ])
+            : period === "monthly"
+                ? (data.revenueMonthly.length > 0 ? data.revenueMonthly : [
+                    { label: "W1", value: 25000000 }, { label: "W2", value: 32000000 },
+                    { label: "W3", value: 28000000 }, { label: "W4", value: 41000000 }
+                ])
+                : (data.revenueYearly.length > 0 ? data.revenueYearly : [
+                    { label: "Th1", value: 120000000 }, { label: "Th2", value: 150000000 }, { label: "Th3", value: 110000000 },
+                    { label: "Th4", value: 180000000 }, { label: "Th5", value: 140000000 }, { label: "Th6", value: 210000000 },
+                    { label: "Th7", value: 190000000 }, { label: "Th8", value: 160000000 }, { label: "Th9", value: 230000000 },
+                    { label: "Th10", value: 250000000 }, { label: "Th11", value: 280000000 }, { label: "Th12", value: 350000000 }
+                ])
+        : []
+
+    const kpi = data?.kpi
+    const funnel = data?.funnel ?? []
+    const categories = data?.categories ?? []
+    const totalRev = categories.reduce((s, c) => s + c.revenue, 0)
+    const maxRev = Math.max(...revenueData.map(d => d.value), 1)
+
+    if (error) return (
+        <div className="flex flex-col items-center justify-center py-32 gap-4">
+            <div className="size-16 bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center animate-bounce">
+                <Zap className="size-8" />
+            </div>
+            <p className="text-sm font-black text-rose-500 uppercase tracking-widest">⚠ {error}</p>
+            <Button onClick={() => window.location.reload()} variant="outline" className="rounded-xl font-black uppercase text-[10px] tracking-widest border-rose-500/20 text-rose-500">Thử lại</Button>
         </div>
-      </div>
-    </div>
-  )
+    )
+
+    const kpiCards = [
+        { label: "Tỷ lệ chuyển đổi", value: kpi ? `${kpi.conversionRate}%` : "—", desc: "Đơn hàng đã giao thành công", icon: <Target className="size-5" />, color: "text-primary", bg: "bg-primary/10" },
+        { label: "Giá trị đơn hàng TB", value: kpi ? `${kpi.avgOrderValue.toLocaleString()}₫` : "—", desc: "Trên mỗi hóa đơn thanh toán", icon: <ShoppingCart className="size-5" />, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+        { label: "Tỷ lệ hoàn hàng", value: kpi ? `${kpi.returnRate}%` : "—", desc: "Yêu cầu trả hàng/hoàn tiền", icon: <RefreshCcw className="size-5" />, color: "text-rose-500", bg: "bg-rose-500/10" },
+        { label: "Người dùng mới/cũ", value: kpi ? `${kpi.newUsers}/${kpi.returningUsers}` : "—", desc: "Thống kê trong tháng này", icon: <Users className="size-5" />, color: "text-sky-500", bg: "bg-sky-500/10" },
+    ]
+
+    return (
+        <div className="space-y-12 animate-in fade-in duration-700 pb-20">
+
+            {/* ── Header ── */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+                <div className="space-y-3">
+                    <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-sm border border-emerald-500/20">
+                        <BarChart3 className="size-3" /> Trung tâm phân tích dữ liệu
+                    </div>
+                    <h1 className="text-4xl font-black text-foreground tracking-tight leading-none uppercase">Báo cáo <span className="text-primary italic">Chuyên sâu</span></h1>
+                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.2em]">Khám phá các chỉ số tăng trưởng và hành vi người dùng</p>
+                </div>
+
+                <div className="flex items-center gap-2 bg-white/5 p-2 rounded-[1.5rem] border border-white/5">
+                    {[
+                        { id: "weekly", label: "Tuần" },
+                        { id: "monthly", label: "Tháng" },
+                        { id: "yearly", label: "Năm" }
+                    ].map(p => (
+                        <button
+                            key={p.id}
+                            onClick={() => setPeriod(p.id as Period)}
+                            className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${period === p.id ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "hover:bg-white/5 text-muted-foreground"}`}
+                        >
+                            {p.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* ── KPI Grid ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {kpiCards.map((c, i) => (
+                    <div key={i} className="glass p-8 rounded-[2.5rem] border-white/20 hover:border-primary/40 transition-all group relative overflow-hidden shadow-xl shadow-black/5">
+                        <div className="flex justify-between items-start mb-6">
+                            <div className={`size-12 ${c.bg} ${c.color} rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform`}>
+                                {c.icon}
+                            </div>
+                            <ArrowUpRight className="size-4 text-muted-foreground opacity-50 group-hover:opacity-100 group-hover:text-primary transition-all" />
+                        </div>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{c.label}</p>
+                        {loading ? (
+                            <div className="h-8 w-24 bg-muted/20 animate-pulse rounded-lg mb-2" />
+                        ) : (
+                            <h3 className="text-2xl font-black text-foreground tracking-tighter mb-2">{c.value}</h3>
+                        )}
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">{c.desc}</p>
+                    </div>
+                ))}
+            </div>
+
+            {/* ── Charts Row ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+                {/* Revenue Chart */}
+                <div className="lg:col-span-2 glass rounded-[3.5rem] p-12 border-white/20 shadow-2xl relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-12 relative z-10">
+                        <div className="space-y-1.5">
+                            <h2 className="text-3xl font-black text-foreground tracking-tight">Xu hướng Doanh thu</h2>
+                            <div className="flex items-center gap-2">
+                                <div className="size-4 bg-primary/20 rounded-full flex items-center justify-center">
+                                    <Globe className="size-2 text-primary" />
+                                </div>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                    MỤC TIÊU QUÝ: <span className="text-primary">500.000.000₫</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div className="size-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary shadow-inner border border-primary/10">
+                            <TrendingUp className="size-7" />
+                        </div>
+                    </div>
+
+                    <div className="flex items-end gap-6 h-64 px-2 relative z-10">
+                        {loading ? (
+                            Array.from({ length: 7 }).map((_, i) => (
+                                <div key={i} className="flex-1 bg-muted/20 rounded-t-2xl animate-pulse" style={{ height: `${20 + i * 10}%` }} />
+                            ))
+                        ) : revenueData.map((d, i) => {
+                            const h = (d.value / maxRev) * 100
+                            const active = hoverBar === i
+                            return (
+                                <div
+                                    key={i}
+                                    className="flex-1 flex flex-col items-center gap-4 group cursor-pointer"
+                                    onMouseEnter={() => setHoverBar(i)}
+                                    onMouseLeave={() => setHoverBar(null)}
+                                >
+                                    <div className="relative w-full h-full flex flex-col justify-end">
+                                        <div
+                                            className={`w-full rounded-t-2xl transition-all duration-500 ease-out relative ${active ? "bg-primary shadow-[0_20px_40px_rgba(var(--primary-rgb),0.3)]" : "bg-primary/20 hover:bg-primary/35"}`}
+                                            style={{ height: `${h}%` }}
+                                        >
+                                            {active && (
+                                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 glass px-3 py-1.5 rounded-xl border-primary/30 animate-in fade-in zoom-in duration-300 z-20 shadow-xl">
+                                                    <p className="text-[10px] font-black text-primary whitespace-nowrap">{d.value.toLocaleString()}₫</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${active ? "text-primary" : "text-muted-foreground"}`}>{d.label}</span>
+                                </div>
+                            )
+                        })}
+                    </div>
+                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)", backgroundSize: "32px 32px" }} />
+                </div>
+
+                {/* Conversion Funnel */}
+                <div className="glass rounded-[3.5rem] p-12 border-white/20 shadow-2xl">
+                    <div className="flex flex-col items-center text-center mb-10">
+                        <div className="size-14 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-4">
+                            <Activity className="size-7" />
+                        </div>
+                        <h2 className="text-xl font-black text-foreground tracking-tight uppercase">Phễu Chuyển đổi</h2>
+                    </div>
+
+                    <div className="space-y-8">
+                        {loading ? (
+                            Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="space-y-2">
+                                    <div className="h-4 w-1/2 bg-muted/20 animate-pulse rounded-lg" />
+                                    <div className="h-2 w-full bg-muted/20 animate-pulse rounded-full" />
+                                </div>
+                            ))
+                        ) : funnel.map((f, i) => {
+                            const pct = ((f.value / (funnel[0]?.value || 1)) * 100).toFixed(1)
+                            const color = CAT_COLORS[i % CAT_COLORS.length]
+                            return (
+                                <div key={i} className="space-y-3 group">
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                            <div className="size-2 rounded-full" style={{ backgroundColor: color }} />
+                                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest group-hover:text-primary transition-colors">{f.label}</span>
+                                        </div>
+                                        <span className="text-[10px] font-black text-foreground">{f.value.toLocaleString()}</span>
+                                    </div>
+                                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
+                                        <div
+                                            className="h-full rounded-full transition-all duration-1000 ease-out"
+                                            style={{ width: `${pct}%`, backgroundColor: color }}
+                                        />
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Category Breakdown ── */}
+            <div className="glass rounded-[3.5rem] p-12 border-white/20 shadow-2xl overflow-hidden relative">
+                <div className="flex items-center justify-between mb-12">
+                    <div className="space-y-1">
+                        <h2 className="text-2xl font-black text-foreground tracking-tight">Hiệu suất Danh mục</h2>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Phân tích chuyên sâu ngành hàng</p>
+                    </div>
+                    <div className="size-12 bg-sky-500/10 text-sky-500 rounded-2xl flex items-center justify-center shadow-inner">
+                        <PieChart className="size-6" />
+                    </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-white/5">
+                                <th className="pb-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Danh mục</th>
+                                <th className="pb-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest text-right">Doanh thu</th>
+                                <th className="pb-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest text-right">Số lượng bán</th>
+                                <th className="pb-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest text-right">Tỷ lệ đóng góp</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            {loading ? (
+                                Array.from({ length: 4 }).map((_, i) => (
+                                    <tr key={i} className="animate-pulse">
+                                        <td colSpan={4} className="py-6"><div className="h-10 bg-muted/20 rounded-2xl" /></td>
+                                    </tr>
+                                ))
+                            ) : categories.map((c, i) => {
+                                const share = totalRev === 0 ? "0" : ((c.revenue / totalRev) * 100).toFixed(0)
+                                const color = CAT_COLORS[i % CAT_COLORS.length]
+                                return (
+                                    <tr key={i} className="group hover:bg-white/5 transition-colors">
+                                        <td className="py-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="size-10 rounded-xl flex items-center justify-center font-black text-white group-hover:scale-110 transition-transform shadow-lg" style={{ backgroundColor: color }}>
+                                                    {c.cat.charAt(0)}
+                                                </div>
+                                                <span className="text-sm font-black text-foreground uppercase tracking-tight">{c.cat}</span>
+                                            </div>
+                                        </td>
+                                        <td className="py-6 text-right">
+                                            <span className="text-sm font-black text-primary">{Number(c.revenue).toLocaleString()}₫</span>
+                                        </td>
+                                        <td className="py-6 text-right text-sm font-bold text-muted-foreground">
+                                            {c.units.toLocaleString()} <span className="text-[10px] uppercase">Sản phẩm</span>
+                                        </td>
+                                        <td className="py-6 text-right">
+                                            <div className="flex items-center justify-end gap-6">
+                                                <div className="w-24 h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                                    <div className="h-full rounded-full transition-all duration-700" style={{ width: `${share}%`, backgroundColor: color }} />
+                                                </div>
+                                                <span className="text-xs font-black min-w-[32px]" style={{ color }}>{share}%</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    )
 }

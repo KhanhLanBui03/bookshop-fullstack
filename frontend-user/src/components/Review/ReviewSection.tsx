@@ -109,8 +109,11 @@ export default function ReviewSection({ bookId, bookRating }: Props) {
     }
 
     return (
-        <div className="max-w-2xl">
-            <h2 className="text-lg font-semibold mb-5">Đánh giá &amp; Nhận xét</h2>
+        <div className="space-y-10">
+            <div className="flex items-center gap-4">
+                <h2 className="text-3xl font-black text-foreground uppercase tracking-widest">Đánh giá &amp; Nhận xét</h2>
+                <div className="h-1.5 flex-1 bg-gradient-to-r from-primary/50 to-transparent rounded-full" />
+            </div>
 
             <RatingSummary rating={bookRating} totalReviews={totalElements} />
 

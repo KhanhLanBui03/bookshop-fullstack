@@ -1,4 +1,3 @@
-import React from "react"
 import { glass, mono } from "../category.config"
 import type { CategoryStats } from "../category.type"
 

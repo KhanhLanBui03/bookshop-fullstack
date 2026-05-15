@@ -1,4 +1,4 @@
-import type { BookAdminResponse, BookDashboardStats, BookDetail, BookRequestPayload, BookStatus, GetAdminBooksParams, PageResponse } from "@/feature/book/book.type";
+import type { BookAdminResponse, BookDashboardStats, BookDetail, BookRequestPayload, GetAdminBooksParams, PageResponse, UpdateBookPayload } from "@/feature/book/book.type";
 import axiosClient from "./axios";
 
 

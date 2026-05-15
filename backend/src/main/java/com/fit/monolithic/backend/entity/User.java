@@ -40,4 +40,7 @@ public class User {
     @OneToMany(mappedBy = "orderUser",fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     List<Order> orders = new ArrayList<>();
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Wishlist wishlist;
+
 }

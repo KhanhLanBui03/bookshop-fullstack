@@ -1,5 +1,5 @@
 import React from "react"
-import type { BookStatus } from "../book.type"
+import type { BookStatus } from "./book.type"
 
 export const mono: React.CSSProperties = { fontFamily: "var(--font-mono,'DM Mono',monospace)" }
 

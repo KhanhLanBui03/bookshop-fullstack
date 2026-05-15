@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useRef, useState } from "react"
-import { CSS, mono } from "../book.config"
-import { bookApi, type BookRequestPayload } from "@/api/book.api"
+import { useCallback, useEffect, useState } from "react"
+import { CSS } from "../book.config"
+import { bookApi } from "@/api/book.api"
 import { authorApi, categoryApi, publisherApi, type DropdownItem } from "@/api/metadata.api"
-import type { BookAdminResponse, BookDashboardStats, BookForm, BookStatus, GetAdminBooksParams } from "../book.type"
+import type { BookAdminResponse, BookDashboardStats, BookForm, BookStatus, GetAdminBooksParams, BookRequestPayload } from "../book.type"
 
 import { BookStatsGrid } from "../components/BookStatsGrid"
 import { BookFilters } from "../components/BookFilters"
@@ -10,6 +10,7 @@ import { BookTable } from "../components/BookTable"
 import { BookPagination } from "../components/BookPagination"
 import { BookModal } from "../components/BookModal"
 import { BookDeleteConfirm } from "../components/BookDeleteConfirm"
+import { Button } from "@/components/ui/button"
 
 type SortCol = "title" | "salePrice" | "soldCount" | "stock"
 
@@ -76,7 +77,7 @@ export const BookManagementPage = () => {
             setTotalPages(res.totalPages || 1)
         } catch (err) {
             console.error("Fetch books error", err)
-            showToast("Failed to load books", "err")
+            showToast("Không thể tải danh sách sách", "err")
         } finally {
             setLoading(false)
         }
@@ -112,7 +113,7 @@ export const BookManagementPage = () => {
                 payload.images = form.images.map(img => ({ name: img.name, url: img.url }))
 
             await bookApi.updateBook(bookId, payload)
-            showToast("Book updated successfully")
+            showToast("Cập nhật sách thành công")
         } else {
             const payload: BookRequestPayload = {
                 title: form.title,
@@ -126,7 +127,7 @@ export const BookManagementPage = () => {
                 images: form.images.map(img => ({ name: img.name, url: img.url })),
             }
             await bookApi.createBook(payload)
-            showToast("Book added to catalog")
+            showToast("Đã thêm sách mới vào kho")
         }
 
         setShowModal(false)
@@ -141,63 +142,51 @@ export const BookManagementPage = () => {
         setDeleting(true)
         try {
             await bookApi.deleteBook(deleteBook.id)
-            showToast(`"${deleteBook.title}" removed`)
+            showToast(`"${deleteBook.title}" đã được xóa`)
             setDeleteBook(null)
             if (books.length === 1 && page > 1) setPage(p => p - 1)
             else await fetchBooks()
             refreshStats()
         } catch (err) {
             console.error("Delete error", err)
-            showToast("Failed to delete book", "err")
+            showToast("Xóa sách thất bại", "err")
         } finally {
             setDeleting(false)
         }
     }
 
     /* ════════ RENDER ════════ */
+    /* ════════ RENDER ════════ */
     return (
-        <div className="bm">
+        <div className="space-y-10 animate-in fade-in duration-700">
             <style>{CSS}</style>
 
             {/* Toast */}
             {toast && (
-                <div style={{
-                    position: "fixed", bottom: 24, right: 24, zIndex: 100,
-                    background: "var(--bg3,#18181f)", borderRadius: 10,
-                    border: "1px solid rgba(255,255,255,.12)",
-                    borderLeft: `3px solid ${toast.type === "err" ? "var(--red,#ef4444)" : "var(--accent,#ff6b35)"}`,
-                    padding: "12px 18px", ...mono, fontSize: 12, color: "var(--text)",
-                    animation: "bmUp .3s cubic-bezier(.22,1,.36,1) both",
-                    boxShadow: "0 8px 32px rgba(0,0,0,.4)",
-                }}>
-                    {toast.type === "err" ? "✕" : "✓"} {toast.msg}
+                <div className={`fixed bottom-8 right-8 z-[100] glass px-6 py-4 rounded-2xl shadow-2xl border-l-4 ${toast.type === "err" ? "border-l-destructive" : "border-l-primary"} animate-in slide-in-from-right fade-in duration-300`}>
+                    <div className="flex items-center gap-3">
+                        <div className={`size-6 rounded-full flex items-center justify-center text-xs ${toast.type === "err" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
+                            {toast.type === "err" ? "✕" : "✓"}
+                        </div>
+                        <p className="text-xs font-black text-foreground uppercase tracking-widest">{toast.msg}</p>
+                    </div>
                 </div>
             )}
 
-            <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 28px" }}>
-
+            <div className="max-w-7xl mx-auto px-4">
                 {/* ── Header ── */}
-                <div className="bm-up" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28 }}>
-                    <div>
-                        <p style={{ ...mono, fontSize: 10, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6 }}>
-                            Catalog Management
-                        </p>
-                        <h1 style={{ fontFamily: "var(--font-display,'Fraunces',serif)", fontSize: 28, fontWeight: 700, letterSpacing: "-.5px" }}>
-                            Books
-                        </h1>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+                    <div className="space-y-1">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Quản lý kho hàng</p>
+                        <h1 className="text-4xl font-black text-foreground tracking-tight">Thư viện <span className="text-primary">Sách</span></h1>
                     </div>
-                    <button
-                        className="bm-btn-primary"
+                    <Button
+                        size="lg"
+                        className="rounded-2xl font-black h-14 px-8 shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                         onClick={() => { setEditBook(null); setShowModal(true) }}
-                        style={{
-                            display: "flex", alignItems: "center", gap: 8,
-                            background: "var(--accent,#ff6b35)", color: "#fff",
-                            padding: "10px 18px", borderRadius: 10,
-                            ...mono, fontSize: 12, fontWeight: 600,
-                        }}
                     >
-                        <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Add Book
-                    </button>
+                        <span className="text-xl mr-2">+</span> Thêm sách mới
+                    </Button>
                 </div>
 
                 {/* ── Stats ── */}
@@ -211,14 +200,13 @@ export const BookManagementPage = () => {
                     categories={categories}
                     totalElements={totalElements}
                     totalPages={totalPages}
-                    loading={loading}
                     onSearchChange={v => setSearch(v)}
                     onSearchClear={() => { setSearch(""); setPage(1) }}
                     onStatusChange={s => { setFilterStatus(s); setPage(1) }}
                     onCategoryChange={id => { setFilterCategory(id); setPage(1) }}
                 />
 
-                {/* ── Table ── */}
+                {/* ── Table & Pagination remain within their components ── */}
                 <BookTable
                     books={books}
                     loading={loading}
@@ -231,7 +219,6 @@ export const BookManagementPage = () => {
                     onDelete={b => setDeleteBook(b)}
                 />
 
-                {/* ── Pagination ── */}
                 <BookPagination
                     page={page}
                     totalPages={totalPages}

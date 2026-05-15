@@ -1,102 +1,57 @@
 package com.fit.monolithic.backend.service.Impl;
 
-import com.fit.monolithic.backend.dto.response.*;
-import com.fit.monolithic.backend.repository.AnalyticsRepository;
+import com.fit.monolithic.backend.repository.OrderRepository;
 import com.fit.monolithic.backend.service.AnalyticsService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class AnalyticsServiceImpl implements AnalyticsService {
+    private final OrderRepository orderRepository;
 
-    private final AnalyticsRepository repo;
-
-    /* ── KPI ── */
     @Override
-    public AnalyticsKpiResponse getKpi() {
-        long totalOrders    = repo.countAll();
-        long delivered      = repo.countDelivered();
-        long refunded       = repo.countRefunded();
-        long newUsers       = repo.countNewUsersThisMonth();
-        long returning      = repo.countReturningUsers();
-
-        // Conversion rate = delivered / totalOrders * 100  (fallback 0)
-        double convRate = totalOrders == 0 ? 0
-                : BigDecimal.valueOf((double) delivered / totalOrders * 100)
-                .setScale(1, RoundingMode.HALF_UP).doubleValue();
-
-        // Return rate = refunded / totalOrders * 100
-        double returnRate = totalOrders == 0 ? 0
-                : BigDecimal.valueOf((double) refunded / totalOrders * 100)
-                .setScale(1, RoundingMode.HALF_UP).doubleValue();
-
-        return AnalyticsKpiResponse.builder()
-                .conversionRate(convRate)
-                .avgOrderValue(repo.getAvgOrderValue().setScale(2, RoundingMode.HALF_UP))
-                .returnRate(returnRate)
-                .newUsers(newUsers)
-                .returningUsers(returning)
-                .build();
+    public List<Map<String, Object>> getRevenueStats() {
+        List<Object[]> results = orderRepository.getRevenueByDay();
+        List<Map<String, Object>> stats = new ArrayList<>();
+        for (Object[] row : results) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("date", row[0]);
+            map.put("amount", row[1]);
+            stats.add(map);
+        }
+        return stats;
     }
 
-    /* ── Revenue chart ── */
     @Override
-    public List<RevenuePointResponse> getRevenue(String period) {
-        boolean isWeekly = "weekly".equalsIgnoreCase(period);
-        LocalDate from   = isWeekly
-                ? LocalDate.now().minusDays(6)
-                : LocalDate.now().minusMonths(6);
-
-        List<Object[]> rows = isWeekly
-                ? repo.getWeeklyRevenue(from)
-                : repo.getMonthlyRevenue(from);
-
-        // Object[0] = label (String), Object[1] = revenue (BigDecimal / Number)
-        return rows.stream()
-                .map(row -> new RevenuePointResponse(
-                        (String) row[0],
-                        new java.math.BigDecimal(row[1].toString())
-                                .setScale(2, java.math.RoundingMode.HALF_UP)
-                ))
-                .toList();
+    public List<Map<String, Object>> getCategoryStats() {
+        List<Object[]> results = orderRepository.getRevenueByCategory();
+        List<Map<String, Object>> stats = new ArrayList<>();
+        for (Object[] row : results) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("category", row[0]);
+            map.put("amount", row[1]);
+            stats.add(map);
+        }
+        return stats;
     }
 
-    /* ── Conversion funnel ── */
     @Override
-    public List<FunnelStepResponse> getFunnel() {
-        // Approximate funnel from order data.
-        // For a real app you'd track page-view events separately.
-        long purchased   = repo.countDelivered();
-        long checkout    = repo.countCheckout();
-        long buyers      = repo.countBuyers();
-        long cartQty     = repo.sumAllOrderItemQty();   // proxy for "add to cart"
-
-        // Visitors: generous multiplier from buyers (e.g. 15x)
-        long visitors    = buyers == 0 ? 0 : buyers * 15;
-        long productViews = visitors == 0 ? 0 : (long)(visitors * 0.56);
-        long addToCart   = Math.max(cartQty, checkout);
-
-        return List.of(
-                new FunnelStepResponse("Visitors",      visitors),
-                new FunnelStepResponse("Product Views", productViews),
-                new FunnelStepResponse("Add to Cart",   addToCart),
-                new FunnelStepResponse("Checkout",      checkout),
-                new FunnelStepResponse("Purchased",     purchased)
-        );
-    }
-
-    /* ── Category performance ── */
-    @Override
-    public List<CategoryPerformanceResponse> getCategoryPerformance() {
-        return repo.getTopCategoryPerformance(PageRequest.of(0, 5));
+    public Map<String, Object> getOverallStats() {
+        List<Object[]> results = orderRepository.getOrderDashboardStat();
+        Map<String, Object> stats = new HashMap<>();
+        if (!results.isEmpty()) {
+            Object[] row = results.get(0);
+            stats.put("totalRevenue", row[0]);
+            stats.put("pendingOrders", row[1]);
+            stats.put("shippingOrders", row[2]);
+            stats.put("deliveredOrders", row[3]);
+        }
+        return stats;
     }
 }

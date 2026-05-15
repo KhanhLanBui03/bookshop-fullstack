@@ -1,6 +1,15 @@
-import React from "react"
-import { glass, mono, fmt } from "../book.config"
-import { Stars, StatusBadge } from "./BookAtoms"
+import { 
+    Edit3,
+    Trash2, 
+    Star, 
+    ArrowUpDown, 
+    ChevronUp, 
+    ChevronDown,
+    BookOpen,
+    User,
+    Tags
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
 import type { BookAdminResponse } from "../book.type"
 
 type SortCol = "title" | "salePrice" | "soldCount" | "stock"
@@ -17,188 +26,162 @@ interface Props {
     onDelete: (book: BookAdminResponse) => void
 }
 
+const fmt = (n: number) => `${Number(n ?? 0).toLocaleString()}₫`
+
+const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
+    ACTIVE: { label: "Đang bán", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    INACTIVE: { label: "Ngừng bán", color: "text-muted-foreground", bg: "bg-muted/10" },
+    OUT_OF_STOCK: { label: "Hết hàng", color: "text-rose-500", bg: "bg-rose-500/10" },
+}
+
 export const BookTable = ({
     books, loading, page, pageSize,
     sortBy, sortDir, onSort, onEdit, onDelete,
 }: Props) => {
-    const SortIcon = ({ col }: { col: SortCol }) => (
-        <span style={{ ...mono, fontSize: 9, marginLeft: 4, opacity: sortBy === col ? 1 : 0.3 }}>
-            {sortBy === col ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
-        </span>
-    )
-
-    const thSort = (col: SortCol): React.CSSProperties => ({
-        ...mono, fontSize: 10, fontWeight: 600, letterSpacing: 1,
-        color: sortBy === col ? "var(--accent,#ff6b35)" : "var(--muted)",
-        textTransform: "uppercase", padding: "10px 14px", textAlign: "left",
-        cursor: "pointer", userSelect: "none", whiteSpace: "nowrap",
-    })
-    const thStatic: React.CSSProperties = {
-        ...mono, fontSize: 10, fontWeight: 600, color: "var(--muted)",
-        textTransform: "uppercase", letterSpacing: 1,
-        padding: "10px 14px", textAlign: "left", whiteSpace: "nowrap",
+    const SortIcon = ({ col }: { col: SortCol }) => {
+        if (sortBy !== col) return <ArrowUpDown className="size-3 opacity-30" />
+        return sortDir === "asc" ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />
     }
 
     return (
-        <div className="bm-up" style={{ ...glass(), overflow: "hidden", animationDelay: "120ms" }}>
-            <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div className="glass rounded-[3rem] overflow-hidden border-white/20 mb-10">
+            <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
                     <thead>
-                        <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                            <th style={thStatic}>#</th>
-                            <th onClick={() => onSort("title")} style={thSort("title")}>Title <SortIcon col="title" /></th>
-                            <th style={thStatic}>Category</th>
-                            <th style={thStatic}>Author</th>
-                            <th onClick={() => onSort("salePrice")} style={thSort("salePrice")}>Price <SortIcon col="salePrice" /></th>
-                            <th onClick={() => onSort("stock")} style={thSort("stock")}>Stock <SortIcon col="stock" /></th>
-                            <th onClick={() => onSort("soldCount")} style={thSort("soldCount")}>Sold <SortIcon col="soldCount" /></th>
-                            <th style={thStatic}>Rating</th>
-                            <th style={thStatic}>Status</th>
-                            <th style={{ ...thStatic, textAlign: "right" }}>Actions</th>
+                        <tr className="border-b border-white/5 bg-white/5">
+                            <th className="p-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">#</th>
+                            <th 
+                                className="p-6 text-[10px] font-black uppercase tracking-widest cursor-pointer select-none group"
+                                onClick={() => onSort("title")}
+                            >
+                                <div className="flex items-center gap-2">
+                                    Sách <SortIcon col="title" />
+                                </div>
+                            </th>
+                            <th className="p-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Danh mục</th>
+                            <th className="p-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Tác giả</th>
+                            <th 
+                                className="p-6 text-[10px] font-black uppercase tracking-widest cursor-pointer select-none"
+                                onClick={() => onSort("salePrice")}
+                            >
+                                <div className="flex items-center gap-2">
+                                    Giá <SortIcon col="salePrice" />
+                                </div>
+                            </th>
+                            <th 
+                                className="p-6 text-[10px] font-black uppercase tracking-widest cursor-pointer select-none text-center"
+                                onClick={() => onSort("stock")}
+                            >
+                                <div className="flex items-center justify-center gap-2">
+                                    Kho <SortIcon col="stock" />
+                                </div>
+                            </th>
+                            <th 
+                                className="p-6 text-[10px] font-black uppercase tracking-widest cursor-pointer select-none text-center"
+                                onClick={() => onSort("soldCount")}
+                            >
+                                <div className="flex items-center justify-center gap-2">
+                                    Đã bán <SortIcon col="soldCount" />
+                                </div>
+                            </th>
+                            <th className="p-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest text-center">Đánh giá</th>
+                            <th className="p-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Trạng thái</th>
+                            <th className="p-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest text-right">Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {/* Loading & empty states */}
+                    <tbody className="divide-y divide-white/5">
                         {loading && books.length === 0 ? (
-                            <tr>
-                                <td colSpan={10} style={{ textAlign: "center", padding: "52px 0" }}>
-                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-                                        <div className="bm-spinner" style={{ width: 28, height: 28 }} />
-                                        <p style={{ ...mono, fontSize: 12, color: "var(--muted)" }}>Loading books…</p>
-                                    </div>
-                                </td>
-                            </tr>
+                            Array.from({ length: 5 }).map((_, i) => (
+                                <tr key={i} className="animate-pulse">
+                                    <td colSpan={10} className="p-6"><div className="h-12 bg-muted/20 rounded-2xl" /></td>
+                                </tr>
+                            ))
                         ) : books.length === 0 ? (
                             <tr>
-                                <td colSpan={10} style={{ textAlign: "center", padding: "52px 0" }}>
-                                    <div style={{ fontSize: 32, marginBottom: 10 }}>📭</div>
-                                    <p style={{ ...mono, fontSize: 12, color: "var(--muted)" }}>No books found</p>
+                                <td colSpan={10} className="p-20 text-center">
+                                    <div className="size-20 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <BookOpen className="size-10 text-muted-foreground/30" />
+                                    </div>
+                                    <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Không có sách nào trong danh sách</p>
                                 </td>
                             </tr>
                         ) : books.map((b, i) => {
+                            const status = STATUS_CFG[b.status] || STATUS_CFG.ACTIVE
                             const isLow = b.stock > 0 && b.stock <= 10
                             const isOut = b.stock === 0
 
                             return (
-                                <tr
-                                    key={b.id}
-                                    className="bm-row"
-                                    style={{
-                                        borderBottom: "1px solid var(--border)",
-                                        opacity: loading ? 0.5 : 1,
-                                        transition: "opacity .2s",
-                                    }}
-                                >
-                                    {/* # */}
-                                    <td style={{ ...mono, fontSize: 11, color: "var(--muted)", padding: "13px 14px" }}>
+                                <tr key={b.id} className="group hover:bg-white/5 transition-colors">
+                                    <td className="p-6 text-[10px] font-black text-muted-foreground uppercase tracking-tighter">
                                         {String((page - 1) * pageSize + i + 1).padStart(2, "0")}
                                     </td>
-
-                                    {/* Title + cover */}
-                                    <td style={{ padding: "13px 14px", maxWidth: 240 }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                            <div style={{
-                                                width: 36, height: 36, borderRadius: 6, flexShrink: 0,
-                                                background: "var(--bg2)", border: "1px solid var(--border)",
-                                                overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
-                                            }}>
-                                                {b.images
-                                                    ? <img src={b.images} alt={b.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                                    : <span style={{ fontSize: 16 }}>📚</span>
-                                                }
+                                    <td className="p-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="size-10 rounded-xl bg-background border border-border/50 overflow-hidden flex-shrink-0">
+                                                {b.images ? (
+                                                    <img src={b.images} alt={b.title} className="size-full object-cover" />
+                                                ) : (
+                                                    <div className="size-full flex items-center justify-center bg-muted/20 text-muted-foreground">
+                                                        <BookOpen className="size-5" />
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div style={{ minWidth: 0 }}>
-                                                <p style={{
-                                                    fontSize: 13, fontWeight: 600, color: "var(--text)",
-                                                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                                                }}>
-                                                    {b.title}
-                                                </p>
-                                                <p style={{ ...mono, fontSize: 10, color: "var(--muted)", marginTop: 2 }}>{b.publisher}</p>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-xs font-black text-foreground group-hover:text-primary transition-colors truncate max-w-[200px]">{b.title}</span>
+                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{b.publisher}</span>
                                             </div>
                                         </div>
                                     </td>
-
-                                    {/* Category */}
-                                    <td style={{ padding: "13px 14px" }}>
-                                        <span style={{
-                                            ...mono, fontSize: 10, padding: "3px 8px", borderRadius: 99,
-                                            background: "rgba(255,255,255,.06)", color: "var(--muted2)",
-                                        }}>
-                                            {b.category}
-                                        </span>
+                                    <td className="p-6">
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/5 text-primary border border-primary/10">
+                                            <Tags className="size-3" />
+                                            <span className="text-[10px] font-black uppercase tracking-tighter">{b.category}</span>
+                                        </div>
                                     </td>
-
-                                    {/* Author */}
-                                    <td style={{ ...mono, fontSize: 11, color: "var(--muted2)", padding: "13px 14px", whiteSpace: "nowrap" }}>
-                                        {b.author}
+                                    <td className="p-6">
+                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                            <User className="size-3" />
+                                            <span className="text-[11px] font-bold">{b.author}</span>
+                                        </div>
                                     </td>
-
-                                    {/* Price */}
-                                    <td style={{ padding: "13px 14px" }}>
-                                        <p style={{ ...mono, fontSize: 13, fontWeight: 600, color: "var(--text)" }}>
-                                            {fmt(b.salePrice)}
-                                        </p>
+                                    <td className="p-6">
+                                        <span className="text-sm font-black text-primary">{fmt(b.salePrice)}</span>
                                     </td>
-
-                                    {/* Stock */}
-                                    <td style={{ padding: "13px 14px" }}>
-                                        <span style={{
-                                            ...mono, fontSize: 12, fontWeight: 600,
-                                            color: isOut ? "var(--red,#ef4444)" : isLow ? "var(--amber,#f59e0b)" : "var(--text)",
-                                        }}>
-                                            {b.stock}
-                                        </span>
-                                        {isLow && !isOut && (
-                                            <span style={{ ...mono, fontSize: 9, color: "var(--amber,#f59e0b)", display: "block", marginTop: 1 }}>
-                                                Low
+                                    <td className="p-6 text-center">
+                                        <div className="flex flex-col items-center">
+                                            <span className={`text-xs font-black ${isOut ? "text-rose-500" : isLow ? "text-amber-500" : "text-foreground"}`}>
+                                                {b.stock}
                                             </span>
-                                        )}
-                                    </td>
-
-                                    {/* Sold */}
-                                    <td style={{ ...mono, fontSize: 12, color: "var(--muted2)", padding: "13px 14px" }}>
-                                        {b.soldCount}
-                                    </td>
-
-                                    {/* Rating */}
-                                    <td style={{ padding: "13px 14px" }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                                            <Stars rating={b.rating} />
-                                            <span style={{ ...mono, fontSize: 10, color: "var(--muted)" }}>{b.rating || "—"}</span>
+                                            {isLow && !isOut && (
+                                                <span className="text-[8px] font-black uppercase text-amber-500/80 tracking-tighter">Sắp hết</span>
+                                            )}
                                         </div>
                                     </td>
-
-                                    {/* Status */}
-                                    <td style={{ padding: "13px 14px" }}>
-                                        <StatusBadge status={b.status} />
+                                    <td className="p-6 text-center">
+                                        <span className="text-xs font-black text-muted-foreground">{b.soldCount}</span>
                                     </td>
-
-                                    {/* Actions */}
-                                    <td style={{ padding: "13px 14px", textAlign: "right" }}>
-                                        <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                                            <button
-                                                className="bm-icon-btn"
-                                                title="Edit"
-                                                onClick={() => onEdit(b)}
-                                                style={{
-                                                    background: "rgba(255,255,255,.05)", border: "1px solid var(--border)",
-                                                    borderRadius: 7, width: 30, height: 30, fontSize: 13,
-                                                    cursor: "pointer", color: "var(--muted2)",
-                                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                                }}
-                                            >✏️</button>
-                                            <button
-                                                className="bm-icon-btn"
-                                                title="Delete"
-                                                onClick={() => onDelete(b)}
-                                                style={{
-                                                    background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)",
-                                                    borderRadius: 7, width: 30, height: 30, fontSize: 13,
-                                                    cursor: "pointer", color: "var(--red,#ef4444)",
-                                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                                }}
-                                            >🗑️</button>
+                                    <td className="p-6 text-center">
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className="flex items-center gap-0.5">
+                                                <Star className={`size-2.5 ${b.rating ? "text-amber-500 fill-amber-500" : "text-muted-foreground/20"}`} />
+                                                <span className="text-[10px] font-black text-foreground">{b.rating || "—"}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="p-6">
+                                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl ${status.bg} ${status.color} text-[10px] font-black uppercase tracking-widest`}>
+                                            <span className="size-1.5 rounded-full bg-current animate-pulse" />
+                                            {status.label}
+                                        </div>
+                                    </td>
+                                    <td className="p-6">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button size="icon" variant="ghost" className="size-9 rounded-xl hover:bg-primary/10 hover:text-primary" onClick={() => onEdit(b)}>
+                                                <Edit3 className="size-4" />
+                                            </Button>
+                                            <Button size="icon" variant="ghost" className="size-9 rounded-xl hover:bg-rose-500/10 hover:text-rose-500" onClick={() => onDelete(b)}>
+                                                <Trash2 className="size-4" />
+                                            </Button>
                                         </div>
                                     </td>
                                 </tr>

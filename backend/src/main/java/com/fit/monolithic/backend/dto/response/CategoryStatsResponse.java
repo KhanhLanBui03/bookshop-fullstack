@@ -14,4 +14,5 @@ public class CategoryStatsResponse {
     private Long totalBooks;
     private Double avgBooksPerCategory;
     private Long emptyCategories;
+    private String mostPopularCategory;
 }

@@ -35,7 +35,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
                 COUNT(DISTINCT c.id),
                 COUNT(b.id),
                 AVG(CASE WHEN SIZE(c.books) > 0 THEN SIZE(c.books) ELSE 0 END),
-                SUM(CASE WHEN SIZE(c.books) = 0 THEN 1 ELSE 0 END)
+                SUM(CASE WHEN SIZE(c.books) = 0 THEN 1 ELSE 0 END),
+                CAST(null as string)
             )
             FROM Category c
             LEFT JOIN c.books b

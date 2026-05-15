@@ -3,6 +3,9 @@ package com.fit.monolithic.backend.controller;
 import com.fit.monolithic.backend.dto.request.LoginRequest;
 import com.fit.monolithic.backend.dto.request.RefreshTokenRequest;
 import com.fit.monolithic.backend.dto.request.RegisterRequest;
+import com.fit.monolithic.backend.dto.request.SocialLoginRequest;
+import com.fit.monolithic.backend.dto.request.PasswordResetRequest;
+import com.fit.monolithic.backend.dto.request.ResetPasswordRequest;
 import com.fit.monolithic.backend.dto.response.LoginResponse;
 import com.fit.monolithic.backend.dto.response.RegisterResponse;
 import com.fit.monolithic.backend.dto.response.based.ApiResponse;
@@ -67,9 +70,9 @@ public class AuthController {
         }
 
         Map<String, Object> response = new HashMap<>();
-        response.put("id", userDetails.getId());
+        response.put("userId", userDetails.getId());
         response.put("email", userDetails.getUsername());
-        response.put("name", userDetails.getEmail());
+        response.put("fullName", userDetails.getName());
         response.put("roles", userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList());
@@ -88,4 +91,24 @@ public class AuthController {
         );
     }
 
+    @PostMapping("/google-login")
+    public ApiResponse<LoginResponse> googleLogin(@RequestBody SocialLoginRequest request) {
+        return new ApiResponse<>(
+                200,
+                "Google login success",
+                authService.loginWithGoogle(request.getToken())
+        );
+    }
+
+    @PostMapping("/forgot-password")
+    public ApiResponse<Void> forgotPassword(@Valid @RequestBody PasswordResetRequest request) {
+        authService.forgotPassword(request.getEmail());
+        return new ApiResponse<>(200, "Reset link has been sent to your email", null);
+    }
+
+    @PostMapping("/reset-password")
+    public ApiResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request.getToken(), request.getNewPassword());
+        return new ApiResponse<>(200, "Password has been reset successfully", null);
+    }
 }

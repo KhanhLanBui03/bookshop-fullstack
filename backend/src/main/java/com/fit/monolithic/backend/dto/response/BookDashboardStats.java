@@ -14,4 +14,5 @@ public class BookDashboardStats {
     private Long countActive;
     private Long countLowStock;
     private Long countOutOfStock;
+    private Long totalSold;
 }

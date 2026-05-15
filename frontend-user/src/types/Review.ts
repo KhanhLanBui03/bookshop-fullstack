@@ -3,6 +3,7 @@ export type CommentStatus = "PENDING" | "APPROVED" | "REJECTED"
 export interface ReviewUserResponse {
     id: number
     fullName: string
+    isAdmin: boolean
 }
 
 export interface ReviewResponse {
@@ -16,6 +17,7 @@ export interface ReviewResponse {
     replies: ReviewResponse[]
     helpfulCount: number
     helpful: boolean            // whether current user marked helpful
+    imageUrls?: string[]
 }
 
 /* ── Requests ── */
@@ -24,6 +26,7 @@ export interface CreateReviewRequest {
     content: string
     rating?: number             // required for root reviews, omitted for replies
     parentId?: number           // set to create a reply
+    imageUrls?: string[]
 }
 
 export interface UpdateReviewRequest {

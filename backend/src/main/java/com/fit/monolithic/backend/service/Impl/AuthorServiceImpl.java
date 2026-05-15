@@ -19,7 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,12 +29,25 @@ import java.util.List;
 public class AuthorServiceImpl implements AuthorService {
     private final AuthorRepository authorRepository;
     private final BookRepository  bookRepository;
+
+    private AuthorResponse mapToResponse(Author author) {
+        return new AuthorResponse(
+                author.getId(),
+                author.getName(),
+                author.getEmail(),
+                author.getBio(),
+                author.getImage(),
+                author.getStatus(),
+                author.getFollower(),
+                author.getBooks() != null ? author.getBooks().size() : 0
+        );
+    }
+
     @Override
     public List<AuthorResponse> getAllAuthors() {
         return authorRepository.findAll()
                 .stream()
-                .map(author -> new AuthorResponse(author.getId(),author.getName(),author.getEmail(),author.getBio(),
-                        author.getImage(),author.getStatus()))
+                .map(this::mapToResponse)
                 .toList();
     }
 
@@ -44,15 +57,7 @@ public class AuthorServiceImpl implements AuthorService {
                 .orElseThrow(() ->
                         new RuntimeException("Author not found with id: " + id)
                 );
-        return new AuthorResponse(
-                author.getId(),
-                author.getName(),
-                author.getEmail(),
-                author.getBio(),
-                author.getImage(),
-                author.getStatus()
-
-        );
+        return mapToResponse(author);
     }
 
     @Override
@@ -63,16 +68,9 @@ public class AuthorServiceImpl implements AuthorService {
         author.setStatus(AuthorStatus.ACTIVE);
         author.setBio(authorRequest.getBio());
         author.setImage(authorRequest.getImage());
+        author.setFollower(0L);
         authorRepository.save(author);
-        return new AuthorResponse(
-                author.getId(),
-                author.getName(),
-                author.getEmail(),
-                author.getBio(),
-                author.getImage(),
-                author.getStatus()
-
-        );
+        return mapToResponse(author);
     }
 
     @Override
@@ -112,53 +110,29 @@ public class AuthorServiceImpl implements AuthorService {
 
         log.info("Author updated successfully with id {}", id);
 
-        return new AuthorResponse(
-                savedAuthor.getId(),
-                savedAuthor.getName(),
-                savedAuthor.getEmail(),
-                savedAuthor.getBio(),
-                savedAuthor.getImage(),
-                savedAuthor.getStatus()
+        return mapToResponse(savedAuthor);
+    }
+
+    @Override
+    public AuthorDetailResponse getAuthorDetail(Long id) {
+        Author author = authorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Author not found with id: " + id));
+
+        List<BookCardResponse> books = authorRepository.findByAuthorId(id);
+
+        return new AuthorDetailResponse(
+                mapToResponse(author),
+                books
         );
     }
-//    @Override
-//    public AuthorDetailResponse getAuthorDetail(Long id) {
-//
-//        Author author = authorRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Author not found"));
-//
-//        List<BookCardResponse> books = bookRepository.findByAuthorId(id);
-//
-//        return new AuthorDetailResponse(
-//                new AuthorResponse(
-//                        author.getId(),
-//                        author.getName(),
-//                        author.getEmail(),
-//                        author.getBio(),
-//                        author.getImage(),
-//                        author.getStatus()
-//                ),
-//                books
-//        );
-//    }
-//        @Override
-//        public List<AuthorResponse> getTopAuthors() {
-//            Pageable pageable = (Pageable) PageRequest.of(0, 3); // lấy top 3
-//
-//            return authorRepository.findTopAuthors(pageable)
-//                    .stream()
-//                    .map(a -> new AuthorResponse(
-//                            a.getId(),
-//                            a.getName(),
-//                            a.getEmail(),
-//                            a.getBio(),
-//                            a.getImage(),
-//                            a.getStatus()
-//                    ))
-//                    .toList();
-//        }
 
+    @Override
+    public List<AuthorResponse> getTopAuthors() {
+        Pageable pageable = PageRequest.of(0, 3); // lấy top 3
 
-
-
+        return authorRepository.findTopAuthors(pageable)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
 }

@@ -10,4 +10,7 @@ public interface AuthService {
     LoginResponse refreshToken(String refreshToken);
     RegisterResponse register(RegisterRequest registerRequest);
     void logout(String refreshToken);
+    LoginResponse loginWithGoogle(String token);
+    void forgotPassword(String email);
+    void resetPassword(String token, String newPassword);
 }

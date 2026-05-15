@@ -26,9 +26,19 @@ public class AuthorController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<List<AuthorResponse>> getAllAuthors() {
         return new ApiResponse<>(
-                201,
+                200,
                 "Success",
                 authorService.getAllAuthors()
+        );
+    }
+
+    @GetMapping("/featured")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<List<AuthorResponse>> getFeaturedAuthors() {
+        return new ApiResponse<>(
+                200,
+                "Success",
+                authorService.getTopAuthors()
         );
     }
 
@@ -41,11 +51,11 @@ public class AuthorController {
         );
     }
     @GetMapping("/detail-author/{id}")
-    public ApiResponse<AuthorResponse> getAuthorDetail(@PathVariable Long id) {
-        return new ApiResponse<AuthorResponse>(
+    public ApiResponse<AuthorDetailResponse> getAuthorDetail(@PathVariable Long id) {
+        return new ApiResponse<>(
                 200,
                 "Success",
-                authorService.getAuthorById(id)
+                authorService.getAuthorDetail(id)
         );
     }
 
